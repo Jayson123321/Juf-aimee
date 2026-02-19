@@ -16,8 +16,6 @@ plugins:
     - mkdocs-video
     - section-index
     - autolinks
-    - macros:
-          modules: [mkdocs_macros_mdocotion]
 
 markdown_extensions:
     - attr_list
