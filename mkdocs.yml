@@ -1,0 +1,36 @@
+site_name: HBO-ICT Studio RAAI Personal Projects
+site_description:  HBO-ICT Studio RAAI Personal Projects
+site_author: HBO-ICT Studio RAAI
+copyright: Copyright 2026 Hogeschool van Amsterdam
+
+theme:
+    name: material
+    custom_dir: mdocotion/
+    features:
+        - navigation.sections
+        - content.tabs.link
+
+plugins:
+    - search
+    - mermaid2
+    - awesome-pages
+    - mkdocs-video
+    - section-index
+    - autolinks
+    - macros:
+          modules: [mkdocs_macros_mdocotion]
+
+markdown_extensions:
+    - attr_list
+    - md_in_html
+    - fenced_code
+    - admonition
+    - pymdownx.highlight:
+          linenums: true
+          use_pygments: true
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
+    - pymdownx.details
+    - pymdownx.tasklist:
+        custom_checkbox: true

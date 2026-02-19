@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  mkdocs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "pip install -e /workspace/mdocotion &&
+             mkdocs serve -a 0.0.0.0:8000"
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/workspace
