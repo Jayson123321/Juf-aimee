@@ -2,7 +2,7 @@
 
 |Naam|Studentnummer|
 |---|---|
-|Malik|(Shebaaz)| 500935498|
+|Malik|500935498|
 |Jayson| 500928967|
 |Ruben|500930856|
 |Jayson|500945719|
