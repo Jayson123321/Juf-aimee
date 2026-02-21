@@ -62,12 +62,37 @@
 
 ## Sprint rol verdeling
 
-Sprint 1:
+### Sprint 1
+- Ritual master – (nog te bepalen)  
+- Issue master – (nog te bepalen)  
+- Communication master – (nog te bepalen)  
 
-Sprint 2:
+### Sprintdoel
+Probleemverkenning en literatuuronderzoek rondom Hybrid AI en hoogbegaafd onderwijs. Eerste oplossingsrichtingen verkennen en op basis daarvan de eerste user stories opstellen.
 
-Sprint 3:
+---
 
-Sprint 4:
+### Sprint 2
+- Ritual master –  
+- Issue master –  
+- Communication master –  
 
-Sprint 5:
+### Sprintdoel
+
+---
+
+### Sprint 3
+- Ritual master –  
+- Issue master –  
+- Communication master –  
+
+### Sprintdoel
+
+---
+
+### Sprint 4
+- Ritual master –  
+- Issue master –  
+- Communication master –  
+
+### Sprintdoel
