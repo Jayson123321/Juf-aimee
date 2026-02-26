@@ -2,10 +2,10 @@
 
 |Naam|Studentnummer|
 |---|---|
-|Malik|500935498|
+|Shehbaaz|500935498|
 |Jayson| 500928967|
 |Ruben|500930856|
-|Jayson|500945719|
+|Mazen|500945719|
 
 ## stand ups
 
@@ -45,20 +45,20 @@
 
 ## afspraken
 
-- Bij te laat komen of andere vorm van afwezigheid stuur je een bericht in de groepsapp via teams/discord zodat alle groepsgenoten op de hoogte zijn.
-- Bij verzuim, geef het door in de groepsapp.
-- Iedereen word bij de keuzes om iets te doen betrokken.
+- Bij te laat komen of andere vorm van afwezigheid stuur je een bericht in de groepsapp via teams zodat alle groepsgenoten op de hoogte zijn.
+- Bij verzuim, geef het tijdig door in de groepsapp.
+- Iedereen wordt betrokken bij de keuzes en beslissingen.
 - Als je iets wilt plannen, geef het ruim van te voren aan via een poll.
-- zet in de planning wat er verwacht wordt bij de meeting.
-- Hou rekening met waar iedereen goed in is, zodat je efficiënt kan werken.
-- Help elkaar als er iets niet duidelijk is.
-- per week houden we op een willekeurige dag een stand-up van een kwartier om alles qua userstories te weten waar iedereen staat.
+- Zet in de planning wat er verwacht wordt bij de meeting.
+- Hou rekening met waar iedereen goed in is, zodat efficiëntie wordt behaald.
+- Help elkaar als iets voor de ander onduidelijk is.
+- Per week houden we op een willekeurige dag een stand-up van een kwartier om alles qua userstories te weten waar iedereen staat.
 
 ## Consequenties bij niet nakomen van afspraken of conflicten (ziekte, afwezigheid, stoppen met opleiding, verhindering, niet nakomen)
 
 - Bij de eerste keer krijg je een waarschuwing van het team, bij 2 nog een waarschuwing.
 - na 2 waarschuwing overleg met de teamcoach om tot een oplossing te komen.
-- als er te vaak is dat de afspraken niet wordt nagekomen, dan zijn we geneigd om de persoon uit het team te zetten, tenzij er een goede en grondige rede is.
+- als er te vaak is dat de afspraken niet wordt nagekomen, dan zijn we geneigd om de persoon uit het team te zetten, tenzij er een goede en grondige reden is.
 
 ## Sprint rol verdeling
 
