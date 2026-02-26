@@ -1,4 +1,4 @@
-# Samenwerkingscontract Team 3
+# Samenwerkingscontract Hoogbegaafd Onderwijs
 
 |Naam|Studentnummer|
 |---|---|
@@ -11,13 +11,13 @@
 
 |dag|moment|duur|locatie|reden|
 |---|---|---|---|---|
-|Maandag| elk moment van de dag|5 -15 minuten|Teams/Discord|ondersteuning/stand-up|
+|Maandag| elk moment van de dag|5 -15 minuten|Teams|ondersteuning/stand-up|
 |Dinsdag|Eerste uur van de schooldag|5 minuten|HvA Wibautshuis|stand-up|
 |woensdag| eerste uur van de schooldag|5 minuten|HVA Wibautshuis|stand-up|
 |Donderdag|Eerste uur van de schooldag|5 minuten|HvA Wibautshuis|stand-up|
-|vrijdag| elk moment van de dag| 5 minuten|Teams/Discord|stand-up|
-|Zaterdag|elk moment van de dag|5 -15|Teams/Discord|ondersteuning|
-|Zondag|elk moment van de dag|5 -15|Teams/Discord|ondersteuning|
+|vrijdag| elk moment van de dag| 5 minuten|Teams|stand-up|
+|Zaterdag|elk moment van de dag|5 -15|Teams|ondersteuning|
+|Zondag|elk moment van de dag|5 -15|Teams|ondersteuning|
 
 ## Richtlijnen besluitvorming
 
