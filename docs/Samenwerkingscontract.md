@@ -63,9 +63,9 @@
 ## Sprint rol verdeling
 
 ### Sprint 1
-- Ritual master – (nog te bepalen)  
-- Issue master – (nog te bepalen)  
-- Communication master – (nog te bepalen)  
+- Ritual master – Ruben
+- Issue master – Shehbhaaz
+- Communication master – Mazen & Jayson  
 
 ### Sprintdoel
 Probleemverkenning en literatuuronderzoek rondom Hybrid AI en hoogbegaafd onderwijs. Eerste oplossingsrichtingen verkennen en op basis daarvan de eerste user stories opstellen.
