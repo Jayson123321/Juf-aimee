@@ -79,12 +79,19 @@ Daarom is het belangrijk dat de AI uitlegbaar en mensgericht is.
 
 
 ## Literatuuronderzoek
+
 ### Hybrid AI
+- Hybrid AI staat voor AI systemen die integreren meerdre verschillende technologieën met elkaar zoals machine-learening, deep-learning en rule based systems. 
+- Hybrid AI met persoonlijke assistentie zou de mogelijkheden enorm kunnen verbeteren door natural language processing with semantic reasoning te mergen. 
+- Hybrid AI zorgt voor diverse moeizaame problemen op te lossen. Daarnaast nauwkeuriger en efficiënter resultaten te voorspellen. 
 
 ### Generatieve AI in onderwijs
+-Generatieve AI wordt gebruikt als een helpmiddle voor docenten om hun leerprocess te verbeteren. Als voorbeeld, betrokkenheid te verhogen, waardoor opdrachten op maat kunnen worden gemaakt voor elke student in verschillende vakgebieden.
+-Generatieve AI helpt ook docenten met duidelijke inzichten over de studenten, zodat ze precies de niveau en de vooruitgang van de studenten kunnen weten. Daardoor word beslissing nemen makkelijker en meer accuraat.
+-Generatieve AI geeft gedetailleerd en gepersonaliseerd feedback zowel aan studenten als docenten, dit biedt uitgebreid ondersteuning vooral voor de studenten met bijzondere behoeften.
 
 ### Hoogbegaafd onderwijs
-
+-Hoogbegaafd onderwijs is bedoeld voor de leerlingen die anders, sneller en op een hoger abstractieniveau leren dan andere leerlingen. Er zijn hoogbegaafde leerlingen die op school niet of nauwelijks problemen ondervinden. Soms is regulier onderwijs voor hoogbegaafde leerlingen niet passend en dat kan leiden tot problemen, bijvoorbeeld op het gebied van motivatie, gedrag of leerprestaties. Deze leerlingen zullen het onderwijsproces vaak anders doorlopen dan leeftijdsgenoten, wat extra ondersteuning dan nodig heeft.
 
 ## 8. Sprint 1 resultaten
 In deze sprint hebben we:
