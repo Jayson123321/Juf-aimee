@@ -81,10 +81,26 @@ Daarom is het belangrijk dat de AI uitlegbaar en mensgericht is.
 ## Literatuuronderzoek
 
 ### Hybrid AI
-- Hybrid AI staat voor AI systemen die integreren meerdre verschillende technologieën met elkaar zoals machine-learening, deep-learning en rule based systems. 
-- Hybrid AI met persoonlijke assistentie zou de mogelijkheden enorm kunnen verbeteren door natural language processing with semantic reasoning te mergen. 
-- Hybrid AI zorgt voor diverse moeizaame problemen op te lossen. Daarnaast nauwkeuriger en efficiënter resultaten te voorspellen. 
+Hybrid AI verwijst naar AI-systemen die meerdere vormen van kunstmatige intelligentie combineren, zoals machine learning, deep learning en rule-based systemen. Door deze technieken te combineren kan een systeem zowel leren uit data als logisch redeneren, waardoor complexere problemen kunnen worden opgelost dan wanneer slechts één AI-techniek wordt gebruikt (Garcez et al., 2019).
 
+Een belangrijk voordeel van Hybrid AI is dat het systemen transparanter en betrouwbaarder kan maken. Machine learning-modellen functioneren vaak als een zogenaamde “black box”, waardoor het moeilijk is om te begrijpen hoe een model tot een bepaalde beslissing komt. Rule-based of symbolische systemen maken het daarentegen mogelijk om duidelijk te zien waarom een bepaalde beslissing wordt genomen. Door deze twee benaderingen te combineren kan een systeem zowel krachtige voorspellingen doen als uitleg geven aan gebruikers (Garcez et al., 2019).
+
+In het onderwijs kan Hybrid AI bijdragen aan systemen waarin mensen en AI samenwerken. Volgens Cukurova (2025) kunnen zogenaamde human–AI hybrid intelligence systems de sterke punten van zowel mensen als AI combineren. AI kan bijvoorbeeld grote hoeveelheden leerdata analyseren en patronen herkennen, terwijl docenten beter zijn in pedagogische beslissingen en het begrijpen van de context van een leerling. Door deze samenwerking kan AI docenten ondersteunen bij het personaliseren van onderwijs en het geven van gerichte feedback aan leerlingen.
+
+Voor projecten zoals Juf Aimee is dit principe relevant, omdat de AI wordt ingezet als ondersteuning voor docenten. De AI kan bijvoorbeeld helpen bij het genereren van opdrachten of het analyseren van leerlinggegevens, terwijl de docent uiteindelijk beslist hoe deze informatie wordt gebruikt in het onderwijs.
+
+#### Bronnen
+
+Garcez, A. d’Avila, Gori, M., Lamb, L., Serafini, L., & Spranger, M. (2019).
+Neural-symbolic computing: An effective methodology for integrating machine learning and reasoning.
+https://arxiv.org/pdf/1905.06088
+
+Cukurova, M. (2025).
+The interplay of learning, analytics and artificial intelligence in education: A vision for hybrid intelligence.
+British Journal of Educational Technology, 56, 469–488.
+https://doi.org/10.1111/bjet.13514
+
+---
 ### Generatieve AI in onderwijs
 -Generatieve AI wordt gebruikt als een helpmiddle voor docenten om hun leerprocess te verbeteren. Als voorbeeld, betrokkenheid te verhogen, waardoor opdrachten op maat kunnen worden gemaakt voor elke student in verschillende vakgebieden.
 -Generatieve AI helpt ook docenten met duidelijke inzichten over de studenten, zodat ze precies de niveau en de vooruitgang van de studenten kunnen weten. Daardoor word beslissing nemen makkelijker en meer accuraat.
@@ -99,6 +115,7 @@ In deze sprint hebben we:
 - het probleem besproken
 - het concept Juf Aimee verkend
 - eerste ideeën bedacht
+- eersteuserstories gemaakt
 - stakeholders in kaart gebracht
 - nagedacht over Responsible AI
 
@@ -106,7 +123,6 @@ In deze sprint hebben we:
 
 ## 9. Volgende sprint
 In Sprint 2 gaan we:
-- user stories maken
 - bepalen wat we als eerste bouwen
 - technische opties onderzoeken
 - een eerste prototype ontwerpen
