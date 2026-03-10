@@ -66,3 +66,5 @@ Binnen onze opleiding is verantwoorde AI de standaard. RAG helpt hierbij op drie
 * **Geen Hallucinaties:** Omdat de AI de feiten uit onze database haalt, is de kans veel kleiner dat hij onzin vertelt over dinosaurussen of verkeerde sommen maakt.
 * **Transparantie:** De leraar kan altijd terugzien welke bronnen de AI heeft gebruikt om een opdracht te genereren. Niets is "toeval".
 
+## 5. Conclusie & Vooruitblik
+Door een krachtig **Hugging Face model** te combineren met een **lokale RAG-database**, bouwen we een systeem dat zowel slim als veilig is. In de volgende fase gaan we deze database vullen en kijken hoe de AI reageert als we Sam's interesses midden in een gesprek veranderen.
