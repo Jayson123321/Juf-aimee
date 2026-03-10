@@ -38,3 +38,15 @@ aan een rekenvraag met grote getallen (tienduizendtallen).
 - De rekenvraag moet een logisch onderdeel zijn van het verhaal.
 - Taal: Nederlands.
 ```
+
+## 4. De "Geheugen-Upgrade": Training via RAG
+Hoewel een model van zichzelf al slim is, weet het niets over Sam als persoon of over de specifieke lesdoelen van de school. In plaats van het model opnieuw te trainen (wat traag en duur is), gebruiken we **RAG (Retrieval-Augmented Generation)**. Dit werkt als een 'open boek' examen voor de AI.
+
+### 4.1 Onze Dummy Database (Input van Docenten)
+In deze fase van het onderzoek werken we met een database die door de docenten van de opleiding ter beschikking wordt gesteld. Deze database bevat dummy data die specifiek is ontworpen om de werking van het systeem te testen zonder de privacy van echte leerlingen te schenden.
+
+Hoewel de exacte structuur en volledige inhoud van deze database op dit moment nog door ons geanalyseerd worden, weten we dat deze de basis zal vormen voor de personalisatie. De database zal naar verwachting informatie bevatten over:
+* **Leerlingkenmerken:** Fictieve profielen met verschillende niveaus en behoeften.
+* **Interessegebieden:** Diverse onderwerpen (zoals dinosaurussen of techniek) om de creativiteit van het model te testen.
+* **Referentiemateriaal:** Voorbeelden van opdrachten die als kwalitatieve standaard dienen.
+
