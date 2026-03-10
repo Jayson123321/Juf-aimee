@@ -50,3 +50,19 @@ Hoewel de exacte structuur en volledige inhoud van deze database op dit moment n
 * **Interessegebieden:** Diverse onderwerpen (zoals dinosaurussen of techniek) om de creativiteit van het model te testen.
 * **Referentiemateriaal:** Voorbeelden van opdrachten die als kwalitatieve standaard dienen.
 
+### 4.2 De RAG-Architectuur: Proces in Ontwikkeling
+Het technisch koppelen van de database aan het AI-model gebeurt via een RAG-architectuur. Het doel is dat de AI-agent niet alleen 'gokt' wat een goede opdracht is, maar zijn antwoord baseert op de specifieke data uit de aangeleverde database in combinatie met een zorgvuldig opgestelde prompt.
+
+Het exacte proces van deze "koppeling" is op dit moment een belangrijk onderdeel van ons lopende onderzoek. We onderzoeken momenteel:
+1. **Data-ophaling:** Hoe de meest relevante informatie uit de dummy database gefilterd wordt zodra een leerling een vraag stelt.
+2. **Prompt-integratie:** Hoe de gevonden data uit de database het beste samengevoegd kan worden met de instructies voor het taalmodel (bijv. Llama of Gemma) om tot een gepersonaliseerde vraag te komen.
+3. **Validatie:** De rest van de workflow — zoals hoe de leraar de output controleert of hoe de feedbacklus werkt — moet op dit moment nog definitief bepaald worden. 
+
+Door deze zaken open te laten, behouden we de flexibiliteit om de meest effectieve en verantwoorde methode te kiezen naarmate we meer inzicht krijgen in de database van de docenten.
+
+### 4.3 Waarom dit "Responsible AI" is
+Binnen onze opleiding is verantwoorde AI de standaard. RAG helpt hierbij op drie manieren:
+* **Privacy:** We kunnen de database lokaal opslaan. De AI krijgt alleen de informatie te zien die strikt nodig is voor de opdracht.
+* **Geen Hallucinaties:** Omdat de AI de feiten uit onze database haalt, is de kans veel kleiner dat hij onzin vertelt over dinosaurussen of verkeerde sommen maakt.
+* **Transparantie:** De leraar kan altijd terugzien welke bronnen de AI heeft gebruikt om een opdracht te genereren. Niets is "toeval".
+
