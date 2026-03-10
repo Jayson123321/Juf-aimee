@@ -30,8 +30,19 @@ Hierbij sturen we een vraag via internet naar een groot model van bijvoorbeeld G
 * **Privacy-risico:** De vragen (en dus ook de interesses van de leerling) worden naar servers van een commercieel bedrijf gestuurd. Voor een project over verantwoorde AI is dit een zwak punt.
 * **Afhankelijkheid:** Als Google de prijs verhoogt of de dienst aanpast, werkt Juf Aimee misschien niet meer.
 
-## 4. Overzicht van de verschillen
+## 4 Optie C: Combinatie van LLM en AI frameworks
 
+In dit geval combineren we een large language model van OpenAI of Google wat het standaardmodel gebruikt en aanvullende context voor de antwoorden, in combinatie met Retrieval-Augmented Generation (RAG) en Structuring Augmented Generation (SAG) kunnen de resultaten verder aansluiten op de leerbehoeften van de leerlingen. Met deze techniek is het mogelijk om passend leermateriaal te ontwikkelen doordat oud materiaal, leerprofielen, leertechnieken en observaties van de leraar wordt ingezet. Deze hybride combinatie zou resultaten kunnen geven die de leraar kunnen helpen bij het ondersteunen en ontwikkelen van nieuw leermateriaal voor de leerlingen.
+
+### 4.1 Voordelen
+**Nauwkeurigheid** Uit een literatuuronderzoek blijkt dat RAG effectief toegepast kan worden als er sprake is van onjuiste informatie zoals verouderd materiaal en beperkte kennis van een gespecialiseerd onderwerp.
+**Structuur** SAG zorgt dat informatie niet alleen uit onderwijsbronnen wordt opgehaald, maar ook gestructureerd wordt verwerkt, waardoor het taalmodel onderwijs passend en overzichtelijk kan genereren en bijvoorbeeld minder kans is dat het gaat hallucineren.
+
+### 4.2 Nadelen
+**Snelheid** In geval van grote datasets die worden aangevuld kan het effect hebben op de performance, omdat AI framworks moeten corresponderen en afstemmen met het AI model. Na een analyse van oude en nieuwe inzichten worden de antwoorden gegenereerd gebaseerd op de prompts.
+
+## 5. Overzicht van de verschillen
+x
 | Wat vinden we belangrijk? | Eigen model (Hugging Face) | Model van bedrijf (Gemini/GPT) |
 | :--- | :--- | :--- |
 | **Veiligheid van data** | Uitstekend (alles blijft bij ons) | Minder (data gaat naar buiten) |
@@ -39,7 +50,7 @@ Hierbij sturen we een vraag via internet naar een groot model van bijvoorbeeld G
 | **Snelheid** | Hangt af van onze computer | Altijd snel |
 | **Controle** | Wij zijn de baas | Het bedrijf is de baas |
 
-## 5. Conclusie
+## 6. Conclusie
 Gezien de focus van de opleiding op **Responsible AI**, kiezen wij ervoor om te focussen op een **lokaal model via Hugging Face**. Hoewel een model van een groot bedrijf misschien iets sneller of slimmer is, weegt dat niet op tegen de veiligheid van de leerlinggegevens. Door het model lokaal te draaien, laten we zien dat we privacy serieus nemen en niet afhankelijk willen zijn van grote tech-bedrijven. Dit is de meest verantwoorde weg voor een onderwijsassistent.
 
 ---
@@ -49,3 +60,5 @@ Gezien de focus van de opleiding op **Responsible AI**, kiezen wij ervoor om te 
 * **Autoriteit Persoonsgegevens (2025).** *Richtlijnen voor AI in de klas en privacy.*
 * **Kennisnet (2025).** *Veilig gebruik van algoritmes in het basisonderwijs.*
 * **Opleiding Responsible AI.** *Projectkaders voor ethiek en databeheer.*
+* **Arxiv.org (2025)** *A Survey on Retrieval And Structuring Augmented Generation with Large Language Models*
+*

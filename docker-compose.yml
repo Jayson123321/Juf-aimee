@@ -1,17 +1,31 @@
-version: "3.9"
-
 services:
-  mkdocs:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: >
-      sh -c "pip install -e /workspace/mdocotion &&
-             mkdocs serve -a 0.0.0.0:8000"
-    working_dir: /workspace
-    volumes:
-      - .:/workspace
-    ports:
-      - "8000:8000"
+  postgres:
+    image: postgres:16
+    container_name: juf-aimee-postgres
+    restart: unless-stopped
     environment:
-      - PYTHONPATH=/workspace
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: juf-aimee
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # mkdocs:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: >
+  #     sh -c "pip install -e /workspace/mdocotion &&
+  #            mkdocs serve -a 0.0.0.0:8000"
+  #   working_dir: /workspace
+  #   volumes:
+  #     - .:/workspace
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - PYTHONPATH=/workspace
+
+volumes:
+  postgres_data:
