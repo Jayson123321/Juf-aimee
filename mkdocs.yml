@@ -5,6 +5,7 @@ copyright: Copyright 2026 Hogeschool van Amsterdam
 
 theme:
     name: material
+    custom_dir: mdocotion/
     features:
         - navigation.sections
         - content.tabs.link

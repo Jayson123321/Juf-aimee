@@ -1,6 +1,17 @@
-version: "3.9"
-
 services:
+  postgres:
+    image: postgres:16
+    container_name: juf-aimee-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: juf-aimee
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   mkdocs:
     build:
       context: .
@@ -15,3 +26,6 @@ services:
       - "8000:8000"
     environment:
       - PYTHONPATH=/workspace
+
+volumes:
+  postgres_data:
