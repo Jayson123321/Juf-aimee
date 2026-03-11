@@ -56,9 +56,13 @@ Gezien de focus van de opleiding op **Responsible AI**, kiezen wij ervoor om te 
 ---
 
 ### Bronnen
-* **Hugging Face (2026).** *Handleiding voor het lokaal draaien van open AI-modellen.*
-* **Autoriteit Persoonsgegevens (2025).** *Richtlijnen voor AI in de klas en privacy.*
-* **Kennisnet (2025).** *Veilig gebruik van algoritmes in het basisonderwijs.*
-* **Opleiding Responsible AI.** *Projectkaders voor ethiek en databeheer.*
-* **Arxiv.org (2025)** *A Survey on Retrieval And Structuring Augmented Generation with Large Language Models*
-*
+* **Hugging Face (2026).** *Handleiding voor het lokaal draaien van open AI-modellen.
+Relevante sectie: Hoofdstuk 2: Hardware Requirements & Quantization.*
+* **Autoriteit Persoonsgegevens (2025).** *Richtlijnen voor AI in de klas en privacy.
+Relevante sectie: Sectie 4.1: Grondslagen voor gegevensverwerking.*
+* **Kennisnet (2025).** *Veilig gebruik van algoritmes in het basisonderwijs.
+Hoofdstuk: Transparantie en Uitlegbaarheid.*
+* **Opleiding Responsible AI.** *Projectkaders voor ethiek en databeheer.
+Relevante sectie: Kader 2: Dataminimalisatie en Autonomie.*
+* **Arxiv.org (2025)** *A Survey on Retrieval And Structuring Augmented Generation with Large Language Models
+Relevante sectie: Sectie 3.3: Hybrid Architectures & Latency.*
