@@ -222,9 +222,6 @@ Based on the results, we have selected the **Qwen 3 235B** architecture as the c
 2. **Linguistic Superiority:** While other models struggled with Dutch/English code-switching (Llama) or simplistic phrasing, Qwen maintained a sophisticated and flawless Dutch vocabulary.
 3. **Fact-to-Logic Ratio:** The model demonstrated an impressive ability to link high-level biological facts (like climate-driven extinction or specific fossil sites like *La Buitrera*) directly to a mathematical challenge.
 
-## The problem
-After trying to implement this model we encountered a big problem. The model is way too big to run on a laptop as multiple very expensive GPU's are needed to run this model. Maybe using free api from huggingface is possible but chances fot
-
 ---
 
 ### 5.3 Responsible AI Justification
@@ -232,6 +229,9 @@ From a "Responsible AI" perspective, the **Thinking (Reasoning)** capabilities o
 
 * **Explainability (XAI):** By using a reasoning-based model, we can audit the "Thought Trace" of Juf Aimee. This allows teachers to understand *why* a specific challenge was generated, ensuring the AI's logic aligns with pedagogical goals.
 * **Accuracy & Safety:** The internal reasoning step acts as a "sanity check," significantly reducing the risk of logical hallucinations (as seen in the DeepSeek test) and ensuring that the output remains safe and age-appropriate.
+
+## The problem
+So the model we chose is huge and would not be able to run on my laptop. Actually make that 10 laptops. So we can send API calls to huggingface who can run it for us, that is great but then data will be sent to huggingface, we will ask permission first to the project leader of digital life if this is a good solution or we will have to run a smaller model.
 
 ## 6. Next Steps: Implementing RAG
 With the model selected, the next phase of the project will focus on **Retrieval-Augmented Generation (RAG)**. We will now research how to securely connect the Qwen 3.5 model to the dummy database provided by the teachers. 
