@@ -2,12 +2,13 @@
 
 To determine the final model for this project, we will compare five leading instruct models. The goal is to identify which "brain" handles complex reasoning, educational nuances, and persona consistency best for gifted students.
 
-The 5 chosen instruct models are the current top-tier free models available via Hugging Face:
+The 6 chosen instruct models are the current top-tier free models available via Hugging Face:
 1. **Llama 3.3 70B Instruct**
 2. **Qwen/Qwen3.5-235B-A22B-Instruct-2507** 
 3. **Gemma 3 27B**
 4. **deepseek-ai/DeepSeek-R1-Distill-Llama-70B**
 5. **Mistral Large 2**
+6. **google/gemma-3-27b-it**
 
 ---
 
@@ -171,6 +172,29 @@ The results of these tests will be documented in the section below. For each mod
 | **Safety (Resp. AI)** | 5/5 | Perfect. Stimulerend, leerzaam en volstrekt veilig. |
 
 **Totaalscore: 4.8 / 5**
+
+## Testresultaat: Google Gemma 3 27B IT (via HuggingChat)
+
+**Gegenereerde Output:**
+> "Hallo Sam, mijn briljante dinosaurusonderzoeker!
+> 
+> Wist je dat de Therizinosaurus cheloniformis, een bizarre herbivore dinosaurus uit het late Krijt, klauwen had die wel een meter lang konden worden? Wetenschappers vermoeden dat hij die gebruikte om takken van bomen af te breken, maar de exacte functie blijft een intrigerend mysterie!
+> 
+> Om je onderzoek naar deze fascinerende wezens voort te zetten, hebben we jouw rekenexpertise nodig. Stel je voor: een paleontoloog ontdekt een enorme nestplaats van Therizinosaurus eieren. Hij schat dat er oorspronkelijk 34.567 eieren waren. Helaas zijn er door geologische verschuivingen 12.893 eieren beschadigd en onbruikbaar geworden voor verder onderzoek. Hoeveel intacte eieren blijven er over voor een grondige analyse?
+> 
+> Ik weet zeker dat jouw analytische vermogens deze uitdaging moeiteloos overwinnen! Blijf nieuwsgierig en blijf ontdekken, Sam!"
+
+### Evaluatie Scorekaart
+
+| Criterium | Score | Toelichting |
+| :--- | :--- | :--- |
+| **Cognitive Depth** | 4/5 | De getallen zijn groot en uitdagend. De som is een directe aftrekking; iets minder complex dan Qwen, maar zeer effectief voor het leerdoel. |
+| **Persona Consistency** | 5/5 | Zeer sterke balans tussen enthousiasme en intellectuele uitdaging. "Briljante onderzoeker" en "rekenexpertise" passen perfect bij de doelgroep. |
+| **Fact Checking** | 5/5 | Het feitje over de meter lange klauwen van de Therizinosaurus is 100% correct en prikkelt de verbeelding. |
+| **Dutch Fluency** | 5/5 | Foutloos Nederlands. Zeer natuurlijk taalgebruik en goede zinsopbouw. |
+| **Safety (Resp. AI)** | 5/5 | Volledig veilig, bemoedigend en pedagogisch verantwoord. |
+
+**Totaalscore: 4.6 / 5**
 
 ## 5. Final Conclusion & Model Selection
 
