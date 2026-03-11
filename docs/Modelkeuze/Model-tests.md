@@ -76,7 +76,7 @@ The results of these tests will be documented in the section below. For each mod
 
 **Totaalscore: 4.0 / 5**
 
-## Testresultaat: Qwen 3.5 235B Instruct 
+## Testresultaat: Qwen/Qwen3-235B-A22B-Instruct-2507 
 
 **Gegenereerde Output:**
 > "Hoi Sam! Wat fantastisch om je weer te zien – ik wist dat jij precies de juiste onderzoeker was voor deze paleontologische puzzel.
@@ -151,7 +151,7 @@ The results of these tests will be documented in the section below. For each mod
 
 **Totaalscore: 3.2 / 5**
 
-## Testresultaat: Qwen 3.5 235B Thinking (Reasoning Model)
+## Testresultaat: Qwen 3 235B Thinking (Reasoning Model)
 
 **Gegenereerde Output:**
 > "Hallo Sam, mijn briljante dinovriend! Wist je dat de fossiele vindplaats La Buitrera in Argentinië maar liefst 34.560 microscopisch kleine huidschubben van de Rebbachisaurus heeft opgeleverd – een getal dat zelfs experts verbaast, omdat deze sauropod normaal gesproken géén geconserveerde huidresten laat achter?
@@ -172,3 +172,40 @@ The results of these tests will be documented in the section below. For each mod
 
 **Totaalscore: 4.8 / 5**
 
+## 5. Final Conclusion & Model Selection
+
+After extensive benchmarking of five leading instruct models, we have a clear overview of how different architectures handle the complex requirements of gifted education.
+
+### 5.1 Comparative Summary
+
+| Model | Avg. Score | Key Strength | Main Weakness |
+| :--- | :--- | :--- | :--- |
+| **Qwen/Qwen3-235B-A22B-Instruct-2507** | **5.0** | Intellectual depth & abstract logic. | None identified in this test. |
+| **Qwen 3 235B Thinking** | **4.8** | Unmatched transparency (XAI). | Slightly more informal intro. |
+| **Gemma 3 27B Instruct** | **4.6** | Emotional safety & fluency. | Less challenging terminology. |
+| **Llama 3.3 70B Instruct** | **4.0** | Reliable factual knowledge. | Language mixing (EN/NL). |
+| **DeepSeek-R1-Llama 70B** | **3.2** | Motivational tone. | Failed logical consistency in math. |
+
+---
+
+### 5.2 The Final Choice: Qwen/Qwen3-235B-A22B-Instruct-2507
+
+Based on the results, we have selected the **Qwen 3 235B** architecture as the core "brain" for Juf Aimee. 
+
+#### Why Qwen/Qwen3-235B-A22B-Instruct-2507?
+1. **Cognitive Challenge:** Qwen was the only model that consistently treated Sam as an intellectual equal ("Expertise", "Scientific researcher"). It avoided "spoiling" the math problems, forcing the student to extract the logic from the narrative.
+2. **Linguistic Superiority:** While other models struggled with Dutch/English code-switching (Llama) or simplistic phrasing, Qwen maintained a sophisticated and flawless Dutch vocabulary.
+3. **Fact-to-Logic Ratio:** The model demonstrated an impressive ability to link high-level biological facts (like climate-driven extinction or specific fossil sites like *La Buitrera*) directly to a mathematical challenge.
+
+---
+
+### 5.3 Responsible AI Justification
+From a "Responsible AI" perspective, the **Thinking (Reasoning)** capabilities of the Qwen series are decisive. 
+
+* **Explainability (XAI):** By using a reasoning-based model, we can audit the "Thought Trace" of Juf Aimee. This allows teachers to understand *why* a specific challenge was generated, ensuring the AI's logic aligns with pedagogical goals.
+* **Accuracy & Safety:** The internal reasoning step acts as a "sanity check," significantly reducing the risk of logical hallucinations (as seen in the DeepSeek test) and ensuring that the output remains safe and age-appropriate.
+
+## 6. Next Steps: Implementing RAG
+With the model selected, the next phase of the project will focus on **Retrieval-Augmented Generation (RAG)**. We will now research how to securely connect the Qwen 3.5 model to the dummy database provided by the teachers. 
+
+Our goal is to ensure that Juf Aimee’s personalized responses are not just based on "world knowledge," but are strictly grounded in the verified student profiles and educational materials from our own database.
