@@ -222,6 +222,9 @@ Based on the results, we have selected the **Qwen 3 235B** architecture as the c
 2. **Linguistic Superiority:** While other models struggled with Dutch/English code-switching (Llama) or simplistic phrasing, Qwen maintained a sophisticated and flawless Dutch vocabulary.
 3. **Fact-to-Logic Ratio:** The model demonstrated an impressive ability to link high-level biological facts (like climate-driven extinction or specific fossil sites like *La Buitrera*) directly to a mathematical challenge.
 
+## The problem
+After trying to implement this model we encountered a big problem. The model is way too big to run on a laptop as multiple very expensive GPU's are needed to run this model. Maybe using free api from huggingface is possible but chances fot
+
 ---
 
 ### 5.3 Responsible AI Justification
