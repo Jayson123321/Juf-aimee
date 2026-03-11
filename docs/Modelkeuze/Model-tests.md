@@ -173,7 +173,7 @@ The results of these tests will be documented in the section below. For each mod
 
 **Totaalscore: 4.8 / 5**
 
-## Testresultaat: Google Gemma 3 27B IT (via HuggingChat)
+## Testresultaat: Google Gemma 3 27B IT
 
 **Gegenereerde Output:**
 > "Hallo Sam, mijn briljante dinosaurusonderzoeker!
@@ -209,6 +209,7 @@ After extensive benchmarking of five leading instruct models, we have a clear ov
 | **Gemma 3 27B Instruct** | **4.6** | Emotional safety & fluency. | Less challenging terminology. |
 | **Llama 3.3 70B Instruct** | **4.0** | Reliable factual knowledge. | Language mixing (EN/NL). |
 | **DeepSeek-R1-Llama 70B** | **3.2** | Motivational tone. | Failed logical consistency in math. |
+| **Google Gemma 3 27B IT** | **4.6** | Very good model almost excels in everything. | A little les complex questions. |
 
 ---
 
