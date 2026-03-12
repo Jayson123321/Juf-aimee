@@ -122,3 +122,11 @@ Het profiel bevat onder andere:
 - opdrachtgeschiedenis  
 
 ---
+
+## Bronnen
+
+[1] - https://wij-leren.nl/taxonomie-van-bloom.php   
+[2] - https://link.springer.com/chapter/10.1007/978-3-030-50506-6_8
+
+
+
