@@ -73,6 +73,7 @@ Belangrijke risico’s:
 - AI kan verkeerde opdrachten maken
 - bias in aanbevelingen
 - leraar moet begrijpen waarom AI iets doet
+- zonder menselijke sturing kan AI onverantwoord handelen
 - mensen mogen niet te afhankelijk worden van AI
 
 Daarom is het belangrijk dat de AI uitlegbaar en mensgericht is.
@@ -93,6 +94,7 @@ Voor projecten zoals Juf Aimee is dit principe relevant, omdat de AI wordt ingez
 - Hybrid AI combineert verschillende AI-technieken zoals machine learning en symbolische systemen.
 - Het combineren van deze technieken maakt AI-systemen beter uitlegbaar en betrouwbaarder.
 - Hybrid intelligence benadrukt samenwerking tussen mens en AI.
+- De mens kan contextueel sterker redeneren en ethisch verantwoord handelen
 - In onderwijs kan AI docenten ondersteunen bij analyse van data, personalisatie en feedback.
 #### Bronnen
 
@@ -104,6 +106,8 @@ Cukurova, M. (2025).
 The interplay of learning, analytics and artificial intelligence in education: A vision for hybrid intelligence.
 British Journal of Educational Technology, 56, 469–488.
 https://doi.org/10.1111/bjet.13514
+
+
 
 ---
 ### Generatieve AI in onderwijs
