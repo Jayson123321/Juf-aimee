@@ -21,7 +21,7 @@ De eindbeslissing moet altijd bij de mens blijven. AI ondersteunt, maar de leraa
 ## Taakverdeling tussen AI en leraar
 
 ### Taken geschikt voor AI
-- analyseren van leerdata  
+- analyseren van bestaande leerdata  
 - signaleren van leerachterstanden  
 - genereren van eerste feedback  
 - doen van aanbevelingen voor diversiteit  
@@ -51,7 +51,7 @@ Hierdoor blijft de controle bij de leraar en functioneert AI als ondersteunend h
 
 De inzet van hybride AI kan zorgen voor:
 - snellere analyse van leerlinggegevens  
-- ondersteuning bij differentiatie  
+- ondersteuning bij diverse omstandigheden 
 - tijdswinst bij herhalende taken  
 - betere onderbouwing van beslissingen  
 
