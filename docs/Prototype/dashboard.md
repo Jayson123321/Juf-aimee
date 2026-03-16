@@ -1,6 +1,4 @@
-
-
-## 1.  Juf Aimee Dashboard
+## 1. Dashboard 
 
 Juf Aimee is een AI-ondersteunend assistent voor het begeleiden van hoogbegaafde leerlingen in het basisonderwijs. Het systeem helpt leraren bij het ontwikkelen van gepersonaliseerde opdrachten op basis van leerlingprofielen en Bloom’s Taxonomie. De docent heeft op het dashboard uitgebreid overzicht in de voorgang van de leerlingen en hun interesses.
 
@@ -35,7 +33,7 @@ Belangrijke ontwerpprincipes:
 
 ## 3. Feedback verwerkt in prototype
 
-Tijdens de vorige meeting met de opdrachtgever zijn meerdere verbeterpunten besproken voor het prototype van Juf Aimee. Deze feedback is verwerkt in de huidige versie van het systeem.
+Tijdens de vorige meeting met de opdrachtgever zijn meerdere verbeterpunten besproken voor het prototype van Juf Aimee. Deze feedback is verwerkt in de huidige versie.
 
 ### Dashboard met leerlinginzichten
 
@@ -46,6 +44,7 @@ Het dashboard toont onder andere:
 - de voortgang van de leerling
 - interesses en leergebieden
 - het huidige Bloom-niveau
+- gemiddeld toetscijfers van de leerling
 
 Deze informatie ondersteunt leraren bij het maken van gerichte onderwijskeuzes.
 
@@ -86,6 +85,7 @@ Aanbevelingen binnen het systeem worden ondersteund door statistische inzichten 
 - voortgang op eerdere opdrachten  
 - prestaties binnen verschillende Bloom-niveaus  
 - ontwikkeling van de leerling over tijd  
+- toetsen/cijfers van de leerlingen
 
 Deze aanpak zorgt voor transparante en onderbouwde aanbevelingen die leraren kunnen gebruiken bij het begeleiden van leerlingen.
 
@@ -100,8 +100,8 @@ Het dashboard biedt een centraal overzicht van alle leerlingen en hun leerontwik
 Functionaliteiten:
 
 - overzicht van leerlingen  
-- inzien bibliotheek lesmaterialen
-- Bloom-niveau per leerling  
+- inzage bibliotheek lesmaterialen
+- bloom-niveau per leerling  
 - voortgangsindicatoren  
 - navigatie naar leerlingprofielen  
 - toegang tot AI-opdrachtgenerator  
@@ -109,9 +109,19 @@ Functionaliteiten:
 
 ## 4.2 Leerlingprofielen
 
-Elke leerling beschikt over een fictief profiel met relevante leerinformatie.
+De opdrachtgever heeft 6 fictieve leerlingprofielen opgesteld:
 
-Het profiel bevat onder andere:
+| Leerling | Groep | TIQ (Total intelligence Quotient) | Kenmerken |
+|---|---|---|---|
+| Julia van Loon | 6 | 142 | Verbaal sterk, perfectionistisch, faalangst |
+| Milan de Groot | 6 | 145 | Logisch/analytisch, techniek, dominant in samenwerking |
+| Sophie Meijer | 5 | 138 | Taalsterk, gevoelig, onzeker |
+| Daan Verbeek | 6 | 139 | Analytisch, bouwen/natuur, frustratiegevoelig |
+| Emma Koster | 4 | 137 | Creatief, taalsterk, dromerig bij makkelijke stof |
+| Noah Smit | 6 | 141 | Wetenschappelijk nieuwsgierig, houdt van experimenten |
+---
+
+En op basis van deze fictieve profielen worden de volgende eigenschappen verwerkt in het prototype voor het samenstellen van een aanbevolen opdracht voor de leraar:
 
 - persoonlijke informatie  
 - interesses  
