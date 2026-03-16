@@ -1,7 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/app/lib/db";
-
-
+import bcrypt from "bcryptjs";
 
 
 async function createUser(formData: FormData) {
@@ -9,15 +8,19 @@ async function createUser(formData: FormData) {
 
   const name = formData.get("name")?.toString().trim();
   const email = formData.get("email")?.toString().trim();
+  const password = formData.get("password")?.toString();
 
-  if (!name || !email) {
-    throw new Error("Name and email are required.");
+  if (!name || !email || !password) {
+    throw new Error("Name, email, and password are required.");
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   await prisma.user.create({
     data: {
       name,
       email,
+      password: hashedPassword,
     },
   });
 
@@ -65,6 +68,20 @@ export default async function Home() {
               required
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-500"
               placeholder="Enter email"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="mb-1 block text-sm font-medium">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 outline-none focus:border-zinc-500"
+              placeholder="Enter password"
             />
           </div>
 
