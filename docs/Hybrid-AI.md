@@ -43,7 +43,7 @@ Binnen een hybride AI-systeem verloopt de samenwerking in drie stappen:
    Het systeem verwerkt deze gegevens en geeft inzichten of aanbevelingen.
 
 3. **Besluitvorming door de leraar**  
-   De leraar beoordeelt de uitkomsten en beslist wat ermee gebeurt.
+   De leraar beoordeelt de context en uitkomsten en beslist wat ermee gebeurt.
 
 Hierdoor blijft de controle bij de leraar en functioneert AI als ondersteunend hulpmiddel.
 
@@ -70,4 +70,4 @@ Hybride AI kan de leraar effectief ondersteunen, zolang de samenwerking goed is 
 ## Bronnen
 
 [1] - https://www.emerald.com/ijcs/article/3/2/198/126031
-
+[2] - https://dialoguesreview.com/index.php/2/article/view/1513
