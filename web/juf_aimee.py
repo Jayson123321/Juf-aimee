@@ -33,7 +33,7 @@ def vraag_juf_aimee(leerling_data, gebruikers_vraag):
         {"role": "user", "content": volledige_prompt}
     ]
 
-    print(f"\n[Systeem] Juf Aimee raadpleegt het zwaarste model: {MODEL_ID}...")
+    print(f"\n[Systeem] Juf Aimee raadpleegt model: {MODEL_ID}...")
     
     try:
         response = client.chat_completion(
@@ -45,21 +45,59 @@ def vraag_juf_aimee(leerling_data, gebruikers_vraag):
     except Exception as e:
         return f"De 235B reus is momenteel niet bereikbaar via de gratis API.\nTip: Gebruik Qwen/Qwen2.5-72B-Instruct als fallback.\n\nFout: {str(e)}"
 
-# --- DE THERIZINOSAURUS UITDAGING ---
+# --- FICTIEVE LEERLING: JULIA VAN LOON (OPP VOORBEELD) ---
 dummy_database_info = """
-Naam: Sam
-Leeftijd: 8 jaar
-Interesses: Paleontologie (Therizinosaurus), complexe systemen, anatomie.
-Rekenniveau: Groep 8+ (beheerst grote getallen en verhoudingen).
+Naam: Julia van Loon
+Geboortedatum: 17-02-2015
+Leeftijd: 10 jaar
+Geslacht: Vrouw
+School: Spinaker
+Huidig schooljaar en groep: 2024-2025, groep 6
+Leerkracht: Juf Marit
+
+Cognitief profiel (WISC-V, 11-03-2024):
+  TIQ: 142 | Verbaal Begrip: 148 | Visueel Ruimtelijk: 129
+  Fluïde Redeneren: 136 | Werkgeheugen: 122 | Verwerkingssnelheid: 103
+
+Didactisch niveau (per juni 2025):
+  Rekenen: I+ / DLE 62 (groep 8+)
+  Begrijpend lezen: I+ / DLE 60 (groep 8+)
+  Technisch lezen: I+ / DLE 64 (groep 8+) / AVI Plus
+  Spelling: I / DLE 53
+
+Sterke punten:
+  - Uitzonderlijk verbaal redeneervermogen en rijke woordenschat
+  - Legt snel verbanden in complexe leerstof
+  - Sterk in tekstanalyse en onderbouwde argumentatie
+  - Werkt langdurig geconcentreerd bij uitdagende opdrachten
+  - Empathisch, reflectief en geeft genuanceerd antwoord
+
+Aandachtspunten:
+  - Perfectionisme en faalangst: blokkeert wanneer iets niet direct perfect lukt
+  - Opstarten en plannen van taken kost moeite bij lage motivatie
+  - Vermijdingsgedrag bij herhaling en automatisering
+  - Werktempo in schriftelijke verwerking lager dan denkniveau
+  - Sociale flexibiliteit en samenwerken vragen aandacht
+
+Onderwijsbehoefte:
+  - Compact aanbod met verrijking, verdieping en open opdrachten
+  - Onderzoekend leren met autonomie binnen kaders
+  - Expliciete begeleiding bij executieve functies (plannen, starten, afronden)
+  - Prikkelreductie, visuele planning en korte evaluatiemomenten
+  - Normaliseren van fouten maken
+
+Uitstroomverwachting: VWO / Gymnasium
+Huidige begeleiding: Praktijk Denkruimte (hoogbegaafdheid)
+Diagnose: Geen classificatie (DSM-V)
 """
 
-vraag_van_sam = "Bedenk een complexe rekensom over de anatomie en de klauwen van de Therizinosaurus."
+vraag_van_julia = "Ik snap niet hoe het kan dat licht tegelijk een golf en een deeltje is. Dat lijkt toch een tegenstrijdigheid?"
 
-# Uitvoeren
-resultaat = vraag_juf_aimee(dummy_database_info, vraag_van_sam)
+
+resultaat = vraag_juf_aimee(dummy_database_info, vraag_van_julia)
 
 print("\n" + "="*60)
-print("ANTWOORD VAN JUF AIMEE (235B):")
+print("ANTWOORD VAN JUF AIMEE AAN JULIA (235B):")
 print("="*60)
 print(resultaat)
 print("="*60)
