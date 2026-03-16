@@ -48,7 +48,9 @@ aangeleverd als basis voor de RAG-oplossing:
 ## Sprint 2 doelen
 
 **Hoofddoel: RAG-oplossing**
-- Profielen opslaan in een database
+- Relevante leerlinggegevens opslaan in de 
+  database (dataminimalisatie: alleen wat nodig is voor 
+  het genereren van een opdracht)
 - Zoekmechanisme bouwen dat het juiste profiel ophaalt
 - Opdracht-generator koppelen aan de database
 
@@ -57,6 +59,12 @@ aangeleverd als basis voor de RAG-oplossing:
   feedback verwerken
 - Authenticatie koppelen aan het dashboard
 
+**Responsible AI**
+- Eerste verkenning pseudonimisering: persoonsgegevens 
+  zoals naam en adres worden niet opgeslagen, alleen 
+  de informatie die nodig is voor het genereren van 
+  een passende opdracht (AVG - dataminimalisatie)
+  
 ## Bijdrage van Ruben
 
 In deze sprint heb ik mij vooral gericht op het onderzoeken en opzetten van de technische basis voor Juf Aimee.
