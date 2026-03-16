@@ -7,17 +7,29 @@
 ## 1. Inleiding
 Voor Juf Aimee moeten we een keuze maken: gebruiken we een kant-en-klaar model van een groot bedrijf zoals Google, of bouwen we iets met een open-source model dat we zelf kunnen beheren? Omdat dit project valt onder **Responsible AI**, is het niet alleen belangrijk dat de opdrachten goed zijn, maar ook dat we heel voorzichtig omgaan met de gegevens van leerlingen.
 
-## 2. Optie A: Een lokaal model via Hugging Face
-Hugging Face is een soort bibliotheek waar je gratis AI-modellen (zoals Llama of Gemma) kunt downloaden en op je eigen computer of een eigen server kunt draaien.
+## 2. Optie A: Een model via de Hugging Face API
+In deze aanpak gebruiken we een model dat via de Hugging Face Inference API wordt aangeroepen. De prompt wordt dus via internet verstuurd naar Hugging Face, waarna we direct een antwoord terugkrijgen.
 
 ### 2.1 Voordelen
-* **Privacy en Veiligheid:** Dit is het grootste pluspunt. Omdat het model lokaal draait, verlaten de gegevens van de leerling nooit onze eigen omgeving. Er gaat niets naar Google of OpenAI. Dit sluit perfect aan bij de eisen van Responsible AI.
-* **Eigenaarschap:** Wij zijn de baas over het model. Niemand kan zomaar de regels aanpassen of de toegang blokkeren.
-* **Geen verborgen kosten:** Je hoeft niet per vraag te betalen, wat fijn is als leerlingen veel verschillende opdrachten willen uitproberen.
+* **Snelle implementatie:** We kunnen direct werken met sterke modellen zonder zelf zware hardware te beheren.
+* **Schaalbaarheid:** De infrastructuur van Hugging Face vangt pieken in gebruik beter op dan een lokale laptop-opstelling.
+* **Flexibiliteit in modelkeuze:** We kunnen sneller wisselen tussen modellen tijdens testen en iteraties.
+* **Regie op inrichting:** We houden veel controle over modelkeuze, prompting en veiligheidsregels in onze eigen applicatie.
+* **Transparante ontwikkelstap:** De API-route is praktisch voor een proof-of-concept dat snel demo-baar moet zijn.
 
 ### 2.2 Nadelen
-* **Kracht van de computer:** Om een goed model soepel te laten draaien, heb je een sterke computer nodig. Op een simpele laptop kan het erg traag werken.
-* **Zelf instellen:** Je moet meer zelf programmeren om het model goed te laten reageren op de interesses van de leerlingen.
+* **Privacy-risico zonder maatregelen:** Omdat data naar een externe API gaat, mogen we geen direct herleidbare persoonsgegevens meesturen.
+* **Afhankelijkheid van externe dienst:** Als beschikbaarheid, limieten of prijzen veranderen, heeft dat direct impact op Juf Aimee.
+
+### 2.3 Privacymaatregel: Pseudonimisering
+Omdat de prompt naar Hugging Face wordt verstuurd, voegen we een verplichte pseudonimiseringsstap toe voordat de API-call wordt gedaan.
+
+Concreet betekent dit:
+* Namen, adressen, telefoonnummers en e-mails worden vervangen door neutrale labels (bijv. "Leerling-4108").
+* Gevoelige context blijft functioneel bruikbaar voor personalisatie, maar is niet direct herleidbaar tot een kind.
+* De koppeling tussen pseudoniem en echte identiteit blijft alleen lokaal in een beveiligde omgeving.
+
+Zo combineren we de praktische voordelen van de API met een privacy-aanpak die past bij Responsible AI en AVG-principes.
 
 ## 3. Optie B: Praten met een model via een API (bijv. claude)
 Hierbij sturen we een vraag via internet naar een groot model van bijvoorbeeld Google en krijgen we direct een antwoord terug.
@@ -42,16 +54,16 @@ In dit geval combineren we een large language model van OpenAI of Google wat het
 **Snelheid** In geval van grote datasets die worden aangevuld kan het effect hebben op de performance, omdat AI framworks moeten corresponderen en afstemmen met het AI model. Na een analyse van oude en nieuwe inzichten worden de antwoorden gegenereerd gebaseerd op de prompts.
 
 ## 5. Overzicht van de verschillen
-x
-| Wat vinden we belangrijk? | Eigen model (Hugging Face) | Model van bedrijf (Gemini/GPT) |
+
+| Wat vinden we belangrijk? | Open model via Hugging Face API | Model van bedrijf (Gemini/GPT) |
 | :--- | :--- | :--- |
-| **Veiligheid van data** | Uitstekend (alles blijft bij ons) | Minder (data gaat naar buiten) |
+| **Veiligheid van data** | Goed (met pseudonimisering voor API-verkeer) | Minder (data gaat naar buiten) |
 | **Slimme opdrachten** | Goed (als we het goed instellen) | Zeer goed |
-| **Snelheid** | Hangt af van onze computer | Altijd snel |
-| **Controle** | Wij zijn de baas | Het bedrijf is de baas |
+| **Snelheid** | Meestal snel (afhankelijk van API-latency en limieten) | Meestal snel |
+| **Controle** | Veel regie op prompt en modelkeuze, maar platformafhankelijk | Minder regie, sterker vendor-afhankelijk |
 
 ## 6. Conclusie
-Gezien de focus van de opleiding op **Responsible AI**, kiezen wij ervoor om te focussen op een **lokaal model via Hugging Face**. Hoewel een model van een groot bedrijf misschien iets sneller of slimmer is, weegt dat niet op tegen de veiligheid van de leerlinggegevens. Door het model lokaal te draaien, laten we zien dat we privacy serieus nemen en niet afhankelijk willen zijn van grote tech-bedrijven. Dit is de meest verantwoorde weg voor een onderwijsassistent.
+Gezien de focus van de opleiding op **Responsible AI**, kiezen wij in deze fase voor een **model via de Hugging Face API**, gecombineerd met **pseudonimisering** als vaste privacymaatregel. Daarmee blijft het project technisch snel uitvoerbaar, terwijl we persoonsgegevens van leerlingen beschermen voordat data het systeem verlaat. Deze aanpak is voor nu de meest haalbare en verantwoorde route voor een werkend prototype van een onderwijsassistent.
 
 ---
 
