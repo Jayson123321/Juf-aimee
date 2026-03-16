@@ -10,7 +10,7 @@
 
 ---
 
-## Sprintdoel
+## Sprint 1 doel
 - Inzicht krijgen in het project en de doelgroep (hoogbegaafde leerlingen)
 
 - verkennen van de mogelijkheden van een AI-onderwijsassistent
