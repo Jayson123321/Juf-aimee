@@ -4,7 +4,58 @@
 **Sprint periode:** Sprint 1  
 **Datum review:** 17 maart 2026  
 
+- Ritual master: Ruben 
+- Issue master: Shehbhaaz
+- Communication master: Mazen & Jayson 
+
 ---
+
+## Sprintdoel
+- Inzicht krijgen in het project en de doelgroep (hoogbegaafde leerlingen)
+
+- verkennen van de mogelijkheden van een AI-onderwijsassistent
+
+- het onderzoeken en vergelijken van geschikte AI-modellen
+
+- het opzetten van een eerste werkend prototype
+
+## Resultaten
+- Onderzoek uitgevoerd naar Hybrid AI, Generative AI en de doelgroep hoogbegaafde leerlingen
+
+- Verkenning en vergelijking van verschillende LLM-modellen
+
+- Eerste Figma-prototypes voor de interface van de applicatie ontwikkeld
+
+- Technische basis opgezet met het Next.js framework
+
+- Login en registratiepagina voor de leraar ontwikkeld
+
+## De 6 leerlingprofielen
+
+De opdrachtgever heeft 6 fictieve leerlingprofielen
+aangeleverd als basis voor de RAG-oplossing:
+
+| Leerling | Groep | TIQ (Total intelligence Quotient) | Kenmerken |
+|---|---|---|---|
+| Julia van Loon | 6 | 142 | Verbaal sterk, perfectionistisch, faalangst |
+| Milan de Groot | 6 | 145 | Logisch/analytisch, techniek, dominant in samenwerking |
+| Sophie Meijer | 5 | 138 | Taalsterk, gevoelig, onzeker |
+| Daan Verbeek | 6 | 139 | Analytisch, bouwen/natuur, frustratiegevoelig |
+| Emma Koster | 4 | 137 | Creatief, taalsterk, dromerig bij makkelijke stof |
+| Noah Smit | 6 | 141 | Wetenschappelijk nieuwsgierig, houdt van experimenten |
+---
+
+## Sprint 2 doelen
+
+**Hoofddoel: RAG-oplossing**
+- Profielen opslaan in een database
+- Zoekmechanisme bouwen dat het juiste profiel ophaalt
+- Opdracht-generator koppelen aan de database
+
+**Overige doelen**
+- Figma-ontwerpen voorleggen aan de opdrachtgever en 
+  feedback verwerken
+- Authenticatie koppelen aan het dashboard
 
 ## Bijdrage van Ruben
 
@@ -58,5 +109,4 @@ Volgende sprint wil ik mij richten op:
 
 - het integreren van een RAG-structuur met een database voor leerlingprofielen
 - het onderzoeken hoe pseudonimisering van leerlingdata automatisch kan worden toegepast voordat data naar de API wordt gestuurd
-
 
