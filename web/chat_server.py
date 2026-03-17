@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from flask import Flask, request, jsonify, render_template_string
 from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
@@ -68,6 +69,28 @@ Uitstroomverwachting: VWO / Gymnasium
 Diagnose: Geen classificatie (DSM-V)
 """
 }
+
+LEERLING_PSEUDONIEM = "Leerling-4108"
+
+
+def pseudonimiseer_tekst(tekst):
+  if not tekst:
+    return tekst
+
+  geschoond = tekst
+
+  # Vaste vervanging voor bekende leerlingnaam in dit profiel.
+  echte_naam = LEERLING_PROFIEL.get("naam")
+  if echte_naam:
+    geschoond = geschoond.replace(echte_naam, LEERLING_PSEUDONIEM)
+
+  # Algemene patronen voor direct herleidbare persoonsgegevens.
+  geschoond = re.sub(r"\b\d{2}-\d{2}-\d{4}\b", "[DATUM]", geschoond)
+  geschoond = re.sub(r"\b\d{4}\s?[A-Z]{2}\b", "[POSTCODE]", geschoond, flags=re.IGNORECASE)
+  geschoond = re.sub(r"(?:\+31|0)\d[\d\-\s]{7,}\b", "[TELEFOON]", geschoond)
+  geschoond = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[EMAIL]", geschoond)
+
+  return geschoond
 
 SYSTEM_INSTRUCTION = (
     "Je bent Juf Aimee, een gespecialiseerde AI-onderwijsassistent voor hoogbegaafde kinderen (8-12 jaar). "
@@ -473,37 +496,40 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json(force=True)
-    gebruikers_vraag = (data.get("vraag") or "").strip()
-    if not gebruikers_vraag:
-        return jsonify({"antwoord": "Ik heb geen vraag ontvangen."}), 400
+  data = request.get_json(force=True)
+  gebruikers_vraag = (data.get("vraag") or "").strip()
+  if not gebruikers_vraag:
+    return jsonify({"antwoord": "Ik heb geen vraag ontvangen."}), 400
 
-    volledige_prompt = (
-        f"GEGEVENS LEERLING UIT DATABASE:\n{LEERLING_PROFIEL['raw']}\n\n"
-        f"VRAAG VAN DE LEERLING:\n{gebruikers_vraag}"
-    )
-    messages = [
-        {"role": "system", "content": SYSTEM_INSTRUCTION},
-        {"role": "user",   "content": volledige_prompt},
-    ]
+  veilige_profielcontext = pseudonimiseer_tekst(LEERLING_PROFIEL["raw"])
+  veilige_gebruikers_vraag = pseudonimiseer_tekst(gebruikers_vraag)
 
+  volledige_prompt = (
+    f"GEGEVENS LEERLING UIT DATABASE (GEPSEUDONIMISEERD):\n{veilige_profielcontext}\n\n"
+    f"VRAAG VAN DE LEERLING:\n{veilige_gebruikers_vraag}"
+  )
+  messages = [
+    {"role": "system", "content": SYSTEM_INSTRUCTION},
+    {"role": "user", "content": volledige_prompt},
+  ]
+
+  try:
+    response = client.chat_completion(messages, max_tokens=800, temperature=0.7)
+    antwoord = response.choices[0].message.content
+  except Exception as primary_error:
+    print(f"[WAARSCHUWING] Hoofdmodel ({MODEL_ID}) niet bereikbaar: {primary_error}")
+    print(f"[INFO] Schakel over naar fallback: {FALLBACK_MODEL_ID}")
     try:
-        response = client.chat_completion(messages, max_tokens=800, temperature=0.7)
-        antwoord = response.choices[0].message.content
-    except Exception as primary_error:
-        print(f"[WAARSCHUWING] Hoofdmodel ({MODEL_ID}) niet bereikbaar: {primary_error}")
-        print(f"[INFO] Schakel over naar fallback: {FALLBACK_MODEL_ID}")
-        try:
-            response = fallback_client.chat_completion(messages, max_tokens=800, temperature=0.7)
-            antwoord = response.choices[0].message.content
-        except Exception as fallback_error:
-            antwoord = (
-                f"Beide modellen zijn momenteel niet bereikbaar.\n"
-                f"Hoofd ({MODEL_ID}): {primary_error}\n"
-                f"Fallback ({FALLBACK_MODEL_ID}): {fallback_error}"
-            )
+      response = fallback_client.chat_completion(messages, max_tokens=800, temperature=0.7)
+      antwoord = response.choices[0].message.content
+    except Exception as fallback_error:
+      antwoord = (
+        f"Beide modellen zijn momenteel niet bereikbaar.\n"
+        f"Hoofd ({MODEL_ID}): {primary_error}\n"
+        f"Fallback ({FALLBACK_MODEL_ID}): {fallback_error}"
+      )
 
-    return jsonify({"antwoord": antwoord})
+  return jsonify({"antwoord": antwoord})
 
 
 if __name__ == "__main__":
