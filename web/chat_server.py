@@ -13,7 +13,9 @@ if not token:
     exit()
 
 MODEL_ID = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+FALLBACK_MODEL_ID = "Qwen/Qwen2.5-72B-Instruct"
 client = InferenceClient(model=MODEL_ID, api_key=token)
+fallback_client = InferenceClient(model=FALLBACK_MODEL_ID, api_key=token)
 
 LEERLING_PROFIEL = {
     "naam": "Julia van Loon",
@@ -488,11 +490,18 @@ def chat():
     try:
         response = client.chat_completion(messages, max_tokens=800, temperature=0.7)
         antwoord = response.choices[0].message.content
-    except Exception as e:
-        antwoord = (
-            f"De 235B reus is momenteel niet bereikbaar via de gratis API.\n"
-            f"Tip: Gebruik Qwen/Qwen2.5-72B-Instruct als fallback.\n\nFout: {str(e)}"
-        )
+    except Exception as primary_error:
+        print(f"[WAARSCHUWING] Hoofdmodel ({MODEL_ID}) niet bereikbaar: {primary_error}")
+        print(f"[INFO] Schakel over naar fallback: {FALLBACK_MODEL_ID}")
+        try:
+            response = fallback_client.chat_completion(messages, max_tokens=800, temperature=0.7)
+            antwoord = response.choices[0].message.content
+        except Exception as fallback_error:
+            antwoord = (
+                f"Beide modellen zijn momenteel niet bereikbaar.\n"
+                f"Hoofd ({MODEL_ID}): {primary_error}\n"
+                f"Fallback ({FALLBACK_MODEL_ID}): {fallback_error}"
+            )
 
     return jsonify({"antwoord": antwoord})
 
