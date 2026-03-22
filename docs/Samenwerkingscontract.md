@@ -64,7 +64,7 @@
 
 ### Sprint 1
 - Ritual master – Ruben
-- Issue master – Shehbhaaz
+- Issue master – Shehbaaz
 - Communication master – Mazen & Jayson  
 
 ### Sprintdoel
@@ -73,11 +73,12 @@ Probleemverkenning en literatuuronderzoek rondom Hybrid AI en hoogbegaafd onderw
 ---
 
 ### Sprint 2
-- Ritual master –  
-- Issue master –  
-- Communication master –  
+- Ritual master – Ritual master  
+- Issue master –  Jayson
+- Communication master - Shehbaaz 
 
 ### Sprintdoel
+Het realiseren van het eindproduct op basis van ontvangen feedback zodat in deze sprint in elk geval een deel al klaar is voor review. Daarnaast is het de bedoeling dat wij gericht onderzoek doen naar literatuur en advies geven in begaafd onderwijs. En op basis van de verzamelde informatie user stories schrijven die relevant zijn voor het ontwerp en implementatie.
 
 ---
 
