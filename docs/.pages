@@ -4,7 +4,7 @@ nav:
   - Algemeen:
       - Hybrid AI: Hybrid-AI.md
       - Samenwerkingscontract: Samenwerkingscontract.md
-  - Modelkeuze: Modelkeuze
-  - Prototype: Prototype
-  - Sprints: sprints
-  - Teamdocumentatie: teamdocumentatie
+  - Modelkeuze: Modelkeuze/
+  - Prototype: Prototype/
+  - Sprints: sprints/
+  - Teamdocumentatie: teamdocumentatie/
