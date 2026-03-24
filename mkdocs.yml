@@ -8,6 +8,7 @@ theme:
     custom_dir: mdocotion/
     features:
         - navigation.sections
+        - navigation.expand
         - content.tabs.link
 
 plugins:
