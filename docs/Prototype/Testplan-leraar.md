@@ -1,4 +1,4 @@
-# 🧪 Testprotocol: Juf Aimee Prototypes
+# Testprotocol: Juf Aimee Prototypes
 
 **Casus:** Julia van Loon (OPP 1)
 **Doel:** Het 'beste van drie werelden' bepalen op basis van design en AI-output.
