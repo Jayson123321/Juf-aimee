@@ -3,6 +3,29 @@ site_description:  HBO-ICT Studio RAAI Personal Projects
 site_author: HBO-ICT Studio RAAI
 copyright: Copyright 2026 Hogeschool van Amsterdam
 
+nav:
+    - Home: index.md
+    - Algemeen:
+        - Hybrid AI: Hybrid-AI.md
+        - Samenwerkingscontract: Samenwerkingscontract.md
+    - Modelkeuze:
+        - Overzicht: Modelkeuze/Modelkeuze.md
+        - Model research: Modelkeuze/Model-research.md
+        - Model tests: Modelkeuze/Model-tests.md
+    - Prototype:
+        - Dashboard: Prototype/dashboard.md
+        - Testplan leraar: Prototype/Testplan-leraar.md
+    - Sprints:
+        - Sprint 0: sprints/sprint_0.md
+        - Sprint 1: sprints/sprint_1.md
+        - Sprint review 1: sprints/sprint-review1.md
+        - Sprint 2: sprints/sprint_2.md
+    - Teamdocumentatie:
+        - Sprint 1:
+            - Sprint 0: teamdocumentatie/sprint 1/sprint_0.md
+            - Sprint 1: teamdocumentatie/sprint 1/sprint_1.md
+            - Sprint review 1: teamdocumentatie/sprint 1/sprint-review1.md
+
 theme:
     name: material
     custom_dir: mdocotion/
