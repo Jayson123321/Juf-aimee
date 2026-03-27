@@ -1,25 +1,51 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url        = env("DATABASE_URL")
+  provider   = "postgresql"
   extensions = [pgvector(map: "vector")]
-
 }
+
 model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+}
+
+model Leerling {
+  id          Int        @id @default(autoincrement())
+  naam        String
+  groep       Int
+  bloomNiveau Int        @default(1)
+  createdAt   DateTime   @default(now())
+
+  oppChunks   OppChunk[]
+  opdrachten  Opdracht[]
+}
+
+model OppChunk {
+  id         Int                        @id @default(autoincrement())
+  leerlingId Int
+  tekst      String
+  embedding  Unsupported("vector(1024)")
+  createdAt  DateTime                   @default(now())
+
+  leerling   Leerling @relation(fields: [leerlingId], references: [id])
+}
+
+model Opdracht {
+  id          Int      @id @default(autoincrement())
+  leerlingId  Int
+  tekst       String
+  bloomNiveau Int
+  bloomNaam   String
+  uitleg      String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  leerling    Leerling @relation(fields: [leerlingId], references: [id])
 }
