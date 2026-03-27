@@ -65,6 +65,8 @@ In dit geval combineren we een large language model van OpenAI of Google wat het
 ## 6. Conclusie
 Gezien de focus van de opleiding op **Responsible AI**, kiezen wij in deze fase voor een **model via de Hugging Face API**, gecombineerd met **pseudonimisering** als vaste privacymaatregel. Daarmee blijft het project technisch snel uitvoerbaar, terwijl we persoonsgegevens van leerlingen beschermen voordat data het systeem verlaat. Deze aanpak is voor nu de meest haalbare en verantwoorde route voor een werkend prototype van een onderwijsassistent.
 
+**Vooruitblik:** Voor de toekomst is het optimaal om een eigen (GPU-)rig te bouwen waarop we het gekozen open model **lokaal** kunnen draaien. Dat vermindert de afhankelijkheid van externe diensten en maakt het makkelijker om privacy en datastromen volledig in eigen beheer te houden. In de huidige **testfase** is dit echter nog niet realistisch (o.a. vanwege hardware-/inrichtingskosten en doorlooptijd), waardoor we nu bewust kiezen voor de API-aanpak met pseudonimisering.
+
 ---
 
 ### Bronnen
