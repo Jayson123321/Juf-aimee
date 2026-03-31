@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
-import { runAgentLoop } from "@/app/ai/agent"
-import { allTools } from "@/app/ai/tools"
+import { runAgent } from "@/lib/agent"
+import { allTools } from "@/lib/tools"
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { message, leerlingId } = body
+  const { message, studentId } = await req.json()
 
   if (!message || typeof message !== "string") {
-    return NextResponse.json({ error: "Bericht is verplicht" }, { status: 400 })
+    return NextResponse.json({ error: "Message is required" }, { status: 400 })
   }
 
-  const response = await runAgentLoop(
-    [{ role: "user", content: message }],
-    allTools,
-    { leerlingId: leerlingId ? Number(leerlingId) : undefined }
-  )
+  const response = await runAgent(message, allTools, { studentId: studentId ? String(studentId) : undefined })
 
   return NextResponse.json({ response })
 }

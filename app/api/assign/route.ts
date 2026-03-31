@@ -1,31 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
-import { runAgentLoop } from "@/app/ai/agent"
-import { assignmentTools } from "@/app/ai/tools"
+import { runAgent } from "@/lib/agent"
+import { assignmentTools } from "@/lib/tools"
 import { prisma } from "@/lib/db"
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { leerlingId } = body
+  const { studentId } = await req.json()
 
-  if (!leerlingId) {
-    return NextResponse.json({ error: "leerlingId is verplicht" }, { status: 400 })
+  if (!studentId) {
+    return NextResponse.json({ error: "studentId is required" }, { status: 400 })
   }
 
-  const student = await prisma.leerling.findUnique({ where: { id: Number(leerlingId) } })
+  const student = await prisma.student.findUnique({ where: { id: String(studentId) } })
   if (!student) {
-    return NextResponse.json({ error: "Leerling niet gevonden" }, { status: 404 })
+    return NextResponse.json({ error: "Student not found" }, { status: 404 })
   }
 
-  const prompt = `Genereer een passende opdracht voor leerling ${student.naam} (groep ${student.groep}).
-Zoek eerst relevante informatie op uit het OPP over hun leerniveau, interesses en aandachtspunten.
-Maak daarna een concrete opdracht op Bloom-niveau ${student.bloomNiveau}.
-Sla de opdracht op via save_assignment met leerling_id ${student.id}.`
+  const prompt = `Generate an appropriate assignment for student ${student.fullName} (group ${student.groep ?? "Unknown"}).
+First search for relevant information from the OPP about their learning level, interests and attention points.
+Then create a concrete assignment at Bloom level ${student.bloomNiveau}.
+Save the assignment via save_assignment with student_id ${student.id}.`
 
-  const response = await runAgentLoop(
-    [{ role: "user", content: prompt }],
-    assignmentTools,
-    { leerlingId: student.id }
-  )
+  const response = await runAgent(prompt, assignmentTools, { studentId: student.id })
 
   return NextResponse.json({ response })
 }
