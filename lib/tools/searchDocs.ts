@@ -10,9 +10,10 @@ export const searchDocsTool: Tool = {
     parameters: {
       type: "object",
       properties: {
-        query: { type: "string", description: "What to search for, e.g. 'reading level'" },
+        student_id: { type: "string", description: "The UUID of the student, obtained from list_students" },
+        query: { type: "string", description: "What to search for, e.g. 'reading level' or 'attention points'" },
       },
-      required: ["query"],
+      required: ["student_id", "query"],
     },
   },
 }
