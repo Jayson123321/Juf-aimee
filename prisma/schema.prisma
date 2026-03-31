@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String    @id @default(uuid())
+  name     String?
+  email    String    @unique
+  password String
+  role     UserRole?
+
+  managedStudents Student[] @relation("StudentPrimaryTeacher")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+}
+
+model Student {
+  id             String    @id @default(uuid())
+  fullName       String
+  dateOfBirth    DateTime?
+  gender         String?
+  addressLine    String?
+  postalCode     String?
+  city           String?
+  phoneNumber    String?
+  email          String?
+  familyDetails  String?
+  custodyDetails String?
+
+  primaryTeacherId String?
+  primaryTeacher   User?   @relation("StudentPrimaryTeacher", fields: [primaryTeacherId], references: [id], onDelete: SetNull)
+
+  profile     StudentProfile?
+  assignments Assignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// This is a join table to represent the many-to-many relationship between teachers and students
+model TeacherStudent {
+  id        String @id @default(uuid())
+  teacherId String
+  studentId String
+
+  assignedAt DateTime @default(now())
+
+  @@unique([teacherId, studentId])
+}
+
+model StudentProfile {
+  id          String  @id @default(uuid())
+  studentId   String  @unique
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdById String?
+
+  registrationNumber     String?
+  currentDate            DateTime?
+  currentSchoolYearGroup String?
+  currentTeacher         String?
+
+  schoolOfOrigin String?
+  schoolHistory  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Subject {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  assignments Assignment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Assignment {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  status      AssignmentStatus @default(PENDING)
+  dueDate     DateTime?
+  bloomLevel  String?
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  TEACHER
+  ADMIN
+}
+
+enum AssignmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
