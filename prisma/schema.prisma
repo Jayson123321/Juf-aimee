@@ -39,11 +39,15 @@ model Student {
   familyDetails  String?
   custodyDetails String?
 
+  groep       String?
+  bloomNiveau Int     @default(1)
+
   primaryTeacherId String?
   primaryTeacher   User?   @relation("StudentPrimaryTeacher", fields: [primaryTeacherId], references: [id], onDelete: SetNull)
 
   profile     StudentProfile?
   assignments Assignment[]
+  oppChunks   OppChunk[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,15 +98,25 @@ model Assignment {
   status      AssignmentStatus @default(PENDING)
   dueDate     DateTime?
   bloomLevel  String?
+  bloomNiveau Int              @default(1)
+  uitleg      String?
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
+  subjectId String?
+  subject   Subject? @relation(fields: [subjectId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model OppChunk {
+  id        Int                         @id @default(autoincrement())
+  studentId String
+  student   Student                     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tekst     String
+  embedding Unsupported("vector(1024)")?
 }
 
 enum UserRole {
