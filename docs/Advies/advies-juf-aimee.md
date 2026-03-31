@@ -1,18 +1,21 @@
 # Advies: Juf Aimee AI-Assistent
 
-**Datum:** dinsdag 31 maart 2026
-**Auteurs:** [Namen hier invullen]
+**Datum:** dinsdag 31 maart 2026  
+**Deelnemer**:
+
+- Shehbaaz
 
 ---
 
 ## Inleiding
 
-Dit advies is gebaseerd op **analyse, ontwerp en realisatie** van de Juf Aimee AI-assistent voor docenten met hoogbegaafde leerlingen.
+Dit advies is gebaseerd op analyse, ontwerp en realisatie van de Juf Aimee AI-assistent voor leraren met hoogbegaafde leerlingen. Wij hebben een prototype ontworpen; het is de bedoeling dat wij verder onderzoek doen naar bestaande leerplatforms en literatuur besturen zodat wij wetenschappelijk onderbouwde interpretaties in ons platform kunnen integreren. 
+
+Daarnaast gaan wij ook gebruikerstesten uitvoeren bij echte leerkrachten zodat wij relevante feedback kunnen ontvangen op het leerplatform waar wij rekening mee kunnen houden bij het realiseren van het leerplatform.
 
 **Adviesproces:**
 - **Analyse:** Onderzoek van behoeften en feedback
-- **Ontwerp:** Iteratief prototyping en requirements
-- **Realisatie:** Testing en validatie
+- **Ontwerp:** prototyping en testen
 
 ---
 
