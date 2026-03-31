@@ -42,6 +42,9 @@ model Student {
   primaryTeacherId String?
   primaryTeacher   User?   @relation("StudentPrimaryTeacher", fields: [primaryTeacherId], references: [id], onDelete: SetNull)
 
+  profile     StudentProfile?
+  assignments Assignment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -60,6 +63,7 @@ model TeacherStudent {
 model StudentProfile {
   id          String  @id @default(uuid())
   studentId   String  @unique
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   createdById String?
 
   registrationNumber     String?
@@ -73,7 +77,41 @@ model StudentProfile {
   updatedAt      DateTime @updatedAt
 }
 
+model Subject {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  assignments Assignment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Assignment {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  status      AssignmentStatus @default(PENDING)
+  dueDate     DateTime?
+  bloomLevel  String?
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum UserRole {
   TEACHER
   ADMIN
+}
+
+enum AssignmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
 }
