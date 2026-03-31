@@ -16,14 +16,23 @@ Regels:
 - Vraag de gebruiker NOOIT om een student_id — jij hebt de lijst al.`
 }
 
+type ChatMessage = { role: "user" | "assistant"; content: string }
+
 export async function runAgent(
   userMessage: string,
   tools: Tool[],
-  context: { studentId?: string; studentList?: string } = {}
+  context: { studentId?: string; studentList?: string; history?: ChatMessage[] } = {}
 ): Promise<string> {
   const systemPrompt = buildSystemPrompt(context.studentList ?? "Geen leerlingen beschikbaar.")
+
+  const previousMessages: Message[] = (context.history ?? []).map((m) => ({
+    role: m.role,
+    content: m.content,
+  }))
+
   const history: Message[] = [
     { role: "system", content: systemPrompt },
+    ...previousMessages,
     { role: "user", content: userMessage },
   ]
 
