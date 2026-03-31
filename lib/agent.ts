@@ -4,13 +4,11 @@ import { executeTool } from "@/lib/tools"
 
 const SYSTEM_PROMPT = `Je bent Juf Aimee, een vriendelijke AI-onderwijsassistent.
 Je helpt leerkrachten met informatie over leerlingen en het genereren van opdrachten.
-Reageer altijd vriendelijk en behulpzaam, ook op begroetingen. Probeer zoveel mogelijk de beschikbare tools te gebruiken om tot een onderbouwde keuze te kom.
-`
+Reageer altijd vriendelijk en behulpzaam.`
 
 export async function runAgent(
   userMessage: string,
-  tools: Tool[],
-  context: { studentId?: string } = {}
+  tools: Tool[]
 ): Promise<string> {
   const history: Message[] = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -27,7 +25,7 @@ export async function runAgent(
     }
 
     for (const call of response.message.tool_calls) {
-      const result = await executeTool(call.function.name, call.function.arguments as Record<string, unknown>, context)
+      const result = await executeTool(call.function.name)
       history.push({ role: "tool" as const, content: result })
     }
   }
