@@ -9,15 +9,33 @@
 
 ## Inleiding
 
-Dit advies is gebaseerd op analyse, ontwerp en realisatie van de Juf Aimee AI-assistent voor leraren met hoogbegaafde leerlingen. Wij hebben een prototype ontworpen; het is de bedoeling dat wij verder onderzoek doen naar bestaande leerplatforms en literatuur besturen zodat wij wetenschappelijk onderbouwde interpretaties in ons platform kunnen integreren. 
+Dit advies is gebaseerd op relevante inzichten in bestaande leerlingen platforms en wetenschappelijk onderzoek voor de Juf Aimee AI-assistent voor leraren met hoogbegaafde leerlingen. Wij hebben een prototype ontworpen; het is de bedoeling dat wij verder onderzoek doen naar bestaande leerplatforms en literatuur besturen zodat wij wetenschappelijk onderbouwde interpretaties in ons platform kunnen integreren. 
 
 Daarnaast gaan wij ook gebruikerstesten uitvoeren bij echte leerkrachten zodat wij relevante feedback kunnen ontvangen op het leerplatform waar wij rekening mee kunnen houden bij het realiseren van het leerplatform.
 
 **Adviesproces:**
-- **Analyse:** Onderzoek van behoeften en feedback
+- **Analyse:** Onderzoeken de behoefte/gebruiksgemak van de leraar
 - **Ontwerp:** prototyping en testen
 
 ---
+
+
+## Prototype voorbeeld
+
+Dit is de eerste versie van ons prototype, en daarin laat ik de onderdelen zien die we willen realiseren voor het leerplatform voor hoogbegaafde leerlingen.
+
+### Dashboard 
+![alt text](image.png)
+
+>*in de voortangsbalk is met kleuren zichtbaar hoe ver de leerling is*
+
+### Profiel leerling
+
+![alt text](image-1.png)
+
+>*zichtbaar voor de leraar wat de eigenschappen en motivaties zijn van de leerling*
+
+
 
 ## Aanbevelingen
 
