@@ -1,23 +1,23 @@
-import type { Tool } from "ollama"
-import { prisma } from "@/lib/db"
+import type { Tool } from "ollama";
+import { prisma } from "@/lib/db";
 
 export const getStudentAssignmentsTool: Tool = {
   type: "function",
   function: {
     name: "get_student_assignments",
-    description: "Haalt de opdrachten op die eerder zijn gegenereerd voor een leerling.",
+    description: "Haalt recente opdrachten op voor een leerling.",
     parameters: {
       type: "object",
       properties: {
         leerling_id: {
-          type: "number",
+          type: "string",
           description: "Het ID van de leerling",
         },
       },
       required: ["leerling_id"],
     },
   },
-}
+};
 
 export const saveAssignmentTool: Tool = {
   type: "function",
@@ -27,16 +27,22 @@ export const saveAssignmentTool: Tool = {
     parameters: {
       type: "object",
       properties: {
-        leerling_id: { type: "number", description: "Het ID van de leerling" },
+        leerling_id: { type: "string", description: "Het ID van de leerling" },
         tekst: { type: "string", description: "De volledige opdrachttekst" },
         bloom_niveau: { type: "number", description: "Bloom-niveau (1-6)" },
-        bloom_naam: { type: "string", description: "Naam van het Bloom-niveau, bijv. 'Toepassen'" },
-        uitleg: { type: "string", description: "Uitleg over waarom deze opdracht past bij de leerling" },
+        bloom_naam: {
+          type: "string",
+          description: "Naam van het Bloom-niveau, bijv. 'Toepassen'",
+        },
+        uitleg: {
+          type: "string",
+          description: "Uitleg over waarom deze opdracht past bij de leerling",
+        },
       },
       required: ["leerling_id", "tekst", "bloom_niveau", "bloom_naam", "uitleg"],
     },
   },
-}
+};
 
 export const updateBloomLevelTool: Tool = {
   type: "function",
@@ -46,53 +52,71 @@ export const updateBloomLevelTool: Tool = {
     parameters: {
       type: "object",
       properties: {
-        leerling_id: { type: "number", description: "Het ID van de leerling" },
+        leerling_id: { type: "string", description: "Het ID van de leerling" },
         bloom_niveau: { type: "number", description: "Nieuw Bloom-niveau (1-6)" },
       },
       required: ["leerling_id", "bloom_niveau"],
     },
   },
-}
+};
 
-export async function executeGetStudentAssignments(leerlingId: number): Promise<string> {
-  const assignments = await prisma.opdracht.findMany({
-    where: { leerlingId },
+export async function executeGetStudentAssignments(leerlingId: string): Promise<string> {
+  const assignments = await prisma.assignment.findMany({
+    where: { studentId: leerlingId },
     orderBy: { createdAt: "desc" },
     take: 5,
-  })
+    include: {
+      subject: true,
+    },
+  });
 
-  if (assignments.length === 0) return "Geen opdrachten gevonden voor deze leerling."
+  if (assignments.length === 0) return "Geen opdrachten gevonden voor deze leerling.";
 
   return assignments
-    .map((a) => `[${a.bloomNaam} - niveau ${a.bloomNiveau}]\n${a.tekst}\nUitleg: ${a.uitleg}`)
-    .join("\n\n---\n\n")
+    .map(
+      (assignment) =>
+        `[${assignment.bloomLevel ?? "Onbekend"}]\n${assignment.title}\n${
+          assignment.description ?? "Geen beschrijving beschikbaar."
+        }\nVak: ${assignment.subject?.name ?? "Onbekend"}`
+    )
+    .join("\n\n---\n\n");
 }
 
 export async function executeSaveAssignment(args: {
-  leerling_id: number
-  tekst: string
-  bloom_niveau: number
-  bloom_naam: string
-  uitleg: string
+  leerling_id: string;
+  tekst: string;
+  bloom_niveau: number;
+  bloom_naam: string;
+  uitleg: string;
 }): Promise<string> {
-  const assignment = await prisma.opdracht.create({
+  const title = args.tekst.split("\n")[0]?.slice(0, 80).trim() || "AI gegenereerde opdracht";
+
+  const assignment = await prisma.assignment.create({
     data: {
-      leerlingId: args.leerling_id,
-      tekst: args.tekst,
+      studentId: args.leerling_id,
+      title,
+      description: args.tekst,
       bloomNiveau: args.bloom_niveau,
-      bloomNaam: args.bloom_naam,
+      bloomLevel: args.bloom_naam,
       uitleg: args.uitleg,
     },
-  })
-  return `Opdracht opgeslagen met ID ${assignment.id}.`
+  });
+
+  return `Opdracht opgeslagen met ID ${assignment.id}.`;
 }
 
-export async function executeUpdateBloomLevel(leerlingId: number, bloomNiveau: number): Promise<string> {
-  if (bloomNiveau < 1 || bloomNiveau > 6) return "Ongeldig Bloom-niveau. Moet tussen 1 en 6 zijn."
+export async function executeUpdateBloomLevel(
+  leerlingId: string,
+  bloomNiveau: number
+): Promise<string> {
+  if (bloomNiveau < 1 || bloomNiveau > 6) {
+    return "Ongeldig Bloom-niveau. Moet tussen 1 en 6 zijn.";
+  }
 
-  await prisma.leerling.update({
+  await prisma.student.update({
     where: { id: leerlingId },
     data: { bloomNiveau },
-  })
-  return `Bloom-niveau van leerling ${leerlingId} bijgewerkt naar niveau ${bloomNiveau}.`
+  });
+
+  return `Bloom-niveau van leerling ${leerlingId} bijgewerkt naar niveau ${bloomNiveau}.`;
 }

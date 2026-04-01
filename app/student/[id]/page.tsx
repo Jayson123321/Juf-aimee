@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentProfilePage({
   params,
 }: {
@@ -31,9 +33,14 @@ export default async function StudentProfilePage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{student.fullName}</h1>
-        <Button asChild variant="outline">
-          <Link href={`/student/${id}/edit`}>Profiel bewerken</Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button asChild variant="secondary">
+            <Link href={`/student/${id}/generate`}>AI opdracht</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/student/${id}/edit`}>Profiel bewerken</Link>
+          </Button>
+        </div>
       </div>
 
       <Card>

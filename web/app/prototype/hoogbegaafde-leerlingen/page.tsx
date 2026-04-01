@@ -10,6 +10,30 @@ type StudentCard = {
   initials: string;
 };
 
+const overviewStats = {
+  averageProgress: 83,
+  bloomLevels: [
+    { label: "Toepassen", value: "1 leerling" },
+    { label: "Analyseren", value: "1 leerling" },
+    { label: "Evalueren", value: "1 leerling" },
+    { label: "Creëren", value: "1 leerling" },
+  ],
+  topInterests: [
+    { label: "techniek", value: "2x" },
+    { label: "onderzoeken", value: "1x" },
+    { label: "presenteren", value: "1x" },
+    { label: "tekstanalyse", value: "1x" },
+    { label: "programmeren", value: "1x" },
+  ],
+  longRunningAssignments: 2,
+  totals: [
+    { label: "Totaal Leerlingen", value: "4" },
+    { label: "Actieve Opdrachten", value: "2" },
+    { label: "Afgerond", value: "1" },
+    { label: "AI Opdrachten", value: "6" },
+  ],
+} as const;
+
 const students: StudentCard[] = [
   {
     name: "Julia van Loon",
@@ -64,6 +88,14 @@ const featureChips = [
   "Voortgangsmonitoring",
 ];
 
+function PlaceholderBadge() {
+  return (
+    <span className="inline-flex w-fit rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">
+      Placeholder
+    </span>
+  );
+}
+
 export default function GiftedStudentsPrototypePage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_38%,_#fdf2f8_100%)] px-4 py-6 text-slate-900 sm:px-6 lg:px-10 lg:py-10">
@@ -86,6 +118,123 @@ export default function GiftedStudentsPrototypePage() {
                   </p>
                 </div>
               </header>
+
+              <section className="mt-10 space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+                      Overzicht & Inzichten
+                    </h2>
+                    <PlaceholderBadge />
+                  </div>
+                  <p className="max-w-3xl text-sm leading-7 text-slate-500">
+                    Dit deel komt uit het design. De cijfers hieronder zijn nu nog
+                    placeholders totdat we ze koppelen aan echte data.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <article className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.35)]">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                        %
+                      </div>
+                      <h3 className="text-sm font-medium text-slate-800">
+                        Gemiddelde Voortgang
+                      </h3>
+                    </div>
+                    <div className="text-4xl font-semibold tracking-tight text-emerald-500">
+                      {overviewStats.averageProgress}%
+                    </div>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Van alle hoogbegaafde leerlingen
+                    </p>
+                    <div className="mt-4">
+                      <PlaceholderBadge />
+                    </div>
+                  </article>
+
+                  <article className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.35)]">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                        B
+                      </div>
+                      <h3 className="text-sm font-medium text-slate-800">
+                        Bloom Niveaus
+                      </h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      {overviewStats.bloomLevels.map((item) => (
+                        <div className="flex items-center justify-between gap-3" key={item.label}>
+                          <span className="text-slate-600">{item.label}:</span>
+                          <span className="font-medium text-slate-900">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4">
+                      <PlaceholderBadge />
+                    </div>
+                  </article>
+
+                  <article className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.35)]">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
+                        I
+                      </div>
+                      <h3 className="text-sm font-medium text-slate-800">
+                        Top Interesses
+                      </h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      {overviewStats.topInterests.map((item) => (
+                        <div className="flex items-center justify-between gap-3" key={item.label}>
+                          <span className="text-slate-600">{item.label}:</span>
+                          <span className="font-medium text-slate-900">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4">
+                      <PlaceholderBadge />
+                    </div>
+                  </article>
+                </div>
+
+                <article className="rounded-[1.5rem] border border-rose-200 bg-rose-50/80 p-5 shadow-[0_20px_50px_-40px_rgba(225,29,72,0.45)]">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-rose-500 shadow-sm">
+                      !
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-rose-700">
+                        Lange termijn opdrachten
+                      </p>
+                      <p className="text-sm leading-6 text-rose-600">
+                        {overviewStats.longRunningAssignments} opdrachten zijn al meer
+                        dan 7 dagen bezig. Overweeg om contact op te nemen met de
+                        leerling(en).
+                      </p>
+                      <PlaceholderBadge />
+                    </div>
+                  </div>
+                </article>
+
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {overviewStats.totals.map((item) => (
+                    <article
+                      key={item.label}
+                      className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.35)]"
+                    >
+                      <p className="text-sm font-medium text-slate-500">{item.label}</p>
+                      <div className="mt-4 text-4xl font-semibold tracking-tight text-slate-900">
+                        {item.value}
+                      </div>
+                      <div className="mt-4">
+                        <PlaceholderBadge />
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
 
               <section className="mt-10 grid gap-6 lg:grid-cols-2">
                 {students.map((student) => (
