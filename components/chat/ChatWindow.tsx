@@ -32,7 +32,7 @@ export default function ChatWindow({ studentId }: { studentId?: string }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, studentId }),
+        body: JSON.stringify({ message, studentId, history: messages }),
       })
       const data = await res.json()
       setMessages((prev) => [
