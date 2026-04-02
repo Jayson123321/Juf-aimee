@@ -61,11 +61,6 @@ Khanmigo is niet speciaal gericht op hoogbegaafde kinderen, maar is wel een AI-o
 ![Khanmigo Question Generator page select: Grade level, number questions, Text input](images/khanmigo_question_generator.png)
 ![Khanmigo generated questions with answers with AI assistant Chat on the right](images/khanmigo_generatedQA_with_ai_assistant.png)
 
-
-## Punten lijstje 
-- Ai assistant bar in de dashboard voor de leraar naast alle leerlingen, zodat de leraar kan praten met de ai. Zodat ze van elkaar kunnen leren.( Zoeken naar effectiviteit van AI assistant in onderwijs voor leraar. Als dit effectief is dan userstory ervan maken.)
-- 
-- 
 ## Conclusie & Advies
 
 ### Wat Khanmigo goed doet en Juf Aimee moet overnemen
@@ -93,3 +88,175 @@ Juf Aimee moet hier tussenin zitten:
 | Uitleg | Geen referentie aan Bloom | Legt uit waarom op basis van Bloom |
 | Rol leraar | Bedient de AI | Werkt samen met de AI |
 
+
+## 6. Wetenschappelijke onderbouwing: mens AI samenwerking
+
+De centrale vraag van dit onderzoek is hoe Juf Aimee de leraar kan
+ondersteunen zonder diens regie over te nemen. De wetenschap biedt hiervoor
+drie complementaire perspectieven: hoe AI en mens elkaars sterktes aanvullen
+(complementariteit), hoe zij samen leren over tijd (hybride samenwerking), en
+hoe de controle verdeeld wordt (gedeelde regie).
+
+---
+
+### 6.1 Human-AI Complementarity: sterktes aanvullen, niet vervangen
+
+**Molenaar, I. (2022). Towards hybrid human–AI learning technologies.
+*European Journal of Education,* 57(4), 632–645.**
+
+**TAICo — Teacher-AI Complementarity Consortium (Molenaar / NOLAI, lopend).**
+
+Molenaar introduceert het concept van Human-AI Complementarity: mens en AI
+zijn het meest effectief wanneer zij elkaars sterktes aanvullen in plaats van
+elkaars taken overnemen. De AI is beter in het continu monitoren van
+leerlingdata en het herkennen van patronen over tijd. De leraar is beter in
+het interpreteren van context, het bouwen van een vertrouwensrelatie met de
+leerling, en het nemen van pedagogische beslissingen.
+
+Toepassing voor Juf Aimee:
+
+- De AI monitort continu (18 minuten vastgelopen, 2 opdrachten overgeslagen)
+  — taken die de leraar met een volle klas niet kan bijhouden
+- De leraar interpreteert de context en beslist (hint sturen of zelf spreken)
+  — een beslissing die de AI niet kan nemen zonder relationele kennis
+- Het dashboard is de plek waar deze twee sterktes samenkomen
+
+Het gevaar van niet-complementaire systemen is dat de AI taken overneemt
+waarvoor de leraar juist onmisbaar is, zoals het opbouwen van vertrouwen met
+een leerling. Juf Aimee is daarom bewust ontworpen als signalerings- en
+suggestiesysteem, niet als autonoom handelend systeem.
+
+---
+
+### 6.2 Hybrid Human-AI Learning Technologies: samen leren over tijd
+
+**Molenaar & Knoop-van Campen (2019). *How Teachers Make Dashboard Information
+Actionable.* IEEE Transactions on Learning Technologies, 12(3), 347–355.**
+
+**Van Kessel, Molenaar et al. (2025). *Primary School Teacher Perspectives on
+Effective Dashboard Use.* Journal of Learning Analytics, 12(2), 279–292.**
+
+**Knoop-van Campen & Molenaar (2020). *How Teachers Integrate Dashboards into
+Their Feedback Practices.* Frontline Learning Research, 8(4), 37–51.**
+
+Een hybride mens-AI systeem wordt beter naarmate mens en AI meer met elkaar
+samenwerken. Dit vereist twee dingen: de AI moet leren van de keuzes van de
+leraar, en de leraar moet leren hoe de AI redeneert. Beide kanten van dit
+leerproces moeten expliciet worden ontworpen.
+
+**De AI leert van de leraar:**
+
+Elke goedkeuring, afwijzing of aanpassing door de leraar is een signaal dat de
+AI gebruikt om het leerlingprofiel te verfijnen. Khanmigo doet dit niet — het
+begint elke sessie opnieuw. Juf Aimee bouwt een persistent leerlingprofiel op
+zodat opdrachten over tijd steeds beter aansluiten.
+
+**De leraar leert de AI begrijpen:**
+
+Van Kessel et al. (2025) toonden aan dat effectief dashboardgebruik drie
+condities vereist: vaardigheden om data te interpreteren, domeinkennis om
+AI-suggesties te beoordelen, en contextuele omstandigheden die gebruik
+faciliteren. Het dashboard is daarom zo ontworpen dat de leraar niet eerst
+AI-expert hoeft te worden: elke suggestie bevat een uitleg in Bloom-termen die
+de leraar al kent.
+
+**Wat dit betekent voor de goedkeuringsflow:**
+
+Molenaar & Knoop-van Campen (2019) toonden aan dat leraren pas handelen op
+dashboardinformatie als die direct koppelbaar is aan een concrete actie.
+Dashboards die alleen data tonen worden nauwelijks gebruikt. De
+goedkeuringsflow — AI suggereert, leraar keurt goed — is daarom de
+architecturale kern van de samenwerking: het is het moment waarop mens en AI
+elkaar ontmoeten en van elkaar leren.
+
+---
+
+### 6.3 Shared control: wie heeft de regie en wanneer?
+
+**Microsoft HAX Guidelines (2019) — G1, G7, G8, G16.**
+
+**Google PAIR Guidebook — Feedback + Controls.**
+
+De verdeling van controle tussen mens en AI is het meest kritieke
+ontwerpvraagstuk in mens-AI samenwerking. Te veel AI-autonomie ondermijnt de
+leraar; te weinig maakt de AI nutteloos. Op basis van de Khanmigo-analyse zijn
+vier concrete ontwerpkeuzes gemaakt:
+
+**1. De AI neemt initiatief, de leraar neemt beslissingen (HAX G1)**
+
+Khanmigo wacht altijd op de leraar. Juf Aimee signaleert proactief — maar
+handelt pas nadat de leraar goedkeuring heeft gegeven. Niets bereikt een
+leerling zonder expliciete goedkeuring van de leraar. Dit is het fundamentele
+verschil tussen een tool en een collega.
+
+**2. De leraar kan altijd corrigeren (HAX G7)**
+
+De leraar kan elke AI-suggestie afwijzen, aanpassen of vervangen via de
+chatinterface. Dit is de veiligheidsklep die de leraar de regie geeft zonder
+de AI nutteloos te maken. Khanmigo doet dit goed via een thumbs-down knop en
+vrije chat — Juf Aimee neemt dit over en voegt een expliciete 'Aanpassen'-knop
+toe per opdrachtsuggestie.
+
+**3. De AI legt altijd uit waarom (HAX G8 — het grootste gat)**
+
+Khanmigo legt nooit uit waarom het een opdracht genereert. Dit is het
+grootste gat in de mens-AI samenwerking bij Khanmigo: de leraar kan de AI niet
+beoordelen als de AI zijn redenering niet toont. Juf Aimee toont bij elke
+suggestie verplicht: het Bloom-niveau, de relevante data uit het
+leerlingprofiel, en de reden voor de keuze. Zonder uitlegbaarheid is er geen
+echte samenwerking — alleen blinde opvolging.
+
+**4. De leraar behoudt globale controle over het AI-gedrag (HAX G16)**
+
+Khanmigo heeft geen AI-gedragsinstellingen. Juf Aimee biedt de leraar de
+mogelijkheid om het Bloom-streefniveau per leerling in te stellen, zodat de
+AI-suggesties altijd binnen de pedagogische kaders van de leraar blijven.
+
+---
+
+### 6.4 Risico's: wanneer mens-AI samenwerking mis kan gaan
+
+**College voor de Rechten van de Mens (2024). *Algoritmen in het onderwijs.*
+KBA Nijmegen / ResearchNed.**
+
+Mens-AI samenwerking brengt specifieke risico's met zich mee wanneer de leraar
+te veel vertrouwen stelt in de AI zonder kritisch te blijven. Het College voor
+de Rechten van de Mens waarschuwt dat algoritmen vooroordelen van mensen
+kunnen versterken door ze te systematiseren — ook wanneer de leraar denkt dat
+de AI objectief is.
+
+Drie risico's die het ontwerp van Juf Aimee expliciet adresseert:
+
+- **Automation bias:** de neiging om AI-suggesties klakkeloos te volgen.
+  Tegenmaatregel: de goedkeuringsflow dwingt de leraar altijd actief te
+  beslissen — er is geen automatische doorstroom naar de leerling.
+- **Labeling:** een AI die een leerling permanent categoriseert als 'zwak' of
+  'sterk'. Tegenmaatregel: Bloom-niveaus zijn dynamisch en tonen voortgang,
+  geen vaste eigenschappen van een leerling.
+- **Ondoorzichtigheid:** een leraar die niet begrijpt waarom de AI iets doet
+  en daardoor niet kan bijsturen. Tegenmaatregel: uitlegbaarheid (HAX G8) is
+  een harde ontwerpeis, niet een optionele feature.
+
+---
+
+
+### Bronnen
+
+- Anderson, L.W. & Krathwohl, D.R. (2001). *A taxonomy for learning,
+  teaching, and assessing.* Pearson.
+- College voor de Rechten van de Mens (2024). *Algoritmen in het onderwijs.*
+  KBA Nijmegen / ResearchNed.
+- Knoop-van Campen, C. & Molenaar, I. (2020). How teachers integrate
+  dashboards into their feedback practices. *Frontline Learning Research,*
+  8(4), 37–51.
+- Microsoft Research (2019). *Guidelines for Human-AI Interaction (HAX).*
+- Molenaar, I. (2022). Towards hybrid human–AI learning technologies.
+  *European Journal of Education,* 57(4), 632–645.
+- Molenaar, I. & Knoop-van Campen, C.A.N. (2019). How teachers make dashboard
+  information actionable. *IEEE Transactions on Learning Technologies,* 12(3),
+  347–355.
+- TAICo — Teacher-AI Complementarity Consortium. NOLAI / Radboud Universiteit
+  (lopend).
+- Van Kessel, M., Molenaar, I. et al. (2025). Primary school teacher
+  perspectives on effective dashboard use. *Journal of Learning Analytics,*
+  12(2), 279–292.
