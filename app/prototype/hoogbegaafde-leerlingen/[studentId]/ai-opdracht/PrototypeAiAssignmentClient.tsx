@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import {
+  Check,
   Brain,
   CheckCircle2,
   Cylinder,
   Database,
+  PencilLine,
+  RotateCcw,
   Lightbulb,
   Loader2,
   Lock,
@@ -92,13 +95,18 @@ export function PrototypeAiAssignmentClient({
   const [focusArea, setFocusArea] = useState(student.interests[0] ?? "");
   const [searching, setSearching] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [revising, setRevising] = useState(false);
+  const [approving, setApproving] = useState(false);
   const [sources, setSources] = useState<string[]>([]);
   const [analysisError, setAnalysisError] = useState<string>("");
+  const [teacherPrompt, setTeacherPrompt] = useState("");
+  const [approvalMessage, setApprovalMessage] = useState("");
   const [generatedAssignment, setGeneratedAssignment] = useState<GeneratedAssignment | null>(null);
 
   async function searchSources() {
     setSearching(true);
     setAnalysisError("");
+    setApprovalMessage("");
 
     try {
       const response = await fetch("/api/prototype/assignment", {
@@ -125,6 +133,7 @@ export function PrototypeAiAssignmentClient({
   async function generateAssignment() {
     setGenerating(true);
     setAnalysisError("");
+    setApprovalMessage("");
 
     try {
       const response = await fetch("/api/prototype/assignment", {
@@ -142,11 +151,82 @@ export function PrototypeAiAssignmentClient({
       if (!response.ok) throw new Error(data.error ?? "Opdracht genereren mislukt.");
       setSources(data.sources ?? []);
       setGeneratedAssignment(data.assignment ?? null);
+      setTeacherPrompt("");
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "Opdracht genereren mislukt.");
     } finally {
       setGenerating(false);
     }
+  }
+
+  async function reviseAssignment() {
+    if (!generatedAssignment) return;
+
+    setRevising(true);
+    setAnalysisError("");
+    setApprovalMessage("");
+
+    try {
+      const response = await fetch("/api/prototype/assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "revise",
+          studentId: student.id,
+          focusArea,
+          bloomLevel: selectedBloom,
+          teacherPrompt,
+          currentAssignment: generatedAssignment,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Opdracht aanpassen mislukt.");
+      setSources(data.sources ?? []);
+      setGeneratedAssignment(data.assignment ?? null);
+      setTeacherPrompt("");
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "Opdracht aanpassen mislukt.");
+    } finally {
+      setRevising(false);
+    }
+  }
+
+  async function approveAssignment() {
+    if (!generatedAssignment) return;
+
+    setApproving(true);
+    setAnalysisError("");
+    setApprovalMessage("");
+
+    try {
+      const response = await fetch("/api/prototype/assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "approve",
+          studentId: student.id,
+          focusArea,
+          bloomLevel: selectedBloom,
+          currentAssignment: generatedAssignment,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Opdracht goedkeuren mislukt.");
+      setApprovalMessage("Opdracht opgeslagen in de database als nieuwe assignment.");
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "Opdracht goedkeuren mislukt.");
+    } finally {
+      setApproving(false);
+    }
+  }
+
+  function rejectAssignment() {
+    setGeneratedAssignment(null);
+    setTeacherPrompt("");
+    setApprovalMessage("");
+    setAnalysisError("");
   }
 
   return (
@@ -383,7 +463,7 @@ export function PrototypeAiAssignmentClient({
 
       {generatedAssignment ? (
         <SectionCard className="border-slate-200/80">
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div className="flex items-center gap-3">
               <Sparkles className="size-6 text-violet-600" />
               <h2 className="text-[1.2rem] font-semibold text-slate-950">Gegenereerde opdracht</h2>
@@ -398,6 +478,61 @@ export function PrototypeAiAssignmentClient({
               <p className="mb-1 text-sm font-semibold text-slate-900">Waarom deze opdracht?</p>
               <p className="text-sm leading-7 text-slate-700">{generatedAssignment.rationale}</p>
             </div>
+
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
+              <label
+                className="block text-sm font-semibold text-slate-900"
+                htmlFor="teacher-prompt"
+              >
+                Aanpassen met instructie
+              </label>
+              <textarea
+                className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
+                id="teacher-prompt"
+                onChange={(event) => setTeacherPrompt(event.target.value)}
+                placeholder="Bijvoorbeeld: maak de opdracht korter, voeg een creatief onderdeel toe of laat haar werken met actuele bronnen."
+                value={teacherPrompt}
+              />
+              <p className="text-xs leading-6 text-slate-500">
+                Deze instructie wordt gebruikt om de huidige opdracht gericht aan te passen.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={revising || approving || !teacherPrompt.trim()}
+                onClick={reviseAssignment}
+                type="button"
+              >
+                {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
+                Aanpassen
+              </button>
+              <button
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={revising || approving}
+                onClick={rejectAssignment}
+                type="button"
+              >
+                <RotateCcw className="size-4" />
+                Afkeuren
+              </button>
+              <button
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={revising || approving}
+                onClick={approveAssignment}
+                type="button"
+              >
+                {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                Goedkeuren
+              </button>
+            </div>
+
+            {approvalMessage ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {approvalMessage}
+              </div>
+            ) : null}
           </div>
         </SectionCard>
       ) : null}
