@@ -15,7 +15,7 @@ export default async function StudentLayout({
         <NavLink href={`/student/${id}`}>Profiel</NavLink>
         <NavLink href={`/student/${id}/assignments`}>Opdrachten</NavLink>
       </Nav>
-      <div className="container mx-auto max-w-3xl px-6 py-8">{children}</div>
+      <div className="w-full px-6 py-8">{children}</div>
     </>
   );
 }
