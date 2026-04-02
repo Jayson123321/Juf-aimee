@@ -313,7 +313,7 @@ export const prototypeAssignments: PrototypeAssignment[] = [
     description:
       "Bedenk en schets een machine die voorwerpen automatisch sorteert en licht je programmeerlogica toe.",
     rationale:
-      "Past bij Milan's technische interesses en stimuleert creëren door ontwerpen en bouwen te combineren.",
+      "Past bij Milan's technische interesses en stimuleert creeren door ontwerpen en bouwen te combineren.",
     feedback:
       "Sterk concept en goede logica. Volgende keer nog beter motiveren waarom deze oplossing het meest efficient is.",
     bloomLevel: "Creeren",
@@ -374,70 +374,3 @@ export function getPrototypeStudent(studentId: string) {
 export function getPrototypeAssignments(studentId: string) {
   return prototypeAssignments.filter((assignment) => assignment.studentId === studentId);
 }
-export const prototypeDashboardStats = {
-  averageProgress: 83,
-  bloomCounts: [
-    { label: "Toepassen", count: 1 },
-    { label: "Analyseren", count: 1 },
-    { label: "Evalueren", count: 1 },
-    { label: "Creëren", count: 1 },
-  ],
-  topInterests: [
-    { label: "techniek", count: 2 },
-    { label: "onderzoeken", count: 1 },
-    { label: "presenteren", count: 1 },
-    { label: "tekstanalyse", count: 1 },
-  ],
-  longRunningAssignments: 2,
-  totalStudents: 4,
-  activeAssignments: 2,
-  completedAssignments: 1,
-  aiAssignments: 6,
-} as const;
-
-export const prototypeStudents = [
-  {
-    name: "Julia van Loon",
-    age: 10,
-    emoji: "👧",
-    interests: ["onderzoeken", "presenteren", "tekstanalyse"],
-    progress: 85,
-    status: "Evalueren",
-    badgeEmoji: "⚖️",
-    completedAssignments: 0,
-    totalAssignments: 2,
-  },
-  {
-    name: "Milan de Groot",
-    age: 10,
-    emoji: "👦",
-    interests: ["programmeren", "techniek", "wiskunde", "ontwerpen"],
-    progress: 90,
-    status: "Creëren",
-    badgeEmoji: "✨",
-    completedAssignments: 1,
-    totalAssignments: 2,
-  },
-  {
-    name: "Sophie Meijer",
-    age: 9,
-    emoji: "👧",
-    interests: ["creatief schrijven", "verhalen", "lezen"],
-    progress: 32,
-    status: "Toepassen",
-    badgeEmoji: "🎯",
-    completedAssignments: 0,
-    totalAssignments: 1,
-  },
-  {
-    name: "Daan Verbeek",
-    age: 9,
-    emoji: "👦",
-    interests: ["natuurkunde", "bouwen", "strategie", "techniek"],
-    progress: 72,
-    status: "Analyseren",
-    badgeEmoji: "🔎",
-    completedAssignments: 0,
-    totalAssignments: 1,
-  },
-] as const;

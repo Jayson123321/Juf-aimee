@@ -186,9 +186,12 @@ export default async function PrototypeStudentProfilePage({
               </div>
             </div>
 
-            <button className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
+            <Link
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+              href={`/prototype/leerling-portaal/${student.id}`}
+            >
               Leerling Weergave
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

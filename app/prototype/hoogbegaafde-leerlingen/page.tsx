@@ -6,6 +6,7 @@ import {
   BookOpen,
   Brain,
   ChartSpline,
+  LogOut,
   Lightbulb,
   Sparkles,
   Users,
@@ -24,42 +25,57 @@ function PlaceholderLabel({ className = "" }: { className?: string }) {
 
 function Header() {
   return (
-    <div className="flex flex-col items-center gap-5 text-center">
-      <div className="flex items-center gap-4">
-        <div className="relative size-20 overflow-hidden rounded-[26px] border border-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
-          <Image
-            alt="Juf Aimee"
-            className="object-cover"
-            fill
-            sizes="80px"
-            src={aimeePortrait}
-          />
-        </div>
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Juf Aimee</h1>
-          <p className="text-sm text-slate-700">AI-onderwijsassistent</p>
-        </div>
+    <div className="space-y-5">
+      <div className="flex justify-end">
+        <Link
+          className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_30px_rgba(92,114,180,0.06)] transition hover:bg-white"
+          href="/prototype/leerling-login"
+        >
+          <LogOut className="size-4" />
+          Uitloggen
+        </Link>
       </div>
 
-      <p className="text-sm text-slate-500">
-        Prototype voor leerkrachten - Hoogbegaafde leerlingen
-      </p>
+      <div className="flex flex-col items-center gap-5 text-center">
+        <div className="flex items-center gap-4">
+          <div className="relative size-20 overflow-hidden rounded-[26px] border border-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+            <Image
+              alt="Juf Aimee"
+              className="object-cover"
+              fill
+              sizes="80px"
+              src={aimeePortrait}
+            />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900">Juf Aimee</h1>
+            <p className="text-sm text-slate-700">AI-onderwijsassistent</p>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.08)] transition hover:bg-white">
-          <BookOpen className="size-4" />
-          Bronnen Bibliotheek
-        </button>
-        <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.06)] transition hover:bg-slate-100">
-          <Users className="size-4" />
-          Leerling Portaal
-        </button>
+        <p className="text-sm text-slate-500">
+          Prototype voor leerkrachten - Hoogbegaafde leerlingen
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.08)] transition hover:bg-white">
+            <BookOpen className="size-4" />
+            Bronnen Bibliotheek
+          </button>
+          <Link
+            className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.06)] transition hover:bg-slate-100"
+            href="/prototype/leerling-login"
+          >
+            <Users className="size-4" />
+            Leerling Portaal
+          </Link>
+        </div>
+
+        <p className="max-w-3xl text-xs leading-6 text-slate-500">
+          Dit scherm is volledig losgetrokken van login, register en database. Alles hieronder is
+          placeholderinhoud voor design- en prototypewerk.
+        </p>
       </div>
-
-      <p className="max-w-3xl text-xs leading-6 text-slate-500">
-        Dit scherm is volledig losgetrokken van login, register en database. Alles hieronder is
-        placeholderinhoud voor design- en prototypewerk.
-      </p>
     </div>
   );
 }
