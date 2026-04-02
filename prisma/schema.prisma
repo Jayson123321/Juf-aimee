@@ -112,9 +112,9 @@ model Assignment {
 }
 
 model OppChunk {
-  id        Int                         @id @default(autoincrement())
+  id        Int                          @id @default(autoincrement())
   studentId String
-  student   Student                     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   Student                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   tekst     String
   embedding Unsupported("vector(1024)")?
 }
