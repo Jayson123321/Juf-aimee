@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import aimeePortrait from "@/app/Images/Aimee.png";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import { prototypeStudents } from "../hoogbegaafde-leerlingen/prototype-data";
+import { getPrototypeDashboardStudents } from "@/lib/prototype-runtime";
 
 function StudentLoginCard({
   student,
 }: {
-  student: (typeof prototypeStudents)[number];
+  student: Awaited<ReturnType<typeof getPrototypeDashboardStudents>>[number];
 }) {
   return (
     <Link
@@ -35,7 +35,9 @@ function StudentLoginCard({
   );
 }
 
-export default function PrototypeStudentLoginPage() {
+export default async function PrototypeStudentLoginPage() {
+  const prototypeStudents = await getPrototypeDashboardStudents();
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.35),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(191,219,254,0.38),transparent_30%),linear-gradient(180deg,#faf7ff_0%,#eff6ff_100%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">

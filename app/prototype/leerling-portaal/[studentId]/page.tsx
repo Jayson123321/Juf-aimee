@@ -12,7 +12,7 @@ import {
 import {
   getPrototypeAssignments,
   getPrototypeStudent,
-} from "../../hoogbegaafde-leerlingen/prototype-data";
+} from "@/lib/prototype-runtime";
 
 function PortalStatCard({
   emoji,
@@ -79,11 +79,11 @@ export default async function PrototypeStudentPortalPage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = await params;
-  const student = getPrototypeStudent(studentId);
+  const student = await getPrototypeStudent(studentId);
 
   if (!student) notFound();
 
-  const assignments = getPrototypeAssignments(studentId);
+  const assignments = await getPrototypeAssignments(studentId);
   const activeAssignments = assignments.filter(
     (assignment) => assignment.status === "in_progress" || assignment.status === "not_started",
   );

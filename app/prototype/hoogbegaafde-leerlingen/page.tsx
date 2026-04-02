@@ -11,7 +11,10 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { prototypeDashboardStats, prototypeStudents } from "./prototype-data";
+import {
+  getPrototypeDashboardStats,
+  getPrototypeDashboardStudents,
+} from "@/lib/prototype-runtime";
 
 function PlaceholderLabel({ className = "" }: { className?: string }) {
   return (
@@ -72,8 +75,8 @@ function Header() {
         </div>
 
         <p className="max-w-3xl text-xs leading-6 text-slate-500">
-          Dit scherm is volledig losgetrokken van login, register en database. Alles hieronder is
-          placeholderinhoud voor design- en prototypewerk.
+          Dit prototype gebruikt nu dezelfde studentdata uit de database als de werkende app,
+          terwijl de vormgeving en flow los blijven voor ontwerp- en iteratiewerk.
         </p>
       </div>
     </div>
@@ -103,7 +106,7 @@ function OverviewCard({
 function StudentCard({
   student,
 }: {
-  student: (typeof prototypeStudents)[number];
+  student: Awaited<ReturnType<typeof getPrototypeDashboardStudents>>[number];
 }) {
   return (
     <div className="rounded-[28px] border border-[rgba(153,164,207,0.28)] bg-white/94 p-5 shadow-[0_18px_50px_rgba(92,114,180,0.08)] backdrop-blur md:p-6">
@@ -120,7 +123,9 @@ function StudentCard({
           </div>
         </div>
 
-        <span className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-lg font-semibold text-slate-700 shadow-sm">
+        <span
+          className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-lg font-semibold shadow-sm ${student.badgeClassName}`}
+        >
           <span aria-hidden="true">{student.badgeEmoji}</span>
           {student.status}
         </span>
@@ -180,7 +185,12 @@ function StudentCard({
   );
 }
 
-export default function PrototypeHoogbegaafdeLeerlingenPage() {
+export default async function PrototypeHoogbegaafdeLeerlingenPage() {
+  const [prototypeDashboardStats, prototypeStudents] = await Promise.all([
+    getPrototypeDashboardStats(),
+    getPrototypeDashboardStudents(),
+  ]);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(171,194,255,0.22),transparent_28%),linear-gradient(180deg,#f7f9ff_0%,#eef4ff_100%)]">
       <div className="mx-auto max-w-[1400px] space-y-8 px-6 py-8 lg:px-8">
@@ -276,7 +286,7 @@ export default function PrototypeHoogbegaafdeLeerlingenPage() {
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-slate-900">Hoogbegaafde Leerlingen</h2>
             <p className="text-sm text-slate-500">
-              Volledig placeholder-overzicht voor design, feedback en iteraties
+              Prototype-overzicht met live databasegegevens in de nieuwe UI
             </p>
           </div>
 

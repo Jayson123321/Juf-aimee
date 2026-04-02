@@ -313,7 +313,7 @@ export const prototypeAssignments: PrototypeAssignment[] = [
     description:
       "Bedenk en schets een machine die voorwerpen automatisch sorteert en licht je programmeerlogica toe.",
     rationale:
-      "Past bij Milan's technische interesses en stimuleert creeren door ontwerpen en bouwen te combineren.",
+      "Past bij Milan's technische interesses en stimuleert creëren door ontwerpen en bouwen te combineren.",
     feedback:
       "Sterk concept en goede logica. Volgende keer nog beter motiveren waarom deze oplossing het meest efficient is.",
     bloomLevel: "Creeren",

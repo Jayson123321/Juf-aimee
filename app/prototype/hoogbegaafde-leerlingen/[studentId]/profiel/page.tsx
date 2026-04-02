@@ -13,7 +13,7 @@ import {
   getPrototypeStudent,
   type PrototypeAssignment,
   type PrototypeSubjectScore,
-} from "../../prototype-data";
+} from "@/lib/prototype-runtime";
 
 function PageCard({
   className = "",
@@ -150,11 +150,11 @@ export default async function PrototypeStudentProfilePage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = await params;
-  const student = getPrototypeStudent(studentId);
+  const student = await getPrototypeStudent(studentId);
 
   if (!student) notFound();
 
-  const assignments = getPrototypeAssignments(studentId);
+  const assignments = await getPrototypeAssignments(studentId);
   const completedAssignments = assignments.filter((assignment) => assignment.status === "completed");
   const inProgressAssignments = assignments.filter((assignment) => assignment.status === "in_progress");
   const notStartedAssignments = assignments.filter((assignment) => assignment.status === "not_started");
