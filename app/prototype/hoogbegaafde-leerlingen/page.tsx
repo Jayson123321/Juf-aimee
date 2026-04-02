@@ -1,5 +1,6 @@
 import Image from "next/image";
 import aimeePortrait from "@/app/Images/Aimee.png";
+import Link from "next/link";
 import {
   AlertTriangle,
   BookOpen,
@@ -143,13 +144,19 @@ function StudentCard({
           </p>
 
           <div className="flex gap-3">
-            <button className="flex h-11 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 transition hover:bg-slate-50">
+            <Link
+              className="flex h-11 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 transition hover:bg-slate-50"
+              href={`/prototype/hoogbegaafde-leerlingen/${student.id}/profiel`}
+            >
               Profiel
-            </button>
-            <button className="flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-800 px-4 text-base font-semibold text-white shadow-[0_12px_24px_rgba(15,23,42,0.16)] transition hover:bg-slate-700">
+            </Link>
+            <Link
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 px-4 text-base font-semibold text-white shadow-[0_12px_24px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600"
+              href={`/prototype/hoogbegaafde-leerlingen/${student.id}/ai-opdracht`}
+            >
               <Sparkles className="size-4" />
               AI Opdracht
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -159,7 +166,7 @@ function StudentCard({
 
 export default function PrototypeHoogbegaafdeLeerlingenPage() {
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(171,194,255,0.22),transparent_28%),linear-gradient(180deg,#f7f9ff_0%,#eef4ff_100%)]">
       <div className="mx-auto max-w-[1400px] space-y-8 px-6 py-8 lg:px-8">
         <Header />
 
@@ -207,7 +214,7 @@ export default function PrototypeHoogbegaafdeLeerlingenPage() {
                 {prototypeDashboardStats.topInterests.map(({ label, count }) => (
                   <div className="flex justify-between" key={label}>
                     <span className="text-slate-700">{label}</span>
-                    <span className="font-semibold text-slate-700">{count}×</span>
+                    <span className="font-semibold text-slate-700">{count}{"\u00D7"}</span>
                   </div>
                 ))}
               </div>
@@ -259,7 +266,7 @@ export default function PrototypeHoogbegaafdeLeerlingenPage() {
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {prototypeStudents.map((student) => (
-              <StudentCard key={student.name} student={student} />
+              <StudentCard key={student.id} student={student} />
             ))}
           </div>
         </section>
