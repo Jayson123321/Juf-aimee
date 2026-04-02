@@ -54,10 +54,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Bento grid: top row — 4 stat cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
         {/* Students — wide card */}
-        <Card className="lg:col-span-2 bg-card/80 backdrop-blur-sm border-border/50 hover:shadow-md transition-shadow">
+        <Card className="col-span-2 bg-card/80 backdrop-blur-sm border-border/50 hover:shadow-md transition-shadow">
           <CardContent className="flex items-center justify-between p-6 h-[140px]">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Totaal studenten</p>
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Bento grid: second row — assignment status ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-3 gap-4 mt-4">
 
         {/* Pending */}
         <Card className="bg-amber-50/80 dark:bg-amber-900/20 border-amber-200/60 backdrop-blur-sm hover:shadow-md transition-shadow">
@@ -153,10 +153,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Bento grid: third row — recent students + progress ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
 
         {/* Recent students — 2/3 width */}
-        <Card className="lg:col-span-2 bg-card/80 backdrop-blur-sm border-border/50">
+        <Card className="md:col-span-2 bg-card/80 backdrop-blur-sm border-border/50">
           <CardHeader className="pb-2 pt-5 px-5">
             <CardTitle className="text-sm font-semibold">Recente studenten</CardTitle>
           </CardHeader>
@@ -176,24 +176,27 @@ export default async function DashboardPage() {
                     .slice(0, 2)
                     .toUpperCase()
                   return (
-                    <div key={student.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0"
-                        style={{ backgroundColor: "oklch(0.28 0.09 255)" }}
-                      >
-                        {initials}
+                    <div key={student.id} className="py-2.5 first:pt-0 last:pb-0">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0"
+                          style={{ backgroundColor: "oklch(0.28 0.09 255)" }}
+                        >
+                          {initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{student.fullName}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {student.profile?.currentTeacher ?? "Geen leraar"}
+                          </p>
+                          <a href={`/student/${student.id}`}>Open profiel</a>
+                        </div>
+                        {student.profile?.currentSchoolYearGroup && (
+                          <Badge variant="secondary" className="text-[10px] shrink-0">
+                            {student.profile.currentSchoolYearGroup}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{student.fullName}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {student.profile?.currentTeacher ?? "Geen leraar"}
-                        </p>
-                      </div>
-                      {student.profile?.currentSchoolYearGroup && (
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
-                          {student.profile.currentSchoolYearGroup}
-                        </Badge>
-                      )}
                     </div>
                   )
                 })}
