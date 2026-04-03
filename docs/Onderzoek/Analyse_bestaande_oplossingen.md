@@ -2,12 +2,6 @@
 
 **Juf Aimee — Studio Responsible AI | Sprint 2**
 
----
-
-## Onderzoeksvraag
-Hoe geven bestaande LLM-assistenten de samenwerking tussen AI en leraar vorm, zodat Juf Aimee de leraar kan ondersteunen en de leraar de baas blijft?
----
-
 ## Gebruikte frameworks
 
 ### Microsoft HAX Guidelines
@@ -27,7 +21,7 @@ Khanmigo is niet speciaal gericht op hoogbegaafde kinderen, maar is wel een AI-o
 
 ---
 
-## Analyse 
+## Analyse tabel
 | Criterium | Khanmigo | MagicSchool AI |
 |-----------|----------|----------------|
 | **Microsoft HAX Guidelines — leraar in controle** | | |
