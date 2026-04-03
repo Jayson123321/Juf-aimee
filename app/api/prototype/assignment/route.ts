@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeSearchOpp } from "@/app/ai/tools/search_opp";
-import { GEN_MODEL, ollama } from "@/lib/ollama";
+import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentPresentation } from "@/lib/student-presentation";
 
 type PrototypeAssignmentApiStudent = {
@@ -79,6 +79,8 @@ function buildGenerationPrompt(args: {
   const presentation = getStudentPresentation(student.fullName);
 
   return `Je bent Juf Aimee en genereert een gepersonaliseerde opdracht voor een hoogbegaafde leerling.
+
+BELANGRIJK: Als er in de OPP BRONNEN een regel staat die begint met "[LEERKRACHT FEEDBACK - afgekeurde opdracht]", dan moet je die feedback serieus nemen. Vermijd het onderwerp of de aanpak die is afgekeurd en kies een andere richting die wél aansluit op de leerling.
 
 Geef exact dit formaat terug:
 TITLE: <korte titel>
@@ -189,6 +191,33 @@ export async function POST(req: NextRequest) {
         ok: true,
         savedAssignmentId: savedAssignment.id,
       });
+    }
+
+    if (action === "reject") {
+      const { rejectReason, assignmentTitle } = body ?? {};
+
+      if (!rejectReason?.trim()) {
+        return NextResponse.json({ error: "Reden van afkeuring is verplicht." }, { status: 400 });
+      }
+
+      const feedbackText = `[LEERKRACHT FEEDBACK - afgekeurde opdracht]\nOpdrachttitel: "${assignmentTitle ?? "onbekend"}"\nReden van afkeuring: "${rejectReason.trim()}"`;
+
+      try {
+        const embedding = await getEmbedding(feedbackText);
+        const vectorStr = `[${embedding.join(",")}]`;
+        await prisma.$executeRaw`
+          INSERT INTO "OppChunk" ("studentId", "tekst", "embedding")
+          VALUES (${student.id}, ${feedbackText}, ${vectorStr}::vector)
+        `;
+      } catch {
+        // Sla op zonder embedding als de embedding mislukt
+        await prisma.$executeRaw`
+          INSERT INTO "OppChunk" ("studentId", "tekst")
+          VALUES (${student.id}, ${feedbackText})
+        `;
+      }
+
+      return NextResponse.json({ ok: true });
     }
 
     if (action !== "generate" && action !== "revise") {

@@ -102,6 +102,8 @@ export function PrototypeAiAssignmentClient({
   const [teacherPrompt, setTeacherPrompt] = useState("");
   const [approvalMessage, setApprovalMessage] = useState("");
   const [generatedAssignment, setGeneratedAssignment] = useState<GeneratedAssignment | null>(null);
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   async function searchSources() {
     setSearching(true);
@@ -222,11 +224,30 @@ export function PrototypeAiAssignmentClient({
     }
   }
 
-  function rejectAssignment() {
+  async function rejectAssignment() {
+    if (generatedAssignment) {
+      try {
+        await fetch("/api/prototype/assignment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "reject",
+            studentId: student.id,
+            rejectReason,
+            assignmentTitle: generatedAssignment.title,
+          }),
+        });
+      } catch {
+        // Doorgaan ook als opslaan mislukt
+      }
+    }
+
     setGeneratedAssignment(null);
-    setTeacherPrompt("");
+    setTeacherPrompt(rejectReason);
     setApprovalMessage("");
     setAnalysisError("");
+    setRejectMode(false);
+    setRejectReason("");
   }
 
   return (
@@ -498,35 +519,72 @@ export function PrototypeAiAssignmentClient({
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={revising || approving || !teacherPrompt.trim()}
-                onClick={reviseAssignment}
-                type="button"
-              >
-                {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
-                Aanpassen
-              </button>
-              <button
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={revising || approving}
-                onClick={rejectAssignment}
-                type="button"
-              >
-                <RotateCcw className="size-4" />
-                Afkeuren
-              </button>
-              <button
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={revising || approving}
-                onClick={approveAssignment}
-                type="button"
-              >
-                {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                Goedkeuren
-              </button>
-            </div>
+            {rejectMode ? (
+              <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-5">
+                <label className="block text-sm font-semibold text-rose-900" htmlFor="reject-reason">
+                  Waarom wordt deze opdracht afgekeurd? <span className="text-rose-600">*</span>
+                </label>
+                <textarea
+                  autoFocus
+                  className="min-h-[100px] w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
+                  id="reject-reason"
+                  onChange={(event) => setRejectReason(event.target.value)}
+                  placeholder="Bijv. te abstract voor deze leerling, sluit niet aan op de interesse..."
+                  value={rejectReason}
+                />
+                <p className="text-xs leading-6 text-rose-700">
+                  HAX G7: de reden van afkeuring is contextuele kennis die alleen de leraar heeft — dit is het moment waarop die kennis het systeem binnenkomt.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={!rejectReason.trim()}
+                    onClick={rejectAssignment}
+                    type="button"
+                  >
+                    <RotateCcw className="size-4" />
+                    Bevestig afkeuring
+                  </button>
+                  <button
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    onClick={() => setRejectMode(false)}
+                    type="button"
+                  >
+                    Annuleren
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={revising || approving || !teacherPrompt.trim()}
+                  onClick={reviseAssignment}
+                  type="button"
+                >
+                  {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
+                  Aanpassen
+                </button>
+                <button
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={revising || approving}
+                  onClick={() => setRejectMode(true)}
+                  type="button"
+                >
+                  <RotateCcw className="size-4" />
+                  Afkeuren
+                </button>
+                <button
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={revising || approving}
+                  onClick={approveAssignment}
+                  type="button"
+                >
+                  {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                  Goedkeuren
+                </button>
+              </div>
+            )}
 
             {approvalMessage ? (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
