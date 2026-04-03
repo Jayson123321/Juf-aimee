@@ -10,6 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AssignmentStatus } from "@/generated/prisma/client";
 
+export const dynamic = "force-dynamic";
+
 const statusLabel: Record<AssignmentStatus, string> = {
   PENDING: "Te doen",
   IN_PROGRESS: "Bezig",
@@ -48,9 +50,9 @@ export default async function AssignmentsPage({
   const bySubject = assignments.reduce<
     Record<string, { subjectName: string; items: typeof assignments }>
   >((acc, a) => {
-    const key = a.subjectId;
+    const key = a.subjectId ?? "zonder-vak";
     if (!acc[key]) {
-      acc[key] = { subjectName: a.subject.name, items: [] };
+      acc[key] = { subjectName: a.subject?.name ?? "Zonder vak", items: [] };
     }
     acc[key].items.push(a);
     return acc;

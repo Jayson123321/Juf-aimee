@@ -1,84 +1,47 @@
-import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db";
+import Link from "next/link";
 
-
-
-
-async function createUser(formData: FormData) {
-  "use server";
-
-  const name = formData.get("name")?.toString().trim();
-  const email = formData.get("email")?.toString().trim();
-
-  if (!name || !email) {
-    throw new Error("Name and email are required.");
-  }
-
-  await prisma.user.create({
-    data: {
-      name: name,
-      email,
-      password: "password", // In a real app, never hardcode passwords!
-    },
-  });
-
-  revalidatePath("/");
-}
-
-export default async function Home() {
-
-
+export default function Home() {
   return (
     <main className="min-h-screen bg-background p-8 text-foreground">
-      <div className="mx-auto max-w-2xl space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold">Prisma + Postgres Test</h1>
-          <p className="mt-2 text-muted-foreground">
-            Create a user to verify your Docker PostgreSQL container is working.
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div className="space-y-3">
+          <h1 className="text-3xl font-bold">Juf Aimee</h1>
+          <p className="text-muted-foreground">
+            De Prisma test-homepage is tijdelijk uitgezet zodat de app niet crasht als de database
+            nog niet bereikbaar is.
           </p>
         </div>
 
-        <form action={createUser} className="space-y-4 rounded-xl bg-card p-6 shadow">
-          <div>
-            <label htmlFor="name" className="mb-1 block text-sm font-medium">
-              Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-ring"
-              placeholder="Enter name"
-            />
+        <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold">Routes</h2>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/dashboard"
+              className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
+            >
+              Open dashboard
+            </Link>
+            <Link
+              href="/prototype/hoogbegaafde-leerlingen"
+              className="rounded-lg border border-border px-4 py-2 hover:bg-muted"
+            >
+              Open prototype-route
+            </Link>
+            <Link
+              href="/students"
+              className="rounded-lg border border-border px-4 py-2 hover:bg-muted"
+            >
+              Open leerlingen
+            </Link>
           </div>
+        </section>
 
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-ring"
-              placeholder="Enter email"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
-          >
-            Create user
-          </button>
-        </form>
-
-        <section className="rounded-xl bg-card p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold">Saved users</h2>
-
-         
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          <p className="font-medium">Database status</p>
+          <p className="mt-2">
+            Er is nu expres geen actie op deze homepage die Prisma aanspreekt. De databaseverbinding
+            zelf heb ik hier niet opnieuw ingesteld of gerepareerd.
+          </p>
         </section>
       </div>
     </main>

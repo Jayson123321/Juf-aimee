@@ -13,7 +13,7 @@ import {
   getPrototypeStudent,
   type PrototypeAssignment,
   type PrototypeSubjectScore,
-} from "../../prototype-data";
+} from "@/lib/prototype-runtime";
 
 function PageCard({
   className = "",
@@ -150,11 +150,11 @@ export default async function PrototypeStudentProfilePage({
   params: Promise<{ studentId: string }>;
 }) {
   const { studentId } = await params;
-  const student = getPrototypeStudent(studentId);
+  const student = await getPrototypeStudent(studentId);
 
   if (!student) notFound();
 
-  const assignments = getPrototypeAssignments(studentId);
+  const assignments = await getPrototypeAssignments(studentId);
   const completedAssignments = assignments.filter((assignment) => assignment.status === "completed");
   const inProgressAssignments = assignments.filter((assignment) => assignment.status === "in_progress");
   const notStartedAssignments = assignments.filter((assignment) => assignment.status === "not_started");
@@ -186,9 +186,12 @@ export default async function PrototypeStudentProfilePage({
               </div>
             </div>
 
-            <button className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
+            <Link
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+              href={`/prototype/leerling-portaal/${student.id}`}
+            >
               Leerling Weergave
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
