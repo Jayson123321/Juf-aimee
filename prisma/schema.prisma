@@ -100,6 +100,9 @@ model Assignment {
   bloomLevel  String?
   bloomNiveau Int              @default(1)
   uitleg      String?
+  studentWork String?
+  savedAt     DateTime?
+  submittedAt DateTime?
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)

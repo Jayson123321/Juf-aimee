@@ -161,7 +161,7 @@ export default async function PrototypeStudentPortalPage({
           <ActionCard
             badge={activeAssignments.length > 0 ? String(activeAssignments.length) : undefined}
             description="Bekijk wat je al hebt gedaan en welke opdrachten je nog kunt maken."
-            href={`/prototype/hoogbegaafde-leerlingen/${student.id}/profiel`}
+            href={`/prototype/leerling-portaal/${student.id}/opdrachten`}
             icon={<BookOpen className="size-10" />}
             tint="bg-[linear-gradient(135deg,rgba(243,232,255,0.9),rgba(255,255,255,0))]"
             title="Mijn opdrachten"
