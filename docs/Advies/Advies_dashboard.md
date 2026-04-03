@@ -59,6 +59,8 @@ Khanmigo wacht altijd op de leraar maar handelt dan autonoom. Juf Aimee doet dit
 **Een Bloom-streefniveau instelling per leerling**
 Molenaar (2022): de leraar is beter in pedagogische beslissingen dan de AI. Door het streefniveau in te stellen bepaalt de leraar de kaders waarbinnen de AI werkt — niet andersom. Maatschappelijk: voorkomt dat de AI leerlingen in een vast niveau houdt, wat kansen op groei blokkeert.
 
+
+** 
 ---
 
 ## Studentpagina (individuele leerling)
