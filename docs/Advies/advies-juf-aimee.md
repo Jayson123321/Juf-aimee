@@ -286,17 +286,17 @@ Het dashboard is de **commando-centrale** waar leraar en AI elkaar ontmoeten. He
 
 3. **Goedkeurings- en afwijzingsknop per suggestie**
    - Acadin: leraar kiest handmatig opdrachten uit catalogus
-   - **Juf Aimee toegevoegd:** AI maakt suggesties, maar leraar beslist altijd (HAX G1)
-   - AI leert van afwijzingen → persoonlijker worden
+   - **Juf Aimee toegevoegd:** AI maakt suggesties, maar leraar beslist altijd
+   - AI leert van afwijzingen en moet leren van de afwijzing dat de suggestie niet voldoende is.
 
 4. **Bloom-streefniveau instelling per leerling**
-   - Acadin heeft geenBloom-niveau tracking
+   - Acadin heeft geen Bloom-niveau tracking
    - **Juf Aimee toegevoegd:** leraar stelt kader in, AI werkt daarbinnen
    - Voorkomt dat AI leerlingen in een vast niveau houdt (Molenaar 2022)
 
 5. **Filters en planningsoverzicht (gebaseerd op Acadin)**
    - Acadin: Filteren op groep, duur, samen/alleen, vaardigheden, vakken
-   - Juf Aimee:同樣的 filters + optie om AI-signalen te combineren ("Toon alleen leerlingen met urgentie-signalen in groep 5")
+   - Juf Aimee: filters + optie om AI-signalen te combineren Toon alleen leerlingen met urgentie-signalen in groep 5
    - Overzicht van geplande opdrachten en deadlines (vanuit Acadin)
    - Plus: AI voert zelf deadline-adviezen in ("Deze leerling heeft last van tempo, pas deadline aan?")
 
