@@ -48,6 +48,7 @@ model Student {
   profile     StudentProfile?
   assignments Assignment[]
   oppChunks   OppChunk[]
+  chatSession StudentChatSession?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -122,6 +123,26 @@ model OppChunk {
   embedding Unsupported("vector(1024)")?
 }
 
+model StudentChatSession {
+  id        String               @id @default(uuid())
+  studentId String               @unique
+  student   Student              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  messages  StudentChatMessage[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model StudentChatMessage {
+  id         String           @id @default(uuid())
+  sessionId  String
+  session    StudentChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role       StudentChatRole
+  content    String
+  createdAt  DateTime         @default(now())
+
+  @@index([sessionId, createdAt])
+}
+
 enum UserRole {
   TEACHER
   ADMIN
@@ -131,4 +152,9 @@ enum AssignmentStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
+}
+
+enum StudentChatRole {
+  USER
+  ASSISTANT
 }

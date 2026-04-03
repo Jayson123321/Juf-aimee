@@ -10,34 +10,35 @@
 
 ### Design 1: Shebaaz
 
-| Onderdeel                       | Sterke punten (+)                                                                      | Verbeterpunten (-)                                             |
-| :------------------------------ | :------------------------------------------------------------------------------------- | :------------------------------------------------------------- |
-| **Interface leraar**            | Veel inzicht in leerlingdata; uitgebreide functionaliteiten voor monitoring en sturing | Kan overweldigend zijn; minder visueel rustig                  |
-| **Leerlingoverzicht**           | Bevat veel inhoudelijke informatie over de leerling                                    | Te druk; informatie staat direct in overzicht (niet handig)    |
-| **Studentprofielpagina**        | Zeer uitgebreid; veel data beschikbaar voor docent                                     | Overload aan informatie; niet overzichtelijk voor snel gebruik |
-| **AI-opdracht aanmaken pagina** | Veel instelmogelijkheden en controle voor docent                                       | Complex in gebruik; kost meer tijd                             |
-| **Profielenpagina**             | Veel details zichtbaar per profiel                                                     | Onrustig design; minder intuïtief                              |
-| **Interface student**           | Inhoudelijk sterk gekoppeld aan leerlingdata                                           | Te veel informatie zichtbaar voor student; niet wenselijk      |
+| Onderdeel                       | Sterke punten (+)                                                                | Verbeterpunten (-)                                                      |
+| :------------------------------ | :------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| **Interface leraar**            | Veel inzicht in leerlingdata; sterke analysemogelijkheden; snelle doorklikopties | Kan overweldigend zijn; visueel druk door kleurgebruik                  |
+| **Leerlingoverzicht**           | Rijke informatie direct zichtbaar; weinig doorklik nodig                         | Te druk; informatie staat direct in overzicht (vermindert scanbaarheid) |
+| **Studentprofielpagina**        | Zeer uitgebreid; duidelijke voortgang en historie zichtbaar                      | Overload aan informatie; niet efficiënt voor snel gebruik               |
+| **AI-opdracht aanmaken pagina** | Veel instelmogelijkheden; flexibel en krachtig                                   | Complex in gebruik; hogere leercurve                                    |
+| **Profielenpagina**             | Veel details en differentiatie zichtbaar                                         | Onrustig design; minder duidelijke hiërarchie                           |
+| **Interface student**           | Inhoudelijk rijk; koppeling met persoonlijke data                                | Toont informatie die leerling niet hoeft te zien; verwarrend en te druk |
 
 ### Design 2: Mazen
 
-| Onderdeel                       | Sterke punten (+)                         | Verbeterpunten (-)                  |
-| :------------------------------ | :---------------------------------------- | :---------------------------------- |
-| **Interface leraar**            | Rustige en duidelijke indeling; intuïtief | Minder diepgaande functionaliteiten |
-| **Leerlingoverzicht**           | Overzichtelijk; focus op structuur        | Minder informatie direct zichtbaar  |
-| **Studentprofielpagina**        | Duidelijk en minimalistisch               | Mist diepgang in data               |
-| **AI-opdracht aanmaken pagina** | Eenvoudig en snel te gebruiken            | Minder aanpasmogelijkheden          |
-| **Profielenpagina**             | Goede structuur en visuele hiërarchie     | Beperkte informatie                 |
-| **Interface student**           | Rustig, duidelijk en prettig in gebruik   | Minder gepersonaliseerd             |
+| Onderdeel                       | Sterke punten (+)                                    | Verbeterpunten (-)                          |
+| :------------------------------ | :--------------------------------------------------- | :------------------------------------------ |
+| **Interface leraar**            | Rustig, duidelijk en intuïtief; goede visuele balans | Minder analysemogelijkheden en diepgang     |
+| **Leerlingoverzicht**           | Zeer overzichtelijk; snel scanbaar                   | Mist detailinformatie die relevant kan zijn |
+| **Studentprofielpagina**        | Minimalistisch en helder                             | Beperkte inhoud; weinig verdieping          |
+| **AI-opdracht aanmaken pagina** | Snel en eenvoudig in gebruik                         | Minder flexibiliteit en instelmogelijkheden |
+| **Profielenpagina**             | Logische structuur; duidelijke visuele hiërarchie    | Minder inzicht in individuele verschillen   |
+| **Interface student**           | Rustig en prettig; focus op taak                     | Minder personalisatie en context            |
 
 ---
 
 ## Observaties Design (Meester Jim)
 
-* **Kleurenpalet & indeling:** Design Mazen scoort duidelijk beter; rustiger en overzichtelijker.
-* **Functionaliteit docent:** Design Shebaaz scoort beter; meer controle en inzicht.
-* **Leerlingervaring:** Mazen prettiger door eenvoud en rust.
-* **Probleem bij Shebaaz:** Te veel leerlinginformatie wordt direct getoond (ook aan leerlingzijde), wat niet wenselijk is.
+* **Kleurenpalet & indeling:** Mazen scoort beter; rustiger en consistenter. Shebaaz voelt druk door intens kleurgebruik.
+* **Functionaliteit docent:** Shebaaz biedt duidelijk meer diepgang en controle.
+* **Datagebruik:** Shebaaz toont veel waardevolle informatie die bij Mazen ontbreekt.
+* **Leerlingervaring:** Mazen is prettiger door eenvoud en focus.
+* **Belangrijk probleem (Shebaaz):** In de studentinterface wordt informatie getoond die niet relevant is voor de leerling zelf.
 
 ---
 
@@ -49,38 +50,39 @@
 * Kenmerken: perfectionistisch, sterke behoefte aan autonomie
 * Leerdoel: zelfstandig onderzoek uitvoeren
 
-| Model       | Voorgestelde Vraag voor Julia                                                                                               | Score (1-5) | Feedback Docent |
-| :---------- | :-------------------------------------------------------------------------------------------------------------------------- | :---------- | :-------------- |
-| **Model A** | "Schrijf 3 verschillen op tussen een democratie en een dictatuur(placeholder)."                                                          |             |                 |
-| **Model B** | "Ontwerp je eigen ideale eiland. Welke wetten gelden daar? Maak een planning voor je eerste drie stappen.(placeholder)"                  |             |                 |
-| **Model C** | "Je gaat een onderzoek doen naar de ruimte. Welke drie vragen heb je al? Laten we samen kijken hoe we stap 1 gaan plannen(placeholder)." |             |                 |
+| Model       | Voorgestelde Vraag voor Julia                                                                                                             | Score (1-5) | Feedback Docent |
+| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :---------- | :-------------- |
+| **Model A** | "Schrijf 3 verschillen op tussen een democratie en een dictatuur (placeholder)."                                                          |             |                 |
+| **Model B** | "Ontwerp je eigen ideale eiland. Welke wetten gelden daar? Maak een planning voor je eerste drie stappen. (placeholder)"                  |             |                 |
+| **Model C** | "Je gaat een onderzoek doen naar de ruimte. Welke drie vragen heb je al? Laten we samen kijken hoe we stap 1 gaan plannen (placeholder)." |             |                 |
 
 ---
 
 ## DEEL 3: Synthese (De 'Gouden' Interface)
 
 1. **Welke specifieke onderdelen uit Design Shebaaz en Mazen moeten we combineren?**
-   → Gebruik de **functionaliteit van Shebaaz** + de **visuele rust en structuur van Mazen**
+   → Functionaliteit en datadiepte van Shebaaz combineren met de rust en UX van Mazen
 
 2. **Welke elementen dragen het meest bij aan autonomie van de leerling?**
-   → Simpele interface (Mazen) + stapsgewijze begeleiding (behouden uit AI-logica)
+   → Eenvoudige interface (Mazen) + duidelijke stappen en structuur
 
 3. **Wat moet absoluut aangepast worden?**
-   → Geen directe weergave van uitgebreide leerlingdata in studentinterface (probleem bij Shebaaz)
+   → Geen overbodige data tonen in studentinterface (probleem bij Shebaaz)
 
 4. **Aanbevolen richting:**
    → Combineer:
 
-   * Mazen: kleuren, layout, UX
-   * Shebaaz: docentfunctionaliteit en datadiepte
+   * Mazen: kleuren, layout, overzicht
+   * Shebaaz: functionaliteit, data-inzicht, flexibiliteit
 
 ---
 
 ## Notities & Observaties (Meester Jim)
 
 * Minder is meer voor leerlingen
-* Docenten willen controle, maar niet ten koste van gebruiksgemak
-* Scheiding tussen docent- en studentweergave is cruciaal
+* Docenten willen controle, maar zonder complexiteit
+* Scheiding tussen docent- en leerlingweergave is essentieel
+* Data is waardevol, maar moet op de juiste plek getoond worden
 
 ---
 
@@ -93,6 +95,6 @@
 **Aanbevolen combinatie ('Gouden Versie'):**
 Een hybride design waarbij de kracht van beide systemen wordt benut:
 
-* Strakke, rustige interface (Mazen)
-* Diepe, krachtige docenttools (Shebaaz)
-* Duidelijke scheiding tussen docent- en leerlinginformatie
+* Rustige en overzichtelijke interface (Mazen)
+* Diepe en flexibele docentfunctionaliteit (Shebaaz)
+* Strikte scheiding tussen docent- en leerlinginformatie
