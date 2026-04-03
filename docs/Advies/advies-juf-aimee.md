@@ -441,3 +441,6 @@ De leraar hoeft niet meer zelf te synthetiseren over 25 leerlingen. De AI doet p
 - Siegle, D. & McCoach, D.B. (2005). Making a difference: Motivating gifted students who are not achieving. *Teaching Exceptional Children,* 38(1), 22–27.
 - Van Kessel, M., Molenaar, I. et al. (2025). Primary school teacher perspectives on effective dashboard use. *Journal of Learning Analytics,* 12(2), 279–292.
 - Chen, J., Dai, D. Y., & Zhou, Y. (2013). Enable, Enhance, and Transform: How Technology Use Can Improve Gifted Education. Roeper Review, 35(3), 166–176. https://doi.org/10.1080/02783193.2013.794892
+- Lisette H, A.C. Sven M, Jaap D, Anouke B. (2023). Academic motivation of intellectually gifted students and their classmates in regular primary school classes: A multidimensional, longitudinal, person- and variable-centered approach,
+https://www.sciencedirect.com/science/article/pii/S1041608023000894?via%3Dihub
+
