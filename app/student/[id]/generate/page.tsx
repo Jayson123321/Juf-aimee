@@ -10,10 +10,10 @@ import {
   Zap,
 } from "lucide-react";
 import {
+  deriveStudentPresentation,
   getBloomLevelLabel,
   getStudentAge,
-  getStudentPresentation,
-} from "@/lib/student-presentation";
+} from "@/lib/student-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -37,12 +37,23 @@ export default async function AssignmentGenerationPage({
         take: 3,
       },
       profile: true,
+      oppChunks: {
+        select: {
+          tekst: true,
+        },
+        take: 12,
+      },
     },
   });
 
   if (!student) notFound();
 
-  const presentation = getStudentPresentation(student.fullName);
+  const presentation = deriveStudentPresentation({
+    fullName: student.fullName,
+    schoolHistory: student.profile?.schoolHistory,
+    assignments: student.assignments,
+    oppTexts: student.oppChunks.map((chunk) => chunk.tekst),
+  });
   const bloomLevel = getBloomLevelLabel(student.bloomNiveau);
   const age = getStudentAge(student.dateOfBirth);
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeSearchOpp } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
-import { getBloomLevelLabel, getStudentPresentation } from "@/lib/student-presentation";
+import { deriveStudentPresentation, getBloomLevelLabel } from "@/lib/student-profile";
 
 type PrototypeAssignmentApiStudent = {
   id: string;
@@ -65,6 +65,7 @@ function bloomLevelToNumber(label: string) {
 
 function buildGenerationPrompt(args: {
   student: PrototypeAssignmentApiStudent;
+  schoolHistory?: string | null;
   resolvedBloom: string;
   focusArea: string;
   sources: string[];
@@ -75,8 +76,21 @@ function buildGenerationPrompt(args: {
     rationale?: string;
   } | null;
 }) {
-  const { student, resolvedBloom, focusArea, sources, teacherPrompt, currentAssignment } = args;
-  const presentation = getStudentPresentation(student.fullName);
+  const {
+    student,
+    schoolHistory,
+    resolvedBloom,
+    focusArea,
+    sources,
+    teacherPrompt,
+    currentAssignment,
+  } = args;
+  const presentation = deriveStudentPresentation({
+    fullName: student.fullName,
+    schoolHistory,
+    assignments: student.assignments,
+    oppTexts: sources,
+  });
 
   return `Je bent Juf Aimee en genereert een gepersonaliseerde opdracht voor een hoogbegaafde leerling.
 
@@ -137,7 +151,12 @@ export async function POST(req: NextRequest) {
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
-      profile: true,
+      profile: {
+        select: {
+          currentSchoolYearGroup: true,
+          schoolHistory: true,
+        },
+      },
       assignments: {
         select: {
           title: true,
@@ -154,9 +173,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Student niet gevonden." }, { status: 404 });
   }
 
-  const resolvedBloom = normalizeBloomLabel(
-    bloomLevel || getBloomLevelLabel(student.bloomNiveau),
-  );
+  const resolvedBloom = normalizeBloomLabel(bloomLevel || getBloomLevelLabel(student.bloomNiveau));
   const query = buildSearchQuery(focusArea, resolvedBloom, student.fullName);
 
   try {
@@ -233,6 +250,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = buildGenerationPrompt({
       student,
+      schoolHistory: student.profile?.schoolHistory,
       resolvedBloom,
       focusArea,
       sources,

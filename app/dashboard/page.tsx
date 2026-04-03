@@ -13,12 +13,12 @@ import {
   Users,
 } from "lucide-react";
 import {
+  deriveStudentPresentation,
   calculateStudentProgress,
   getBloomAppearance,
   getBloomLevelLabel,
   getStudentAge,
-  getStudentPresentation,
-} from "@/lib/student-presentation";
+} from "@/lib/student-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -47,9 +47,24 @@ const placeholderDashboardStats = {
 async function getDashboardStudents() {
   const students = await prisma.student.findMany({
     include: {
+      profile: {
+        select: {
+          schoolHistory: true,
+        },
+      },
+      oppChunks: {
+        select: {
+          tekst: true,
+        },
+        take: 12,
+      },
       assignments: {
         select: {
           id: true,
+          title: true,
+          description: true,
+          uitleg: true,
+          bloomLevel: true,
           status: true,
         },
       },
@@ -60,7 +75,12 @@ async function getDashboardStudents() {
   });
 
   return students.map((student) => {
-    const presentation = getStudentPresentation(student.fullName);
+    const presentation = deriveStudentPresentation({
+      fullName: student.fullName,
+      schoolHistory: student.profile?.schoolHistory,
+      assignments: student.assignments,
+      oppTexts: student.oppChunks.map((chunk) => chunk.tekst),
+    });
     const bloomLabel = getBloomLevelLabel(student.bloomNiveau);
     const completedAssignments = student.assignments.filter(
       (assignment) => assignment.status === "COMPLETED",

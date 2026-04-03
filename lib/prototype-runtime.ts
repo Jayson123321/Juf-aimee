@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
 import {
+  deriveStudentPresentation,
   calculateStudentProgress,
   getBloomAppearance,
   getBloomLevelLabel,
   getStudentAge,
-  getStudentPresentation,
-} from "@/lib/student-presentation";
+} from "@/lib/student-profile";
 
 export type PrototypeBloomLevel =
   | "Onthouden"
@@ -103,6 +103,9 @@ function mapStudent(student: {
     currentTeacher: string | null;
     schoolHistory: string | null;
   } | null;
+  oppChunks: Array<{
+    tekst: string;
+  }>;
   assignments: Array<{
     id: string;
     title: string;
@@ -113,8 +116,13 @@ function mapStudent(student: {
     createdAt: Date;
   }>;
 }): PrototypeStudent {
-  const presentation = getStudentPresentation(student.fullName);
-  const status = getBloomLevelLabel(student.bloomNiveau).replace("Ã«", "ë") as string;
+  const presentation = deriveStudentPresentation({
+    fullName: student.fullName,
+    schoolHistory: student.profile?.schoolHistory,
+    assignments: student.assignments,
+    oppTexts: student.oppChunks.map((chunk) => chunk.tekst),
+  });
+  const status = getBloomLevelLabel(student.bloomNiveau);
   const badge = getBloomAppearance(status);
   const completedAssignments = student.assignments.filter(
     (assignment) => assignment.status === "COMPLETED",
@@ -128,17 +136,14 @@ function mapStudent(student: {
     interests: presentation.interests,
     progress: calculateStudentProgress(student.assignments),
     status,
-    badgeEmoji: badge.badgeEmoji.replace("â", "").replace("ï¸", ""),
+    badgeEmoji: badge.badgeEmoji,
     badgeClassName: badge.badgeClassName,
     completedAssignments,
     totalAssignments: student.assignments.length,
     learningStyle: presentation.learningStyle,
     workMethod: presentation.workMethod,
     concentration: presentation.concentration,
-    motivationFactors: [
-      "Autonomie",
-      ...presentation.interests.slice(0, 2).map((interest) => toTitleCase(interest)),
-    ],
+    motivationFactors: ["Autonomie", ...presentation.interests.slice(0, 2).map(toTitleCase)],
     strengths: presentation.strengths,
     supportNeeds: [
       "Heldere succescriteria",
@@ -199,6 +204,12 @@ export async function getPrototypeDashboardStudents() {
           currentTeacher: true,
           schoolHistory: true,
         },
+      },
+      oppChunks: {
+        select: {
+          tekst: true,
+        },
+        take: 12,
       },
       assignments: {
         select: {
@@ -290,6 +301,12 @@ export async function getPrototypeStudent(studentId: string) {
           currentTeacher: true,
           schoolHistory: true,
         },
+      },
+      oppChunks: {
+        select: {
+          tekst: true,
+        },
+        take: 20,
       },
       assignments: {
         select: {

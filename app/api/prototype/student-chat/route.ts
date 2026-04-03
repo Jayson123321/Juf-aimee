@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeSearchOpp } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, ollama } from "@/lib/ollama";
-import { getBloomLevelLabel, getStudentPresentation } from "@/lib/student-presentation";
+import { deriveStudentPresentation, getBloomLevelLabel } from "@/lib/student-profile";
 
 type PersistedChatMessage = {
   role: "assistant" | "user";
@@ -63,6 +63,12 @@ export async function POST(req: NextRequest) {
     where: { id: studentId },
     include: {
       profile: true,
+      oppChunks: {
+        select: {
+          tekst: true,
+        },
+        take: 12,
+      },
       assignments: {
         select: {
           title: true,
@@ -82,7 +88,6 @@ export async function POST(req: NextRequest) {
 
   const session = await getOrCreateSession(student.id);
   const firstName = student.fullName.split(" ")[0];
-  const presentation = getStudentPresentation(student.fullName);
   const bloomLevel = getBloomLevelLabel(student.bloomNiveau)
     .replace("ÃƒÆ’Ã‚Â«", "Ã«")
     .replace("ÃƒÂ«", "Ã«");
@@ -98,6 +103,12 @@ export async function POST(req: NextRequest) {
         `${student.fullName}, interesses, leerstijl, begeleiding leerlingchat`,
         3,
       );
+      const presentation = deriveStudentPresentation({
+        fullName: student.fullName,
+        schoolHistory: student.profile?.schoolHistory,
+        assignments: student.assignments,
+        oppTexts: [...student.oppChunks.map((chunk) => chunk.tekst), oppContext],
+      });
 
       const response = await ollama.chat({
         model: GEN_MODEL,
@@ -120,11 +131,11 @@ Werkmethode: ${presentation.workMethod}
 
 RECENTE OPDRACHTEN
 ${student.assignments
-  .map(
-    (assignment) =>
-      `- ${assignment.title} (${assignment.bloomLevel ?? "geen Bloom label"}, ${assignment.status})`,
-  )
-  .join("\n") || "- Geen opdrachten gevonden"}
+                .map(
+                  (assignment) =>
+                    `- ${assignment.title} (${assignment.bloomLevel ?? "geen Bloom label"}, ${assignment.status})`,
+                )
+                .join("\n") || "- Geen opdrachten gevonden"}
 
 OPP CONTEXT
 ${oppContext}
@@ -189,6 +200,12 @@ Sluit af met een open vraag waar je mee kunt helpen.`,
       `${message}, ${student.fullName}, leerlingchat hulpvraag`,
       3,
     );
+    const presentation = deriveStudentPresentation({
+      fullName: student.fullName,
+      schoolHistory: student.profile?.schoolHistory,
+      assignments: student.assignments,
+      oppTexts: [...student.oppChunks.map((chunk) => chunk.tekst), oppContext],
+    });
 
     const conversation = [...(latestSession?.messages ?? [])].reverse();
 
@@ -216,19 +233,19 @@ Sterktes: ${presentation.strengths.join(", ")}
 
 RECENTE OPDRACHTEN
 ${student.assignments
-  .map(
-    (assignment) =>
-      `- ${assignment.title} (${assignment.bloomLevel ?? "geen Bloom label"}, ${assignment.status})`,
-  )
-  .join("\n") || "- Geen opdrachten gevonden"}
+              .map(
+                (assignment) =>
+                  `- ${assignment.title} (${assignment.bloomLevel ?? "geen Bloom label"}, ${assignment.status})`,
+              )
+              .join("\n") || "- Geen opdrachten gevonden"}
 
 OPP CONTEXT
 ${oppContext}
 
 GESPREK TOT NU TOE
 ${conversation
-  .map((item) => `${item.role === "USER" ? "Leerling" : "Juf Aimee"}: ${item.content}`)
-  .join("\n") || "Nog geen eerdere berichten."}
+              .map((item) => `${item.role === "USER" ? "Leerling" : "Juf Aimee"}: ${item.content}`)
+              .join("\n") || "Nog geen eerdere berichten."}
 
 Geef nu een behulpzaam antwoord als Juf Aimee op het laatste bericht van de leerling.`,
         },

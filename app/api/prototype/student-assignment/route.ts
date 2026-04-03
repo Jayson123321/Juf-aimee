@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeSearchOpp } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, ollama } from "@/lib/ollama";
-import { getStudentPresentation } from "@/lib/student-presentation";
+import { deriveStudentPresentation } from "@/lib/student-profile";
 
 function parseTipLines(content: string) {
   return content
@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
       student: {
         include: {
           profile: true,
+          oppChunks: {
+            select: {
+              tekst: true,
+            },
+            take: 12,
+          },
         },
       },
     },
@@ -87,12 +93,27 @@ export async function POST(req: NextRequest) {
 
   if (action === "tips") {
     try {
-      const presentation = getStudentPresentation(assignment.student.fullName);
       const oppResults = await executeSearchOpp(
         studentId,
         `${assignment.title}, ${assignment.bloomLevel ?? "Toepassen"}, denktips voor leerling`,
         3,
       );
+      const presentation = deriveStudentPresentation({
+        fullName: assignment.student.fullName,
+        schoolHistory: assignment.student.profile?.schoolHistory,
+        assignments: [
+          {
+            title: assignment.title,
+            description: assignment.description,
+            uitleg: assignment.uitleg,
+            bloomLevel: assignment.bloomLevel,
+          },
+        ],
+        oppTexts: [
+          ...assignment.student.oppChunks.map((chunk) => chunk.tekst),
+          oppResults,
+        ],
+      });
 
       const prompt = `Je bent Juf Aimee en geeft korte denkhulp aan een leerling.
 
