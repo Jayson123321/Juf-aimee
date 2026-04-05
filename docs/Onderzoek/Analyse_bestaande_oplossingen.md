@@ -61,39 +61,83 @@ Khanmigo herhaalt consistent *"You're the expert"* op meerdere momenten bij de e
 
 Daarnaast werkt de AI chatinterface van Khanmigo goed, de leraar kan in eigen woorden bijsturen (*"These questions are not good enough, generate new ones"*) en de AI reageert direct. Dit is een laagdrempelige manier voor leraren om de AI aan te sturen.
 
+![Khanmigo homepage list of tools for the teacher](images/khanmigo_homepage_tools.png)
+![Khanmigo Question Generator page select: Grade level, number questions, Text input](images/khanmigo_question_generator.png)
+![Khanmigo generated questions with answers with AI assistant Chat on the right](images/khanmigo_generatedQA_with_ai_assistant.png)
+
+
+
 *Arcadin*
 
-Arcadin is een bestaande oplossing in het primair onderwijs en gebruikt diverse knopjes "leerling toevoegen" en "toekennen" waar de leraar gebruik van kan maken bij toewijzing van leeractiviteiten.
+Arcadin is een bestaande oplossing in het primair onderwijs en gebruikt diverse knopjes: "leerling toevoegen" en "toekennen" waar de leraar gebruik van kan maken bij toewijzing van leeractiviteiten.
 Het onderwijssysteem is in te zetten voor een kort leermoment en ook voor een lange leerlijn; daarover is nagedacht bij het maken van de opdrachten.
 
 De leerling uploadt het werk documenten, foto's en filmpjes in een online portfolio met ook een reflectieformulier. Dit reflectieformulier helpt de leerling helpen begrijpen wat hij de volgende keer beter kan doen. En geeft ook de leraar inzichten bij het maken van nieuwe opdrachten. De begeleider ziet gelijk wat de leerling heeft gedaan en geeft ook feedback wat zichtbaar moet zijn voor de leerling.
 
+**accounts toevoegen**
+
+* beheerder voegt accounts toe van leerlingen, leraren via de beheerderstool
+* Koppelt hiermee elke leerling aan één of meerdere leraren
+
+![alt text](images/beheerder-arcadin.png)
+
+![alt text](images/toevoegen-accounts-acadin.png)
+
+**leeractiviteiten zoeken en toewijzen**
+
+* Opdrachtentool filters voor groep, niveau en opdrachtduur
+* Leraar bekijkt de opdracht en wijst het toe aan de leerling of groep
+* Ook is er een agenda beschikbaar voor het selecteren van de deadline
+* Leerling portfolio kan ingezien worden
+
+![alt text](images/opdrachtentool.png)
+
+![alt text](images/leeractiviteiten.png)
+
+![alt text](images/inzageopdracht.png)
+
+![alt text](images/deadline-opdracht.png)
+
+![alt text](images/leerlingenportfolio.png)
+
+*Leerlingenomgeving*
+
+* opdrachten inleveren in portfolio
+* evaluatieformulier insturen
+* feedback van leraar
+
+![alt text](<images/opdrachten inleveren.png>)
+
+![alt text](images/feedback-leraar.png)
 
 ## Resultaten
-![Khanmigo homepage list of tools for the teacher](images/khanmigo_homepage_tools.png)
-![Khanmigo Question Generator page select: Grade level, number questions, Text input](images/khanmigo_question_generator.png)
-![Khanmigo generated questions with answers with AI assistant Chat on the right](images/khanmigo_generatedQA_with_ai_assistant.png)
-![Arcadin leerling activiteiten](images/leerling_activiteiten.png)
+
 
 
 
 ### Waar Juf Aimee het beter moet doen
 
-Khanmigo is uiteindelijk een tool, de leraar moet altijd zelf een tool opstarten, input invullen en op start drukken. De AI doet nooit iets automatisch en onthoudt niets tussen sessies. Dit maakt Khanmigo meer een tool dan een echte collega.
+Khanmigo is een AI-gebaseerde tool voor genereren van opdrachten, ondanks dat moet de leraar altijd zelf een applicatie opstarten, input invullen en op start drukken. De AI doet nooit iets automatisch en onthoudt niets tussen sessies. 
 
-Juf Aimee moet hier tussenin zitten:
+Arcadin zit veel meer op de gebruikersvriendelijkheid en interactie vanuit en voor de leraar, en die integratie in Juf Aimee zou voordelen leveren qua gebruik. Zo werkt Arcadin met filterknoppen zodat specifieke leeractiviteiten zichtbaar worden en de leraar niet eindeloos hoeft te zoeken in een lange lijst met opdrachten.
 
-- Proactief maar niet automatisch: Juf Aimee signaleert en suggereert, maar de leraar keurt altijd goed voordat een leerling iets ziet.
-- Geheugen: Juf Aimee bouwt een leerlingprofiel op over tijd zodat opdrachten steeds beter aansluiten, in plaats van elke sessie opnieuw beginnen.
-- Transparantie over waarom: Khanmigo legt niet uit waarom het bepaalde vragen genereert. Juf Aimee moet dit wel doen, bijvoorbeeld: *"Deze opdracht is gekozen omdat deze leerling toe is aan Analyseren (Bloom niveau 4)"*.
+Juf Aimee moet een combinatie hebben van de sterke punten van beide leerplatforms.
+
+- Proactief maar niet automatisch: Juf Aimee signaleert en suggereert, maar de leraar heeft de keuze om een opdracht goed te keuren of veranderingen vereisen.
+- Geheugen: Juf Aimee kijkt voornamelijk naar het leerlingprofiel. Een eventueel opbouwend portfolio over tijd zodat ingeleverd werk, evaluatieformulieren en feedback de leraar en AI zou kunnen helpen in het genereren van geschikte nieuwe opdrachten.
+- Transparantie: over waarom: Khanmigo legt niet uit waarom het bepaalde vragen genereert. Juf Aimee moet dit wel doen, bijvoorbeeld: *"Deze opdracht is gekozen omdat deze leerling toe is aan Analyseren (Bloom niveau 4)"*.
+- Flexibiliteit: Arcadin kijkt ook opdrachtduur zodat opdrachten worden gemaakt voor een kort leermoment zoals op school.
+En ook intensieve opdrachten waar de leerling online aan kan werken.
+Juf Aimee zou hiermee het lesmateriaal kunnen gebruiken voor hybride lesvormen
 
 ### Kernverschil samengevat
 
-| | Khanmigo | Juf Aimee |
-|---|---|---|
-| Initiatief | Altijd de leraar | Beiden kunnen initiatief nemen |
-| Geheugen | Geen. begint elke sessie opnieuw | Onthoudt leerlingprofiel over tijd |
-| Uitleg | Geen referentie aan Bloom | Legt uit waarom op basis van Bloom |
-| Rol leraar | Bedient de AI | Werkt samen met de AI |
+| | Khanmigo | Juf Aimee | Arcadin |
+|---|---|---|---|
+| Initiatief | Altijd de leraar | Beiden nemen initiatief | Leraar |
+| Geheugen | Geen. begint elke sessie opnieuw | Onthoudt | Geen |
+| Uitleg | Geen referentie aan Bloom | Legt uit waarom op basis van Bloom | Geen Bloom |
+| Opdrachten | Geen opslag | Vector DB| SQL database
+| Rol leraar | Bedient de AI | Werkt samen met de AI | Geen AI-integratie
 
 
