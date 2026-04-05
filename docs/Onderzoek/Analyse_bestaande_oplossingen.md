@@ -1,4 +1,4 @@
-# Analysetabel: Mens-AI Samenwerking
+# Platform-analyse Hoogbegaafden 
 
 **Juf Aimee — Studio Responsible AI | Sprint 2**
 
@@ -18,6 +18,10 @@ Gekozen omdat dit framework specifiek ingaat op hoe mensen en AI van elkaar kunn
 
 ### Khanmigo
 Khanmigo is niet speciaal gericht op hoogbegaafde kinderen, maar is wel een AI-onderwijsassistent die de samenwerking tussen leraar en AI expliciet heeft vormgegeven, waardoor het een relevante casus is om te onderzoeken hoe Juf Aimee de leraar kan ondersteunen zonder diens regie over te nemen.
+
+### Arcadin
+
+Acadin is primair onderwijs voor hoogbegaafde en talentvolle leerlingen van groep 1-8. De leraren in dit platform hebben als doel leerlingen te prikkelen met uitdagende opdachten. Het platform heeft >650 leeractivteiten gebaseerd op het niveau, interesses en vaardigheden van de leerling. Het onderwijssysteem is zowel op school als online inzetbaar voor leerlingen.
 
 ---
 
@@ -47,18 +51,31 @@ Khanmigo is niet speciaal gericht op hoogbegaafde kinderen, maar is wel een AI-o
 
 ---
 
-## Resultaten
-![Khanmigo homepage list of tools for the teacher](images/khanmigo_homepage_tools.png)
-![Khanmigo Question Generator page select: Grade level, number questions, Text input](images/khanmigo_question_generator.png)
-![Khanmigo generated questions with answers with AI assistant Chat on the right](images/khanmigo_generatedQA_with_ai_assistant.png)
-
 ## Conclusie & Advies
 
-### Wat Khanmigo goed doet en Juf Aimee moet overnemen
+### Wat doen de bestaande platformen goed
+
+*Khanmigo*
 
 Khanmigo herhaalt consistent *"You're the expert"* op meerdere momenten bij de eerste popup, in de sidebar en bij elke output. Dit is geen toevallige keuze maar een bewust ontwerpprincipe. Juf Aimee moet dit overnemen: de leraar is altijd de eindverantwoordelijke en dat moet voelbaar zijn door de hele tool heen.
 
 Daarnaast werkt de AI chatinterface van Khanmigo goed, de leraar kan in eigen woorden bijsturen (*"These questions are not good enough, generate new ones"*) en de AI reageert direct. Dit is een laagdrempelige manier voor leraren om de AI aan te sturen.
+
+*Arcadin*
+
+Arcadin is een bestaande oplossing in het primair onderwijs en gebruikt diverse knopjes "leerling toevoegen" en "toekennen" waar de leraar gebruik van kan maken bij toewijzing van leeractiviteiten.
+Het onderwijssysteem is in te zetten voor een kort leermoment en ook voor een lange leerlijn; daarover is nagedacht bij het maken van de opdrachten.
+
+De leerling uploadt het werk documenten, foto's en filmpjes in een online portfolio met ook een reflectieformulier. Dit reflectieformulier helpt de leerling helpen begrijpen wat hij de volgende keer beter kan doen. En geeft ook de leraar inzichten bij het maken van nieuwe opdrachten. De begeleider ziet gelijk wat de leerling heeft gedaan en geeft ook feedback wat zichtbaar moet zijn voor de leerling.
+
+
+## Resultaten
+![Khanmigo homepage list of tools for the teacher](images/khanmigo_homepage_tools.png)
+![Khanmigo Question Generator page select: Grade level, number questions, Text input](images/khanmigo_question_generator.png)
+![Khanmigo generated questions with answers with AI assistant Chat on the right](images/khanmigo_generatedQA_with_ai_assistant.png)
+![Arcadin leerling activiteiten](images/leerling_activiteiten.png)
+
+
 
 ### Waar Juf Aimee het beter moet doen
 
