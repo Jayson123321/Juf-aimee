@@ -90,7 +90,7 @@ De AI-agent gebruikt twee tools:
 ## Aanbevelingen
 
 ### Aanbeveling 1  
-**Advies:** Implementeer een *Structured Augmented Generation* binnen het leerplatform, waarbij gestructureerde onderwijsgegevens zoals leerlingportfolio wordt gebruikt om AI-ondersteuning beter af te stemmen op de individuele leerling.
+**Advies:** Implementeer een *Retrieval And Structured Augmented Generation* (RAS) binnen het leerplatform, waarbij gestructureerde onderwijsgegevens zoals leerlingportfolio wordt gebruikt om AI-ondersteuning beter af te stemmen op de individuele leerling.
 
 **Onderbouwing** 
 Hoewel AI-systemen goed zijn in het vinden van relevante informatie, houden ze vaak onvoldoende rekening met de onderwijsstructuur en het leerproces van de leerling. Voor hoogbegaafde leerlingen is dit juist essentieel, omdat zij vaak:
@@ -99,7 +99,7 @@ Hoewel AI-systemen goed zijn in het vinden van relevante informatie, houden ze v
 - behoefte hebben aan verdieping in plaats van herhaling  
 - verschillende leerstrategieën en interesses hebben  
 
-De SAG-benadering voegt hier een belangrijke laag aan toe door:
+De RAS-benadering voegt hier een belangrijke laag aan toe door:
 
 - informatie niet alleen op relevantie, maar ook op voorgaande reflecties, voorkeuren en interesses van de leerling mee te nemen.  
 - verbanden te leggen tussen onderwerpen en vaardigheden  
@@ -250,6 +250,9 @@ https://www.sciencedirect.com/science/article/pii/S1041608023000894?via%3Dihub
 - Kahyaoglu, Mustafa. (2013) A comparision between gifted students and non-gifted students’ learning styles and their motivation styles
 towards science learning
 https://academicjournals.org/article/article1379768138_Kahyaoglu.pdf
+- Pengcheng J, Siru O, Yizhu J, Ming Z, Runchu T, Jiawei H. (2025). A survey on retrieval and structuring augmented generation with large language models. arXiv. https://arxiv.org/abs/2509.10697
+
+
 
 
 
