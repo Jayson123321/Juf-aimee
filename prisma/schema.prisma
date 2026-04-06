@@ -35,7 +35,8 @@ model Student {
   postalCode     String?
   city           String?
   phoneNumber    String?
-  email          String?
+  email          String?   @unique
+  password       String?
   familyDetails  String?
   custodyDetails String?
 
