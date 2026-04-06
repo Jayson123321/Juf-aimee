@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Users, BookOpen, TrendingUp, Calendar,
   GraduationCap, Settings, User, ChevronLeft, ChevronRight, School,
+  
 } from "lucide-react"
 import { useDashboard, UserRole } from "./role-context"
 import { cn } from "@/lib/utils"
@@ -40,10 +41,9 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
   const pathname = usePathname()
 
   const studentItems: NavItem[] = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: profileHref,  icon: User,            label: "Profiel" },
-    { href: "/opdrachten", icon: BookOpen,        label: "Opdrachten" },
-    { href: "/voortgang",  icon: TrendingUp,      label: "Voortgang" },
+    { href: `/prototype/leerling-portaal/${profileHref.split("/").pop()}`,  icon: User,            label: "Profiel" },
+    { href: `/prototype/leerling-portaal/${profileHref.split("/").pop()}/opdrachten`, icon: BookOpen, label: "Opdrachten" },
+    { href: profileHref,  icon: Settings,            label: "Instellingen" }
   ]
 
   const items = role === "STUDENT" ? studentItems : role === "TEACHER" ? teacherItems : adminItems
