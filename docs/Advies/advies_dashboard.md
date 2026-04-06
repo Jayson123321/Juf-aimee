@@ -5,7 +5,8 @@
 
 ## Inleiding
 
-Uit onze analyse van Khanmigo en de Microsoft HAX Guidelines bleek één fundamenteel probleem: bestaande AI-onderwijstools zijn gebouwd als tools, niet als samenwerkingspartners. De leraar moet altijd zelf het initiatief nemen, de AI onthoudt niets tussen sessies, en legt nooit uit waarom het iets doet. Dit ondermijnt de regie van de leraar in plaats van die te versterken.
+Uit onze analyse van Khanmigo en de Microsoft HAX Guidelines bleek 
+een probleem: bestaande AI-onderwijstools zijn gebouwd als tools, niet als samenwerkingspartners. De leraar moet altijd zelf het initiatief nemen, de AI onthoudt niets tussen sessies, en legt nooit uit waarom het iets doet. Dit ondermijnt de regie van de leraar in plaats van die te versterken.
 
 Dit advies beantwoordt de vraag: hoe moet het dashboard eruitzien zodat mens en AI elkaar versterken, zonder dat de AI de leraar overneemt?
 
@@ -44,14 +45,11 @@ Khanmigo is niet speciaal gericht op hoogbegaafde kinderen, maar heeft de samenw
 
 De overzichtspagina is het moment waarop de leraar en de AI elkaar ontmoeten. Het doel is niet zoveel mogelijk data tonen, maar de leraar in één oogopslag laten zien waar actie nodig is en die actie direct mogelijk maken.
 
-**Een overzicht van leerlingen met actieve AI-signalen zoals patroon signalen, gesorteerd op urgentie**
-Molenaar & Knoop-van Campen (2019): leraren handelen pas op dashboardinformatie als die direct koppelbaar is aan een concrete actie. Sorteren op urgentie verlaagt de drempel om te handelen. Maatschappelijk: leerlingen die extra aandacht nodig hebben worden eerder opgemerkt, wat onderwijsongelijkheid kan verminderen. Siegle & McCoach (2005) tonen aan dat hoogbegaafde leerlingen 
-uitdaging vermijden wanneer ze niet zeker zijn van succes — 
-dit gedrag is zichtbaar in keuzepatronen over tijd, niet in 
-toetsscores.
+**Een overzicht van leerlingen met actieve AI-signalen zoals patroonherkenning over tijd**
+Molenaar & Knoop-van Campen (2019): leraren handelen pas op dashboardinformatie als die direct koppelbaar is aan een concrete actie. Maatschappelijk: leerlingen die extra aandacht nodig hebben worden eerder opgemerkt, wat onderwijsongelijkheid kan verminderen. Siegle & McCoach (2005) tonen aan dat hoogbegaafde leerlingen uitdaging vermijden wanneer ze niet zeker zijn van succes, dit gedrag is zichtbaar in keuzepatronen over tijd, niet in toetsscores.
 
 **Per signaal een korte uitleg waarom de AI dit markeert**
-Uit de Khanmigo-analyse bleek dat de AI nooit uitlegt waarom het iets doet — dit is het grootste gat. HAX G8: zonder uitlegbaarheid is er geen echte samenwerking, alleen blinde opvolging. Maatschappelijk: transparantie over AI-beslissingen beschermt leerlingen tegen ondoorzichtige profilering en is een vereiste onder de AVG.
+Uit de Khanmigo-analyse bleek dat de AI nooit uitlegt waarom het iets doet, dit is het grootste gat. HAX G8: zonder uitlegbaarheid is er geen echte samenwerking, alleen blinde opvolging. Maatschappelijk: transparantie over AI-beslissingen beschermt leerlingen tegen ondoorzichtige profilering en is een vereiste onder de AVG.
 
 **Een goedkeurings en afwijzingsknop per suggestie**
 Khanmigo wacht altijd op de leraar maar handelt dan autonoom. Juf Aimee doet dit anders: proactief initiatief, maar de leraar beslist altijd. HAX G1: niets bereikt een leerling zonder expliciete goedkeuring. Maatschappelijk: de leraar blijft verantwoordelijk — AI kan die verantwoordelijkheid niet overnemen.
@@ -65,7 +63,7 @@ Molenaar (2022): de leraar is beter in pedagogische beslissingen dan de AI. Door
 
 ## Studentpagina (individuele leerling)
 
-De studentpagina is waar de samenwerking het meest concreet wordt. De AI laat zien wat het heeft geleerd over een leerling, de leraar vult aan, corrigeert en keurt goed. Zonder deze wisselwerking is Juf Aimee een tool — met deze wisselwerking is het een collega.
+De studentpagina is waar de samenwerking het meest concreet wordt. De AI laat zien wat het heeft geleerd over een leerling, de leraar vult aan, corrigeert en keurt goed. Zonder deze wisselwerking is Juf Aimee een tool, met deze wisselwerking is het een collega.
 
 **Een tijdlijn van Bloom-niveaus over tijd**
 College voor de Rechten van de Mens (2024): waarschuwt voor labeling door AI. Een tijdlijn toont voortgang in plaats van een vast label. Maatschappelijk: permanente labeling verlaagt de verwachtingen van leraren structureel, met langdurige gevolgen voor onderwijskansen.
@@ -74,7 +72,7 @@ College voor de Rechten van de Mens (2024): waarschuwt voor labeling door AI. Ee
 Molenaar (2022): de leraar is beter in het interpreteren van context dan de AI. Dit veld is de plek waar contextuele kennis het systeem binnenkomt. Maatschappelijk: zorgt dat persoonlijke omstandigheden meewegen in AI-beslissingen.
 
 **Per AI-suggestie de redenering zichtbaar**
-Uit de Khanmigo-analyse bleek dat de AI alleen zegt "I've drafted some questions" — zonder enige toelichting. Van Kessel et al. (2025): effectief dashboardgebruik vereist vaardigheden om data te interpreteren. Door de redenering te tonen leer je de leraar de AI begrijpen zonder dat die AI-expert hoeft te worden. Maatschappelijk: leraren kunnen controleren of de AI geen ongelijke kansen creëert.
+Uit de Khanmigo-analyse bleek dat de AI alleen zegt "I've drafted some questions", zonder enige toelichting. Van Kessel et al. (2025): effectief dashboardgebruik vereist vaardigheden om data te interpreteren. Door de redenering te tonen leer je de leraar de AI begrijpen zonder dat die AI-expert hoeft te worden. Maatschappelijk: leraren kunnen controleren of de AI geen ongelijke kansen creëert.
 
 - **Opdrachtsuggesties** — welke oefening past nu bij dit Bloom-niveau en deze toetsdata?
 - **Interventiesuggesties** — wanneer een leerling structureel moeite heeft. Molenaar (2022): patroonherkenning over tijd is waar de AI sterker in is dan de leraar.
@@ -85,9 +83,6 @@ Khanmigo biedt alleen een thumbs-down — niet de mogelijkheid om aan te passen.
 
 **Een log van eerder afgewezen suggesties**
 Khanmigo onthoudt niets — leren is daardoor onmogelijk. Molenaar (2022): een hybride systeem wordt beter naarmate mens en AI meer samenwerken. Dit log maakt zichtbaar of de AI daadwerkelijk bijleert. Maatschappelijk: maakt het leerproces van de AI controleerbaar en auditeerbaar.
-
-**Een nudge bij herhaalde goedkeuring zonder aanpassing**
-College voor de Rechten van de Mens (2024): automation bias is het grootste gedragsrisico bij mens-AI samenwerking. Een zachte waarschuwing dwingt de leraar actief te blijven beslissen. Maatschappelijk: voorkomt dat vooroordelen in AI-data onopgemerkt structurele ongelijkheden versterken.
 
 ---
 
