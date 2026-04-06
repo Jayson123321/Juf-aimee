@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Users, BookOpen, TrendingUp, Calendar,
   GraduationCap, Settings, User, ChevronLeft, ChevronRight, School,
+  
 } from "lucide-react"
 import { useDashboard, UserRole } from "./role-context"
 import { cn } from "@/lib/utils"
+import type { ReactNode } from "react"
 
 
 
@@ -34,15 +36,14 @@ const roleLabels: Record<UserRole, string> = {
   ADMIN: "Beheerder",
 }
 
-export function Sidebar() {
+export function Sidebar({ footer }: { footer?: ReactNode }) {
   const { role, sidebarCollapsed, setSidebarCollapsed, profileHref } = useDashboard()
   const pathname = usePathname()
 
   const studentItems: NavItem[] = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: profileHref,  icon: User,            label: "Profiel" },
-    { href: "/opdrachten", icon: BookOpen,        label: "Opdrachten" },
-    { href: "/voortgang",  icon: TrendingUp,      label: "Voortgang" },
+    { href: `/prototype/leerling-portaal/${profileHref.split("/").pop()}`,  icon: User,            label: "Profiel" },
+    { href: `/prototype/leerling-portaal/${profileHref.split("/").pop()}/opdrachten`, icon: BookOpen, label: "Opdrachten" },
+    { href: profileHref,  icon: Settings,            label: "Instellingen" }
   ]
 
   const items = role === "STUDENT" ? studentItems : role === "TEACHER" ? teacherItems : adminItems
@@ -50,7 +51,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "relative flex flex-col h-full transition-[width] duration-300 ease-in-out shrink-0",
+        "relative flex flex-col h-full transition-[width] duration-300 ease-in-out shrink-0 border-r border-white/10",
         sidebarCollapsed ? "w-16" : "w-60"
       )}
       style={{ backgroundColor: "oklch(0.18 0.07 255)" }}
@@ -89,6 +90,13 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Footer slot (e.g. logout) */}
+      {footer && (
+        <div className="px-2 border-t border-white/10 pt-1">
+          {footer}
+        </div>
+      )}
 
       {/* Collapse toggle */}
       <div className="px-2 py-3 border-t border-white/10">

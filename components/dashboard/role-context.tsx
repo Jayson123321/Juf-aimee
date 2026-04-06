@@ -21,12 +21,14 @@ const DashboardContext = createContext<DashboardContextType>({
 
 export function DashboardProvider({
   children,
+  role: initialRole = "TEACHER",
   profileHref = "/students",
 }: {
   children: ReactNode
+  role?: UserRole
   profileHref?: string
 }) {
-  const [role, setRole] = useState<UserRole>("TEACHER")
+  const [role, setRole] = useState<UserRole>(initialRole)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   return (
     <DashboardContext.Provider value={{ role, setRole, sidebarCollapsed, setSidebarCollapsed, profileHref }}>
