@@ -6,6 +6,8 @@ import { Sidebar } from "@/components/dashboard/Sidebar"
 import { Header } from "@/components/dashboard/Header"
 import LogoutButton from "@/app/admin/LogoutButton";
 
+export const dynamic = "force-dynamic"
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get("session_user_id")?.value;

@@ -1,16 +1,20 @@
 import Image from "next/image";
+import aimeePortrait from "@/app/Images/Aimee.png";
 import Link from "next/link";
 import {
   AlertTriangle,
   BookOpen,
   Brain,
   ChartSpline,
+  LogOut,
   Lightbulb,
   Sparkles,
   Users,
 } from "lucide-react";
-import aimeePortrait from "@/app/Images/Aimee.png";
-import { prototypeDashboardStats, prototypeStudents } from "./prototype-data";
+import {
+  getPrototypeDashboardStats,
+  getPrototypeDashboardStudents,
+} from "@/lib/prototype-runtime";
 
 function PlaceholderLabel({ className = "" }: { className?: string }) {
   return (
@@ -24,36 +28,56 @@ function PlaceholderLabel({ className = "" }: { className?: string }) {
 
 function Header() {
   return (
-    <div className="flex flex-col items-center gap-5 text-center">
-      <div className="flex items-center gap-4">
-        <div className="relative size-20 overflow-hidden rounded-[26px] border border-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
-          <Image
-            alt="Juf Aimee"
-            className="object-cover"
-            fill
-            sizes="80px"
-            src={aimeePortrait}
-          />
-        </div>
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Juf Aimee</h1>
-          <p className="text-sm text-slate-700">AI-onderwijsassistent</p>
-        </div>
+    <div className="space-y-5">
+      <div className="flex justify-end">
+        <Link
+          className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_30px_rgba(92,114,180,0.06)] transition hover:bg-white"
+          href="/prototype/leerling-login"
+        >
+          <LogOut className="size-4" />
+          Uitloggen
+        </Link>
       </div>
 
-      <p className="text-sm text-slate-500">
-        Prototype voor leerkrachten - Hoogbegaafde leerlingen
-      </p>
+      <div className="flex flex-col items-center gap-5 text-center">
+        <div className="flex items-center gap-4">
+          <div className="relative size-20 overflow-hidden rounded-[26px] border border-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+            <Image
+              alt="Juf Aimee"
+              className="object-cover"
+              fill
+              sizes="80px"
+              src={aimeePortrait}
+            />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900">Juf Aimee</h1>
+            <p className="text-sm text-slate-700">AI-onderwijsassistent</p>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.08)] transition hover:bg-white">
-          <BookOpen className="size-4" />
-          Bronnen Bibliotheek
-        </button>
-        <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.06)] transition hover:bg-slate-100">
-          <Users className="size-4" />
-          Leerling Portaal
-        </button>
+        <p className="text-sm text-slate-500">
+          Prototype voor leerkrachten - Hoogbegaafde leerlingen
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <button className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/90 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.08)] transition hover:bg-white">
+            <BookOpen className="size-4" />
+            Bronnen Bibliotheek
+          </button>
+          <Link
+            className="inline-flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 text-base font-semibold text-slate-900 shadow-[0_10px_30px_rgba(92,114,180,0.06)] transition hover:bg-slate-100"
+            href="/prototype/leerling-login"
+          >
+            <Users className="size-4" />
+            Leerling Portaal
+          </Link>
+        </div>
+
+        <p className="max-w-3xl text-xs leading-6 text-slate-500">
+          Dit prototype gebruikt nu dezelfde studentdata uit de database als de werkende app,
+          terwijl de vormgeving en flow los blijven voor ontwerp- en iteratiewerk.
+        </p>
       </div>
     </div>
   );
@@ -82,7 +106,7 @@ function OverviewCard({
 function StudentCard({
   student,
 }: {
-  student: (typeof prototypeStudents)[number];
+  student: Awaited<ReturnType<typeof getPrototypeDashboardStudents>>[number];
 }) {
   return (
     <div className="rounded-[28px] border border-[rgba(153,164,207,0.28)] bg-white/94 p-5 shadow-[0_18px_50px_rgba(92,114,180,0.08)] backdrop-blur md:p-6">
@@ -99,7 +123,9 @@ function StudentCard({
           </div>
         </div>
 
-        <span className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-lg font-semibold text-slate-700 shadow-sm">
+        <span
+          className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-lg font-semibold shadow-sm ${student.badgeClassName}`}
+        >
           <span aria-hidden="true">{student.badgeEmoji}</span>
           {student.status}
         </span>
@@ -159,7 +185,12 @@ function StudentCard({
   );
 }
 
-export default function PrototypeHoogbegaafdeLeerlingenPage() {
+export default async function PrototypeHoogbegaafdeLeerlingenPage() {
+  const [prototypeDashboardStats, prototypeStudents] = await Promise.all([
+    getPrototypeDashboardStats(),
+    getPrototypeDashboardStudents(),
+  ]);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(171,194,255,0.22),transparent_28%),linear-gradient(180deg,#f7f9ff_0%,#eef4ff_100%)]">
       <div className="mx-auto max-w-[1400px] space-y-8 px-6 py-8 lg:px-8">
@@ -255,7 +286,7 @@ export default function PrototypeHoogbegaafdeLeerlingenPage() {
           <div className="space-y-1">
             <h2 className="text-xl font-semibold text-slate-900">Hoogbegaafde Leerlingen</h2>
             <p className="text-sm text-slate-500">
-              Volledig placeholder-overzicht voor design, feedback en iteraties
+              Prototype-overzicht met live databasegegevens in de nieuwe UI
             </p>
           </div>
 

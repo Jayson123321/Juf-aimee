@@ -5,7 +5,7 @@ import { executeTool } from "./tools"
 export async function runAgentLoop(
   messages: Message[],
   tools: Tool[],
-  context: { leerlingId?: number } = {}
+  context: { leerlingId?: string } = {}
 ): Promise<string> {
   const history = [...messages]
 

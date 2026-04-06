@@ -1,12 +1,10 @@
 # Advies: Juf Aimee AI-Assistent
 
-**Datum:** vrijdag 2 april 2026  
 **Leeruitkomst**: Advies     
 **Deelnemers**:    
 
 - Shehbaaz
 - Jayson 
-
 
 ---
 
@@ -22,10 +20,9 @@ Daarnaast gaan wij ook gebruikerstesten uitvoeren bij echte leerkrachten zodat w
 
 ---
 
-
 ## Prototype voorbeeld
 
-Dit is de eerste versie van ons prototype, en daarin laat ik de onderdelen zien die we willen realiseren voor het leerplatform voor hoogbegaafde leerlingen.
+Dit is de versie van ons prototype, en daarin laat ik de onderdelen zien die we willen realiseren voor het leerplatform voor hoogbegaafde leerlingen.
 
 ### Dashboard 
 ![dashboard](images/dashboard.png)
@@ -54,21 +51,11 @@ Dit is de eerste versie van ons prototype, en daarin laat ik de onderdelen zien 
 
 ## Inleiding
 
-Dit advies is gebaseerd op een functioneel prototype van de Juf Aimee AI-assistent, een vernieuwend leerplatform specifiek ontworpen voor leraren die werken met hoogbegaafde leerlingen. Ons prototype is ontwikkeld met een **RAG (Retrieval-Augmented Generation) architectuur** die individuele Onderwijs Portfolio's (OPP's) van leerlingen integrale analyseert encontextuele, gepersonaliseerde ondersteuning biedt.
-
-**Gerealiseerde-functionaliteit:**
-- **AI-gestuurde chat** met Ollama (llama3.2:3b)端个 teachers' contextaware vragen over leerlingen
-- **Vector database** (PostgreSQL + pgvector) voor semantische zoekopdrachten in OPP-documenten
-- **Documentverwerking** van Word-bestanden via mammoth.js met chunking strategie
-- **Gebruikersbeheer** met rolensysteem (leraar/admin) en authenticatie
-- **Dashboard** voor leerlingoverzicht en Bloom-niveau tracking
-- **Studentprofielen** met gedetailleerde achtergrondinformatie
+Dit advies is gebaseerd op een functioneel prototype van de Juf Aimee AI-assistent, een vernieuwend leerplatform specifiek ontworpen voor leraren die werken met hoogbegaafde leerlingen. Ons prototype is ontwikkeld met het AI-framework Retrieval-Augmented Generation die individuele Onderwijs Portfolio's (OPP's) van leerlingen analyseert en gepersonaliseerde ondersteuning biedt.
 
 **Validatie:** 
-- Proof-of-concept successfully draait met 6 teststudenten en hun OPP-documenten
-- RAG-pipeline verwerkt documenten tot vector embeddings voor intelligent zoeken
-- Chat-agent bruikbaar via API endpoint met tool-calling voor student lookup en document search
-
+- Proof-of-concept succesvol draait met 6 teststudenten en hun OPP-documenten
+- RAG-pipeline verwerkt documenten tot vector embeddings voor contextueel zoeken
 ---
 
 ## Prototype voorbeeld
@@ -76,7 +63,7 @@ Dit advies is gebaseerd op een functioneel prototype van de Juf Aimee AI-assiste
 Ons werkende prototype toont de volgende functionaliteiten:
 
 ### AI Chat Interface
- Dokters kunnen natuurlijke taal vragen stellen zoals:
+ Docenten kunnen natuurlijke taal vragen stellen zoals:
  * "Wat is het leerniveau van Julia?"
  * "Welke aandachtspunten zijn genoemd in Milan's OPP?"
  * "Toon me alle leerlingen in groep 6"
@@ -87,8 +74,8 @@ De AI-agent gebruikt twee tools:
 
 ### Database Schema
  Onze Prisma schema ondersteunt:
- - **Studenten** met bloomNiveau (1-6) en groepindeling
- - **OppChunks** met vector embeddings (1024 dimensies) voor semantic search
+ - **Studenten** met bloomNiveau 1-6 en groepindeling
+ - **OppChunks** met vector embeddings voor semantic search
  - **Assignments** voor taken en voortgang
  - **User roles** voor beveiliging en toegangscontrole
 
@@ -102,149 +89,170 @@ De AI-agent gebruikt twee tools:
 
 ## Aanbevelingen
 
-### Aanbeveling 1
-**Advies:** Implementeer een **RAG-gebaseerde AI-assistent** als kernfunctionaliteit voor het ondersteunen van leraren met hoogbegaafde leerlingen, waarbij elk leerling een persoonlijk OPP heeft dat geïndexeerd wordt in een vector database.
+### Aanbeveling 1  
+**Advies:** Implementeer een *Retrieval And Structured Augmented Generation* (RAS) binnen het leerplatform, waarbij gestructureerde onderwijsgegevens zoals leerlingportfolio wordt gebruikt om AI-ondersteuning beter af te stemmen op de individuele leerling.
 
-**Onderbouwing:** 
-Uit onze analyse blijkt dat hoogbegaafde leerlingen sterk verschillen in hun leervormen, interesses en cognitieve profielen. Traditionele systemen bieden geen manier om dit individuele profiel effectief te benutten. Onze RAG-aanpak lost dit op door:
-- OPP-documenten te converteren naar semantische vector representations
-- Gelijksoortige content te vinden via cosine similarity
-- De LLM-context te verrijken met relevante OPP-fragmenten
-- Hierdoor krijgt de leraar gepersonaliseerde, document-gestuurde antwoorden
+**Onderbouwing** 
+Hoewel AI-systemen goed zijn in het vinden van relevante informatie, houden ze vaak onvoldoende rekening met de onderwijsstructuur en het leerproces van de leerling. Voor hoogbegaafde leerlingen is dit juist essentieel, omdat zij vaak:
 
-**Technische keuzes gemotiveerd:**
-- **Ollama** (local LLM) → data privacy, geen externe API-kosten, volledige controle
-- **pgvector** → scheibare, relationele database met native vector support
-- **Mammoth.js** → robuuste Word-document paring, essentieel voor bestaande OPP's
-- **Next.js App Router** → moderne, server-side rendering met API routes
+- sneller door basisstof gaan  
+- behoefte hebben aan verdieping in plaats van herhaling  
+- verschillende leerstrategieën en interesses hebben  
 
-**(Maatschappelijke) Impact:**
-- **Voor docenten:** 
-  - Bespaart uren aan administratief werk bij het doorzoeken van OPP's
-  - Biedt snelle toegang tot individuele leerlinginformatie
-  - Versterkt pedagogische besluitvorming met historische context
-  - Vermindert cognitieve belasting door informatiecentralisatie
+De RAS-benadering voegt hier een belangrijke laag aan toe door:
 
-- **Voor leerlingen:**
-  - Persoonlijkere begeleiding dankzij compleet leerdossier toegankelijk
-  - Snellere reacties op specifieke vragen over hun progressie
-  - Erkenning van unieke talenten en behoeften in elke interactie
+- informatie niet alleen op relevantie, maar ook op voorgaande reflecties, voorkeuren en interesses van de leerling mee te nemen.  
+- verbanden te leggen tussen onderwerpen en vaardigheden  
+- rekening te houden met het portfolio en het huidige niveau.
 
-- **Voor onderwijs:**
-  - Democratisering van hoogbegaafdenondersteuning; niet alleen voor 'top-sporters'
-  - Duurzame digitalisering van tradisioneel papiergebaseerde OPP's
-  - Data-gedreven onderwijspraktijk zonder privacyrisico's (local hosting)
-  - Schaalbaar model dat per school geïnstalleerd kan worden
+**Maatschappelijke impact**
+
+**Voor docenten**
+- Betere ondersteuning bij het differentiëren in de klas  
+- Inzicht in wat een leerling nodig heeft qua verdieping of versnelling  
+- Minder tijd kwijt aan het zoeken naar passende lesmaterialen  
+- Meer grip op het begeleiden van hoogbegaafde leerlingen  
+
+**Voor leerlingen**
+- Onderwijs dat beter aansluit bij hun denkniveau en interesses
+- Meer uitdaging en minder frustratie door herhalingen
+- Persoonlijk leerpad dat meegroeit met hun ontwikkeling  
+- Stimulans voor kritisch en creatief denken  
 
 ---
 
+
 ### Aanbeveling 2
-**Advies:** Bouw een **Bloom-taxonomie dashboard** uit dat per leerling visueel toont op welk denkniveau hij/zij zich bevindt, gekoppeld aan concrete voorbeelden uit de OPP's.
+**Advies:** gescheiden en rolgebaseerde inlogschermen voor leerlingen, docenten en beheerders, waarbij elke gebruikersgroep toegang krijgt tot een eigen portaal met passende functionaliteiten en verantwoordelijkheden.
 
 **Onderbouwing:**
-Onze database bevat al `bloomNiveau` (1-6) bij Student en Assignment, plus tekstuele OPP-fragmenten. Door AI-driven analyses te combineren met visuele dashboards krijgen leraren inzicht in:
-- Verdeling van Blooms niveaus per leerling (radar chart)
-- Voorbeeldtaken die bewijs leveren van specifieke niveaus
-- Groepsanalyses voor differentiatie planning
+Momenteel ontbreekt een duidelijke scheiding tussen verschillende gebruikersrollen binnen het platform. Dit kan leiden tot onoverzichtelijkheid, inefficiënt gebruik en mogelijke risico’s rondom toegang tot gevoelige informatie.
 
-De bestaande `search_opp` tool kan uitgebreid worden met Bloom-filtering, zodat docenten kunnen vragen: "Toon me creative thinking voorbeelden van Emma".
+Door aparte inlogschermen te creëren voor:
+- *leerlingen/leraren*
+- *beheerders*  
 
-**(Maatschappelijke) Impact:**
-- **Voor docenten:**
-  - Snelle diagnostiek voor differentiatie
-  - Ondersteuning bij Bloom-gerechte taakontwikkeling
-  - Transparantie over leerlingvoortgang
+ontstaat er een duidelijke structuur waarin elke gebruiker alleen toegang heeft tot relevante onderdelen van het systeem.
 
-- **Voor leerlingen:**
-  - Zichtbaarheid van eigen groei en sterke punten
-  - Personalisering op eigen niveau, niet leeftijd
-  - Herkenning van hogere-orde denkvaardigheden
-
-- **Voor onderwijs:**
+**Maatschappelijke Impact**
+**Voor docenten:**
+  - Overzichtelijke leeromgeving voor leraren
+  - Snellere toegang tot leerlinggegevens en voortgang  
+  - Minder afleiding door irrelevante functies  
+  - Betere ondersteuning doordat leerlingen gekoppeld zijn aan een leraar 
+    
+**Voor leerlingen**
+  - Eenvoudig leerlingportaal onder begeleiding van toegewezen leraar
+  - Inzage in portfolio en opdrachten
+  - Meer focus op eigen leeractiviteiten en voortgang  
+  - Gevoel van veiligheid en structuur binnen het platform  
+- 
+**Voor onderwijs**
   - Evidence-based differentiatie
   - Standaardisering van competentie-beoordeling
   - Curriculum-ontwikkeling gebaseerd op klas-samenstelling
 
 ---
 
-### Aanbeveling 3
-**Advies:** Implementeer **automatische OPP-opdate notificaties** en **dynamische notitiegeneratie** waarbij de AI suggesties doet voor nieuwe aandachtspunten of doelstellingen gebaseerd op recente leerlingprestaties.
+## Aanbeveling 3  
+**Advies:** Een leerlingportaal met portfolio-opbouw, waarin leerlingactiviteiten, motivaties, zelfreflectie en samenkomen  samenkomen in één dynamisch leerlingprofiel.
 
-**Onderbouwing:**
-Momenteel是静态 documents. Echter, hoogbegaafde leerlingen ontwikkelen zich snel en regelmatig OPP-updates zijn cruciaal. Onze voorstel:
-- Wanneer een docent een assignment aanmaakt of update, triggert het systeem een AI-analyse van vergelijkbare OPP-fragmenten
-- De AI geeft suggesties: "Deze leerlijk toonde eerder interesse in X;overweeg doel Y aan te passen"
-- Notificaties naar docenten wanneer een OPP ouder is dan X maanden
-- Automatische samenvatting van OPP-updates voor teamoverleggen Dit sluit aan bij het geariveerde prototype: we hebben al een werkende chat-met-OPP functionaliteit en een assignment model. Uitbreiding met scheduled tasks en notificaties is een logische volgende stap.
+**Onderbouwing**
+Hoogbegaafde leerlingen hebben voordeel bij inzicht in hun eigen leerproces en ruimte voor zelfstandigheid. Veel bestaande systemen focussen op losse activiteiten of documentatie, maar missen een samenhangend overzicht van ontwikkeling, interesses en reflectie.
 
-**(Maatschappelijke) Impact:**
-- **Voor docenten:**
-  - Proactieve ondersteuning in plaats van reactief zoeken
-  - Minder risico op verouderde OPP-informatie
-  - Verbeterde teamcommunicatie over leerlingontwikkeling
+Deze aanbeveling stelt voor om een centrale leeromgeving te creëren waarin:
 
-- **Voor leerlingen:**
-  - Actuele begeleiding gebaseerd op recente prestaties
-  - Snellere aanpassing van ondersteuningsstrategieën
-  - Continuïteit in persoonlijke begeleiding
+- leerlingen een overzicht hebben van afgeronde en geplande leeractiviteiten, inclusief deadlines
+- resultaten van opdrachten eenvoudig kunnen worden ingeleverd en opgeslagen in een persoonlijk portfolio
+- leerlingen na elke activiteit een korte zelfreflectie of evaluatie invullen  
+- leerlingen hun voorkeuren en interesses kunnen aangeven en bijstellen  
+- docenten gerichte feedback geven die gekoppeld wordt aan activiteiten en leerdoelen  
 
-- **Voor onderwijs:**
-  - Hogere kwaliteit van onderwijskundige documentatie
-  - Minder administratieve drempels voor OPP-onderhoud
-  - Data-gedreven bijhouden van hoogbegaafdenbeleid
+Hierdoor ontstaat een *dynamisch leerlingprofiel* dat continu wordt aangevuld met:
+- resultaten  
+- reflecties  
+- feedback  
+- interesses  
 
----
+In plaats van statische documenten zoals traditionele OPP’s, biedt dit een doorlopende en uitgebreidere weergave van de ontwikkeling van de leerling.
 
-## Communicatie per Doelgroep
+**Maatschappelijke impact**
 
-### Voor Docenten
-**Toon:** Praktisch, ondersteunend, respectvol  
-**Focus:** Directe nut- en tijdbesparing in dagelijkse praktijk  
-**Vorm:** Live demo van chat-interface met eige OPP's + hands-on workshop (2 uur)
+**Voor docenten**  
+- Compleet en actueel beeld van de leerlingontwikkeling op één plek  
+- Betere onderbouwing van begeleiding en differentiatie  
+- Minder versnippering van informatie over prestaties en gedrag  
+- Efficiëntere communicatie met collega’s en ouders  
 
-**Communicatie punten:**
-- "Stel vragen in het Nederlands over elke leerling"
-- "Vind specifieke informatie in OPP's in seconden ipv uren"
-- "Blijf in controle: AI citeert bronnen, u blijft beoordelen"
--voorbeeld: "Toon mij alle aandachtspunten over Milan uit zijn OPP"
-
-### Voor Schoolleiding
-**Toon:** Strategisch, verantwoord, innovatief  
-**Focus:** ROI, privacy, onderwijskwaliteit, schaalbaarheid  
-**Vorm:** Korte presentatie (15 min) + technische brochure + pilot-project voorstel
-
-**Communicatie punten:**
-- **ROI:** Besparing van 5-10 uren per docent per maand aan OPP-doeleinden
-- **Privacy:** Alle data blijft lokaal; geen cloud; volledige controle
-- **Inclusiviteit:** Alle hoogbegaafden krijgen gelijkwaardige begeleiding
-- **Schaalbaar:** Eén server per 50-100 docenten; open-source componenten
-
-### Voor Leerlingen (indien relevant)
-**Toon:** Transparant, positief, betrekkend  
-**Focus:** Hoe AI hen beter kan ondersteunen; benadrukken dat de leraar beslist  
-**Vorm:** Korte uitleg in de les + informele Q&A-sessie
-
-**Communicatie punten:**
-- "Jullie OPP's helpen de computer jullie beter te begrijpen"
-- "De leraar krijgt suggesties, maar blijft de baas"
-- "Dit zorgt voor meer tijd voor persoonlijke begeleiding"
-- "Jullie feedback telt: wat vind je nuttig?"
-
-### Voor IT-beheer/Technisch personeel
-**Toon:** Technisch, transparant, ondersteunend  
-**Focus:** Integratie, beveiliging, onderhoud, requirement  
-**Vorm:** Technische documentatie + installatieguid + Docker-compose file
-
-**Communicatie punten:**
-- Stack: Next.js + Prisma + PostgreSQL (pgvector) + Ollama
-- Hardware: 16GB RAM, GPU optioneel (CPU-only werkt)
-- Deployment: Docker + Nginx reverse proxy
-- Beveiliging: HTTPS mandatory, role-based access control, regular DB backups
-- Monitoring: Basic health checks, log rotation
+**Voor leerlingen**
+- Meer eigenaarschap over hun eigen leerproces  
+- Inzicht in eigen groei, sterktes en interesses  
+- Actieve rol via zelfreflectie en voorkeuren  
+- Meer motivatie door persoonlijke en betekenisvolle leeractiviteiten  
 
 ---
 
-### bronnen
+## Vergelijking met bestaande oplossingen
+
+### Arcadin: Een bewezen platform in het primair onderwijs
+
+Arcadin is een operationeel leerplatform specifiek gericht op hoogbegaafde en talentvolle leerlingen in het primair onderwijs groep 1-8. Het platform biedt meer dan 650 leeractiviteiten die zijn afgestemd op niveau, interesses en vaardigheden van leerlingen. Belangrijke functionaliteiten van Arcadin zijn:
+
+- *Leeractiviteiten zoeken en toewijzen* 
+- met filters op groep, niveau en opdrachtduur
+- *Online portfolio* waar leerlingen opdrachten inleveren, reflectieformulieren invullen en feedback van de leraar ontvangen
+- *Beheerderstool* voor het aanmaken en koppelen van accounts
+- *Deadline functionaliteit* en agenda-integratie
+- *Flexibele opdrachtduur* geschikt zowel voor korte leermomenten als langere leerlijnen
+
+### Waarom Juf Aimee deze punten moet verwerken
+
+Hoewel Arcadin een uitgebreid en gebruiksvriendelijk platform is, mist het AI-integratie die kan helpen bij het differentiëren voor hoogbegaafde leerlingen op een schaalbare manier. De cruciale lessen uit Arcadin die verwerkt moeten worden in Juf Aimee zijn:
+
+1. *Gebruikersvriendelijke filtering*: 
+    Arcadin laat leraren gemakkelijk zoeken naar geschikte activiteiten via filters. Juf Aimee moet deze gebruiksvriendelijkheid overnemen in de AI-opdrachtgeneratie, waarbij de leraar makkelijk kan aanpassen aan niveau, duur en interesses.
+
+2. *Portfolio-opbouw*: 
+   Arcadin's leerlingportfolio zorgt voor een doorlopende verzameling van leerlingactiviteiten, werkresultaten, feedback en reflecties. Juf Aimee moet dit geheugen benutten: eerdere opdrachten, evaluaties en feedback moeten bijdragen tot betere AI-aanbevelingen, in plaats van elke sessie opnieuw te beginnen.
+
+   *Afwisseling in opdrachtduur* 
+   Bij Arcadin zijn er complexe opdrachten voor een lange leerlijn; dit zijn meestal abstracte opdrachten waar de leerling zelfstandig aan werkt. Er zijn ook opdrachten voor korte leermomenten bijvoorbeeld de laatste 10 minuten in de klas.
+
+3. *Proactieve ondersteuning zonder overbodige automatisering*:
+   Arcadin geeft de leraar volledige controle over welke opdrachten worden toegewezen. Juf Aimee moet deze filosofie overnemen: de AI signaleert en suggereert, maar de leraar blijft de eindverantwoordelijke die keuzes maakt.
+
+4. *Integratie van leerlingreflectie*:
+   Het evaluatieformulier in Arcadin geeft inzichten in wat leerlingen zelf als uitdagingen ervaren. Juf Aimee moet deze zelfreflecties verwerken in het bestaande leerlingprofiel zodat de AI opdrachten kan aanpassen aan zowel de door de leraar geobserveerde behoeften als de eigen evaluaties van de leerling.
+
+5. *inlogschermen*: 
+   Juf Aimee heeft momenteel geen aparte inlogschermen voor beheerders en leraren/leerlingen; deze scheiding is belangrijk voor de veiligheid en afscherming van de gebruikersrechten.
+
+6. *Beheerderstool*: 
+   Beheerders hebben een speciale omgeving waarin zij functionaliteiten hebben om leraren en leerlingen toe te voegen. Leerlingen en leraren hebben één inlogpagina, maar er is wel een apart leerlingen- en lerarenportaal.
+
+Door deze elementen te combineren met AI-ondersteuning, positioneert Juf Aimee zich als een intelligent platform dat zowel de gebruikerservaring van Arcadin als de intelligentie van AI combineert specifiek gericht op onderwijzing rond hoogbegaafde leerlingen.
+
+
+---
+
+## Bronnen
+
+- College voor de Rechten van de Mens (2024). *Algoritmen in het onderwijs.* KBA Nijmegen / ResearchNed.
+- Google (n.d.). *PAIR Guidebook: People + AI Research.*
+- Microsoft Research (2019). *Guidelines for Human-AI Interaction (HAX).*
+- Molenaar, I. & Knoop-van Campen, C.A.N. (2019). How teachers make dashboard information actionable. *IEEE Transactions on Learning Technologies,* 12(3), 347–355.
+- Molenaar, I. (2022). Towards hybrid human–AI learning technologies. *European Journal of Education,* 57(4), 632–645.
+- Siegle, D. & McCoach, D.B. (2005). Making a difference: Motivating gifted students who are not achieving. *Teaching Exceptional Children,* 38(1), 22–27.
+- Van Kessel, M., Molenaar, I. et al. (2025). Primary school teacher perspectives on effective dashboard use. *Journal of Learning Analytics,* 12(2), 279–292.
+- Chen, J., Dai, D. Y., & Zhou, Y. (2013). Enable, Enhance, and Transform: How Technology Use Can Improve Gifted Education. Roeper Review, 35(3), 166–176. https://doi.org/10.1080/02783193.2013.794892
+- Lisette H, A.C. Sven M, Jaap D, Anouke B. (2023). Academic motivation of intellectually gifted students and their classmates in regular primary school classes: A multidimensional, longitudinal, person- and variable-centered approach,
+https://www.sciencedirect.com/science/article/pii/S1041608023000894?via%3Dihub
+- Kahyaoglu, Mustafa. (2013) A comparision between gifted students and non-gifted students’ learning styles and their motivation styles
+towards science learning
+https://academicjournals.org/article/article1379768138_Kahyaoglu.pdf
+- Pengcheng J, Siru O, Yizhu J, Ming Z, Runchu T, Jiawei H. (2025). A survey on retrieval and structuring augmented generation with large language models. arXiv. https://arxiv.org/abs/2509.10697
+
+
 
 
 

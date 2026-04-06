@@ -9,6 +9,8 @@ import EditStudentButton from "./EditStudentButton"
 import DeleteStudentButton from "./DeleteStudentButton"
 import StudentCardActions from "./StudentCardActions"
 
+export const dynamic = "force-dynamic"
+
 export default async function StudentsPage() {
   const students = await prisma.student.findMany({
     include: { profile: true },

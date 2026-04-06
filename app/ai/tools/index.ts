@@ -26,24 +26,24 @@ export const assignmentTools: Tool[] = [searchOppTool, saveAssignmentTool]
 export async function executeTool(
   name: string,
   args: Record<string, unknown>,
-  context: { leerlingId?: number } = {}
+  context: { leerlingId?: string } = {}
 ): Promise<string> {
   switch (name) {
     case "search_opp": {
-      const leerlingId = context.leerlingId ?? (args.leerling_id as number)
+      const leerlingId = context.leerlingId ?? (args.leerling_id as string)
       if (!leerlingId) return "Geen leerling ID beschikbaar voor OPP zoekopdracht."
       return executeSearchOpp(leerlingId, args.query as string)
     }
     case "list_students":
       return executeListStudents()
     case "get_student_info":
-      return executeGetStudentInfo(args.leerling_id as number)
+      return executeGetStudentInfo(args.leerling_id as string)
     case "get_student_assignments":
-      return executeGetStudentAssignments(args.leerling_id as number)
+      return executeGetStudentAssignments(args.leerling_id as string)
     case "save_assignment":
       return executeSaveAssignment(args as Parameters<typeof executeSaveAssignment>[0])
     case "update_bloom_level":
-      return executeUpdateBloomLevel(args.leerling_id as number, args.bloom_niveau as number)
+      return executeUpdateBloomLevel(args.leerling_id as string, args.bloom_niveau as number)
     default:
       return `Onbekende tool: ${name}`
   }

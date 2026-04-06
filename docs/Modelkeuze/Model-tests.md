@@ -237,3 +237,5 @@ So the model we chose is huge and would not be able to run on my laptop. Actuall
 With the model selected, the next phase of the project will focus on **Retrieval-Augmented Generation (RAG)**. We will now research how to securely connect the Qwen 3.5 model to the dummy database provided by the teachers. 
 
 Our goal is to ensure that Juf Aimee’s personalized responses are not just based on "world knowledge," but are strictly grounded in the verified student profiles and educational materials from our own database.
+
+## Results

@@ -5,6 +5,8 @@ import { User, Mail, MapPin, CalendarDays } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
+export const dynamic = "force-dynamic"
+
 export default async function StudentsPage() {
   const students = await prisma.student.findMany({
     include: { profile: true },
