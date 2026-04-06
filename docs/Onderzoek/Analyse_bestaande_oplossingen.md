@@ -108,12 +108,9 @@ De leerling uploadt het werk documenten, foto's en filmpjes in een online portfo
 
 ![alt text](<images/opdrachten inleveren.png>)
 
+![alt text](images/evaluatieformulier.png)
+
 ![alt text](images/feedback-leraar.png)
-
-## Resultaten
-
-
-
 
 ### Waar Juf Aimee het beter moet doen
 
