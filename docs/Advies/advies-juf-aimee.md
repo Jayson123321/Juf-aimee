@@ -155,7 +155,7 @@ ontstaat er een duidelijke structuur waarin elke gebruiker alleen toegang heeft 
 ---
 
 ## Aanbeveling 3  
-**Advies:** Een leerlingportaal met portfolio-opbouw, waarin leerlingactiviteiten, motivaties, zelfreflectie en samenkomen  samenkomen in één dynamisch leerlingprofiel.
+**Advies:** Een leerlingportaal met portfolio-opbouw, waarin leerlingactiviteiten, motivaties, zelfreflectie en feedback samenkomen in één dynamisch leerlingprofiel.
 
 **Onderbouwing**
 Hoogbegaafde leerlingen hebben voordeel bij inzicht in hun eigen leerproces en ruimte voor zelfstandigheid. Veel bestaande systemen focussen op losse activiteiten of documentatie, maar missen een samenhangend overzicht van ontwikkeling, interesses en reflectie.
@@ -215,23 +215,22 @@ Hoewel Arcadin een uitgebreid en gebruiksvriendelijk platform is, mist het AI-in
 2. *Portfolio-opbouw*: 
    Arcadin's leerlingportfolio zorgt voor een doorlopende verzameling van leerlingactiviteiten, werkresultaten, feedback en reflecties. Juf Aimee moet dit geheugen benutten: eerdere opdrachten, evaluaties en feedback moeten bijdragen tot betere AI-aanbevelingen, in plaats van elke sessie opnieuw te beginnen.
 
-   *Afwisseling in opdrachtduur* 
+3. *Afwisseling in opdrachtduur* 
    Bij Arcadin zijn er complexe opdrachten voor een lange leerlijn; dit zijn meestal abstracte opdrachten waar de leerling zelfstandig aan werkt. Er zijn ook opdrachten voor korte leermomenten bijvoorbeeld de laatste 10 minuten in de klas.
 
-3. *Proactieve ondersteuning zonder overbodige automatisering*:
+4. *Proactieve ondersteuning zonder overbodige automatisering*:
    Arcadin geeft de leraar volledige controle over welke opdrachten worden toegewezen. Juf Aimee moet deze filosofie overnemen: de AI signaleert en suggereert, maar de leraar blijft de eindverantwoordelijke die keuzes maakt.
 
-4. *Integratie van leerlingreflectie*:
+5. *Integratie van leerlingreflectie*:
    Het evaluatieformulier in Arcadin geeft inzichten in wat leerlingen zelf als uitdagingen ervaren. Juf Aimee moet deze zelfreflecties verwerken in het bestaande leerlingprofiel zodat de AI opdrachten kan aanpassen aan zowel de door de leraar geobserveerde behoeften als de eigen evaluaties van de leerling.
 
-5. *inlogschermen*: 
+6. *inlogschermen*: 
    Juf Aimee heeft momenteel geen aparte inlogschermen voor beheerders en leraren/leerlingen; deze scheiding is belangrijk voor de veiligheid en afscherming van de gebruikersrechten.
 
-6. *Beheerderstool*: 
+7. *Beheerderstool*: 
    Beheerders hebben een speciale omgeving waarin zij functionaliteiten hebben om leraren en leerlingen toe te voegen. Leerlingen en leraren hebben één inlogpagina, maar er is wel een apart leerlingen- en lerarenportaal.
 
 Door deze elementen te combineren met AI-ondersteuning, positioneert Juf Aimee zich als een intelligent platform dat zowel de gebruikerservaring van Arcadin als de intelligentie van AI combineert specifiek gericht op onderwijzing rond hoogbegaafde leerlingen.
-
 
 ---
 
@@ -251,6 +250,7 @@ https://www.sciencedirect.com/science/article/pii/S1041608023000894?via%3Dihub
 towards science learning
 https://academicjournals.org/article/article1379768138_Kahyaoglu.pdf
 - Pengcheng J, Siru O, Yizhu J, Ming Z, Runchu T, Jiawei H. (2025). A survey on retrieval and structuring augmented generation with large language models. arXiv. https://arxiv.org/abs/2509.10697
+- Syamala, S., Shrivastava, A., & Karmakar, S. (2025). Identifying interface design factors impacting user experience in digital learning platforms: A pilot study. Social Sciences & Humanities Open, 101662. https://doi.org/10.1016/j.ssaho.2025.101662
 
 
 

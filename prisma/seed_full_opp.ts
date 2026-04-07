@@ -1,4 +1,5 @@
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 
@@ -6,6 +7,35 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // ---------- Admin user ----------
+  const hashedPassword = await bcrypt.hash("123456789", 10);
+  await prisma.user.upsert({
+    where: { email: "email@admin.nl" },
+    update: {},
+    create: {
+      email: "email@admin.nl",
+      name: "SUPERUSER",
+      password: hashedPassword,
+      role: "ADMIN",
+    },
+  });
+
+  // ---------- Teachers ----------
+  const teacherPassword = await bcrypt.hash("teacher123", 10);
+  const teachersData = [
+    { id: "teacher-bakker", name: "Mevrouw Bakker", email: "bakker@school.nl" },
+    { id: "teacher-visser", name: "Meneer Visser", email: "visser@school.nl" },
+    { id: "teacher-smit", name: "Mevrouw Smit", email: "smit@school.nl" },
+    { id: "teacher-dejong", name: "Meneer de Jong", email: "dejong@school.nl" },
+  ];
+  for (const teacher of teachersData) {
+    await prisma.user.upsert({
+      where: { email: teacher.email },
+      update: {},
+      create: { ...teacher, password: teacherPassword, role: "TEACHER" },
+    });
+  }
+
   // ---------- Subjects ----------
   const [rekenen, taal, wereldorientatie, kunst, techniek] = await Promise.all([
     prisma.subject.upsert({
@@ -36,9 +66,10 @@ async function main() {
   ]);
 
   // ---------- Students ----------
+  const studentPassword = await bcrypt.hash("student123", 10);
   const studentsData = [
     {
-      id: "student-emma",
+      id: "1",
       fullName: "Emma de Vries",
       dateOfBirth: new Date("2015-03-12"),
       gender: "Vrouw",
@@ -55,7 +86,7 @@ async function main() {
       },
     },
     {
-      id: "student-noah",
+      id: "2",
       fullName: "Noah Bakker",
       dateOfBirth: new Date("2014-07-28"),
       gender: "Man",
@@ -72,7 +103,7 @@ async function main() {
       },
     },
     {
-      id: "student-sofia",
+      id: "3",
       fullName: "Sofia Meijer",
       dateOfBirth: new Date("2015-11-05"),
       gender: "Vrouw",
@@ -89,7 +120,7 @@ async function main() {
       },
     },
     {
-      id: "student-liam",
+      id: "4",
       fullName: "Liam Janssen",
       dateOfBirth: new Date("2016-01-19"),
       gender: "Man",
@@ -106,7 +137,7 @@ async function main() {
       },
     },
     {
-      id: "student-julia",
+      id: "5",
       fullName: "Julia van Loon",
       dateOfBirth: new Date("2014-09-30"),
       gender: "Vrouw",
@@ -125,16 +156,16 @@ async function main() {
   ];
 
   for (const { profile, ...studentData } of studentsData) {
-    await prisma.student.upsert({
-      where: { id: studentData.id },
-      update: {},
-      create: studentData,
+    const student = await prisma.student.upsert({
+      where: { email: studentData.email },
+      update: { password: studentPassword },
+      create: { ...studentData, password: studentPassword },
     });
 
     await prisma.studentProfile.upsert({
-      where: { studentId: studentData.id },
+      where: { studentId: student.id },
       update: {},
-      create: { studentId: studentData.id, ...profile },
+      create: { studentId: student.id, ...profile },
     });
   }
 
@@ -169,7 +200,7 @@ async function main() {
     });
   }
 
-  console.log("Seeded: 5 students, 5 subjects, 14 assignments");
+  console.log("Seeded: 1 admin, 4 teachers, 5 students, 5 subjects, 14 assignments");
 }
 
 main()
