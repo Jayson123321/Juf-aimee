@@ -215,7 +215,7 @@ Hoewel Arcadin een uitgebreid en gebruiksvriendelijk platform is, mist het AI-in
 2. *Portfolio-opbouw*: 
    Arcadin's leerlingportfolio zorgt voor een doorlopende verzameling van leerlingactiviteiten, werkresultaten, feedback en reflecties. Juf Aimee moet dit geheugen benutten: eerdere opdrachten, evaluaties en feedback moeten bijdragen tot betere AI-aanbevelingen, in plaats van elke sessie opnieuw te beginnen.
 
-3.   *Afwisseling in opdrachtduur* 
+3. *Afwisseling in opdrachtduur* 
    Bij Arcadin zijn er complexe opdrachten voor een lange leerlijn; dit zijn meestal abstracte opdrachten waar de leerling zelfstandig aan werkt. Er zijn ook opdrachten voor korte leermomenten bijvoorbeeld de laatste 10 minuten in de klas.
 
 4. *Proactieve ondersteuning zonder overbodige automatisering*:
@@ -250,6 +250,7 @@ https://www.sciencedirect.com/science/article/pii/S1041608023000894?via%3Dihub
 towards science learning
 https://academicjournals.org/article/article1379768138_Kahyaoglu.pdf
 - Pengcheng J, Siru O, Yizhu J, Ming Z, Runchu T, Jiawei H. (2025). A survey on retrieval and structuring augmented generation with large language models. arXiv. https://arxiv.org/abs/2509.10697
+- Syamala, S., Shrivastava, A., & Karmakar, S. (2025). Identifying interface design factors impacting user experience in digital learning platforms: A pilot study. Social Sciences & Humanities Open, 101662. https://doi.org/10.1016/j.ssaho.2025.101662
 
 
 
