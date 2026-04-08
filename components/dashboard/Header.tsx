@@ -1,7 +1,8 @@
 "use client"
-import { Bell } from "lucide-react"
+import { Bell, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useDashboard, UserRole } from "./role-context"
+import { logout } from "@/app/actions"
 
 const roleLabels: Record<UserRole, string> = {
   STUDENT: "Student",
@@ -9,15 +10,11 @@ const roleLabels: Record<UserRole, string> = {
   ADMIN: "Beheerder",
 }
 
-const mockUsers: Record<UserRole, string> = {
-  STUDENT: "Emma de Vries",
-  TEACHER: "Aimée Bakker",
-  ADMIN: "Systeembeheerder",
-}
+export function Header({ userName }: { userName?: string }) {
+  const { role } = useDashboard()
 
-export function Header() {
-  const { role, setRole } = useDashboard()
-  const initials = mockUsers[role]
+  const displayName = userName ?? "Gebruiker"
+  const initials = displayName
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -31,23 +28,6 @@ export function Header() {
 
       {/* Right */}
       <div className="flex items-center gap-3">
-        {/* Role switcher — demo only, replace with real auth */}
-        <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 text-xs">
-          {(["STUDENT", "TEACHER", "ADMIN"] as UserRole[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-2.5 py-1 rounded-md font-medium transition-all duration-150 cursor-pointer ${
-                role === r
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {roleLabels[r]}
-            </button>
-          ))}
-        </div>
-
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative h-8 w-8" aria-label="Meldingen">
           <Bell className="w-4 h-4" />
@@ -63,10 +43,17 @@ export function Header() {
             {initials}
           </div>
           <div className="hidden sm:block leading-tight">
-            <p className="text-xs font-semibold text-foreground">{mockUsers[role]}</p>
+            <p className="text-xs font-semibold text-foreground">{displayName}</p>
             <p className="text-[10px] text-muted-foreground">{roleLabels[role]}</p>
           </div>
         </div>
+
+        {/* Logout */}
+        <form action={logout}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Uitloggen">
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </form>
       </div>
     </header>
   )
