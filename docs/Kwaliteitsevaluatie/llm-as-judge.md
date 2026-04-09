@@ -3,6 +3,7 @@
 ## Evaluatiepipeline
 
 ```mermaid
+%%{init: {'flowchart': {'useMaxWidth': true}}}%%
 flowchart TD
     A[Leerkracht vraagt opdracht aan] --> B[Agent haalt OPP-chunks op via search_opp]
     B --> C[Qwen2.5 genereert opdracht]
@@ -17,8 +18,6 @@ flowchart TD
 ```
 
 ---
-
-
 
 ## Wetenschappelijke Bronnen
 
