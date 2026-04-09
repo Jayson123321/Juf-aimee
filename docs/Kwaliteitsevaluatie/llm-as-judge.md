@@ -3,7 +3,7 @@
 ## Evaluatiepipeline
 
 ```mermaid
-%%{init: {'flowchart': {'useMaxWidth': true}}}%%
+%%{init: {'flowchart': {'useMaxWidth': true, 'nodeSpacing': 60, 'rankSpacing': 80}, 'themeVariables': {'fontSize': '18px'}}}%%
 flowchart LR
     A[Leerkracht vraagt opdracht aan] --> B[Agent haalt OPP-chunks op via search_opp]
     B --> C[Qwen2.5 genereert opdracht]
