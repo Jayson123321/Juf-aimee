@@ -16,12 +16,6 @@ import type { ReactNode } from "react"
 
 type NavItem = { href: string; icon: ElementType; label: string }
 
-const teacherItems: NavItem[] = [
-  { href: "/dashboard",  icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/students",   icon: Users,           label: "Studenten" },
-  { href: "/opdrachten", icon: BookOpen,        label: "Opdrachten" },
-  { href: "/rooster",    icon: Calendar,        label: "Rooster" },
-]
 
 const adminItems: NavItem[] = [
   { href: "/admin",          icon: LayoutDashboard, label: "Dashboard" },
@@ -40,10 +34,20 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
   const { role, sidebarCollapsed, setSidebarCollapsed, profileHref } = useDashboard()
   const pathname = usePathname()
 
+  const studentId = profileHref.split("/").pop()
+  const opdrachtenHref = `/prototype/leerling-portaal/${studentId}/opdrachten`
+
   const studentItems: NavItem[] = [
-    { href: `/prototype/leerling-portaal/${profileHref.split("/").pop()}`,  icon: User,            label: "Profiel" },
-    { href: `/prototype/leerling-portaal/${profileHref.split("/").pop()}/opdrachten`, icon: BookOpen, label: "Opdrachten" },
-    { href: profileHref,  icon: Settings,            label: "Instellingen" }
+    { href: `/prototype/leerling-portaal/${studentId}`,  icon: User,     label: "Profiel" },
+    { href: opdrachtenHref,                              icon: BookOpen, label: "Opdrachten" },
+    { href: profileHref,                                 icon: Settings, label: "Instellingen" }
+  ]
+
+  const teacherItems: NavItem[] = [
+    { href: "/dashboard",   icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/students",    icon: Users,           label: "Studenten" },
+    { href: opdrachtenHref, icon: BookOpen,        label: "Opdrachten" },
+    { href: "/rooster",     icon: Calendar,        label: "Rooster" },
   ]
 
   const items = role === "STUDENT" ? studentItems : role === "TEACHER" ? teacherItems : adminItems
