@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import AimeeImage from "@/app/Images/Aimee.png";
 
@@ -118,6 +119,12 @@ export default function LoginClient({ action, error }: Props) {
           </button>
         </form>
 
+        <p className="text-center text-sm text-gray-500 mt-5">
+          Nog geen account?{" "}
+          <Link href="/register" className="text-orange-400 font-medium hover:underline">
+            Registreren
+          </Link>
+        </p>
       </div>
     </main>
   );
