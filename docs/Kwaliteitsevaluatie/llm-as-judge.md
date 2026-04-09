@@ -4,7 +4,7 @@
 
 ```mermaid
 %%{init: {'flowchart': {'useMaxWidth': true}}}%%
-flowchart TD
+flowchart LR
     A[Leerkracht vraagt opdracht aan] --> B[Agent haalt OPP-chunks op via search_opp]
     B --> C[Qwen2.5 genereert opdracht]
     C --> D[LLM-as-judge beoordeelt opdracht]
