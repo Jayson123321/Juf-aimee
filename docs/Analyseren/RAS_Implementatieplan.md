@@ -19,8 +19,6 @@ RAS:          OPP vector search
             + leerlinggeschiedenis (patronen uit feedback + reflecties)  → analyseer → genereer opdracht
 ```
 
-Dit maakt de integratie ook veiliger: het systeem blijft werken voor nieuwe leerlingen zonder geschiedenis en verbetert progressief naarmate de leerlinggeschiedenis groeit.
-
 ---
 
 ## Huidige situatie
