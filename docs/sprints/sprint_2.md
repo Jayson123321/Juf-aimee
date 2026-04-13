@@ -4,7 +4,7 @@
 - Een docent interviewen en ontwerpen laten zien en feedback verkrijgen.
 - Onderzoeksverslag voor het team uitwerken voor de volgende groep.
 
-## Resultaten
+## Resultaten van oplevering
 
 ### Authenticatie & rolbeheer
 Er is een inlog- en registratiesysteem gebouwd met rolgebaseerd toegangsbeheer. Leraren en beheerders hebben elk een eigen portaal met bijbehorende rechten en functionaliteiten.
