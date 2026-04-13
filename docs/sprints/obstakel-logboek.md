@@ -1,5 +1,11 @@
 # Obstakel logboek – Sprint 3
 
+## Inleiding
+
+Tijdens de huidige sprint heb ik de rol ritual master, dit houdt in dat ik verantwoordelijk ben voor de daily stand-ups. 
+
+Het is de bedoeling dat elk teamlid aan bod komt en dat de stand-up maximaal 15 minuten duurt. Met dit logboek zijn eventuele belemmeringen direct zichtbaar voor alle teamleden en kunnen wij gezamenlijk overgaan tot oplossingen.
+
 ## Overzicht
 
 | Datum | Issue | Obstakel | Actie | Status |
