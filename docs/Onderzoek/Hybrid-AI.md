@@ -1,5 +1,4 @@
-# Manage & Control Documentatie  
-## Hybride AI in het onderwijs
+# Hybride AI in het onderwijs
 
 ## Inleiding
 

@@ -1,6 +1,6 @@
 # Juf Aimee — AI-onderwijsassistent
 
-**Team:** Shehbaaz, Jayson, Mazen  
+**Team:** Shehbaaz, Jayson, Mazen, Ruben  
 **Opdrachtgever:** Lectoraat Digital Life, Hogeschool van Amsterdam  
 **Studio:** Responsible Applied Artificial Intelligence (RAAI)
 

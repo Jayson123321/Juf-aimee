@@ -6,25 +6,19 @@
 - AI features uitbreiden (RAS integreren)
 - Onderzoek naar AI-model
 - Adviseren over AI features
+- AI controle systeem voor een 'goede' vraag 
+- Applicatie architectuur ontwerpen 
 
 ## Resultaten
 
-### Verwerking coach feedback — documentatiestructuur
+### Documentatiestructuur verbeterd
 
-**Ontvangen feedback na sprint 2:**
+De documentatie was moeilijk doorzoekbaar voor buitenstaanders - content stond verspreid over losse bestanden zonder samenhang of context. Dit is aangepakt door:
 
-> "Het is wel erg lastig doorzoekbaar als (relatieve) buitenstaander. Delen staan op pages, en delen op losse md-files, en delen op issue board… Zorg alsjeblieft dat jullie dat samen oplossen."
+- Een volledige homepage geschreven met projectomschrijving en navigatiegids
+- Logische volgorde ingesteld via `.pages` bestanden in alle secties
+- Intro-pagina's toegevoegd aan elke hoofdsectie
+- Sitenaam aangepast naar "Juf Aimee - AI-onderwijsassistent"
 
-**Wat was het probleem?**
+---
 
-De documentatie was verspreid over meerdere plekken zonder duidelijke samenhang:
-- Losse markdown-bestanden zonder intro of context
-- Geen logische navigatievolgorde voor buitenstaanders
-- De homepage (`index.md`) was leeg — geen uitleg over het project
-
-**Wat hebben we gedaan?**
-
-- **Homepage herschreven** (`docs/index.md`): bevat nu een projectomschrijving, statusoverzicht en een navigatiegids die naar elke sectie verwijst
-- **Logische navigatievolgorde** ingesteld via `.pages` bestanden: van onderzoek → ontwerp → advies → techniek → proces
-- **Intro-pagina's toegevoegd** aan alle hoofdsecties (Onderzoek, Prototype, Advies, Sprints): elke sectie begint nu met een overzicht van wat je erin vindt
-- **Sitebeschrijving** in `mkdocs.yml` aangepast naar "Juf Aimee — AI-onderwijsassistent"

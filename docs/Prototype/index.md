@@ -17,6 +17,12 @@ In deze sectie vind je alle documenten rondom het ontwerp en de validatie van he
 | [Testresultaat 2](testresultaten/Testresultaat2.md) | Resultaten van de tweede gebruikerstest |
 
 ---
+## Figma-design
+
+Na gezamenlijk overleg hebben we gekozen voor het volgende Figma design als definitief ontwerp:
+ [Bekijk het Figma-design](https://www.figma.com/make/MixIujQXWslIg4I8WSiiiO/Import-custom-source-file?t=5Qjqi2pM005VmJ0j-1)
+
+---
 
 ## Aanpak
 
