@@ -9,7 +9,6 @@ theme:
     features:
         - navigation.sections
         - navigation.expand
-        - navigation.indexes
         - content.tabs.link
         - navigation.top
         - toc.follow
