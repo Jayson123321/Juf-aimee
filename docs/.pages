@@ -1,11 +1,11 @@
 nav:
   - index.md
-  - Samenwerkingscontract.md
+  - Onderzoek
+  - Modelkeuze
+  - Prototype
   - Advies
   - Kwaliteitsevaluatie
-  - Modelkeuze
-  - Onderzoek
-  - Outputs
-  - Prototype
-  - sprints
   - documentatie
+  - Sprints
+  - Samenwerkingscontract.md
+  - Outputs

@@ -1,6 +1,6 @@
-site_name: HBO-ICT Studio RAAI Personal Projects
-site_description:  HBO-ICT Studio RAAI Personal Projects
-site_author: HBO-ICT Studio RAAI
+site_name: Juf Aimee — AI-onderwijsassistent
+site_description: Documentatie van het Juf Aimee project — een AI-assistent voor leraren met hoogbegaafde leerlingen
+site_author: Team Juf Aimee | Studio RAAI | HvA
 copyright: Copyright 2026 Hogeschool van Amsterdam
 
 theme:
@@ -9,7 +9,10 @@ theme:
     features:
         - navigation.sections
         - navigation.expand
+        - navigation.indexes
         - content.tabs.link
+        - navigation.top
+        - toc.follow
 
 plugins:
     - search
@@ -22,6 +25,7 @@ plugins:
 markdown_extensions:
     - attr_list
     - md_in_html
+    - tables
     - fenced_code
     - admonition
     - pymdownx.highlight:
