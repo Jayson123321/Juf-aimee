@@ -11,7 +11,7 @@ Het is de bedoeling dat elk teamlid aan bod komt en dat de stand-up maximaal 15 
 | Datum | Naam | Issue | Obstakel | Actie | Status |
 |------|------|------|----------|-------|--------|
 | 14 april 2026|Shehbaaz| geldend voor alle issues|niet alle issues hebben een label of zijn toegewezen|bericht sturen in teams zodat iedereen weet dat het gefixt moet worden.|Bezig|
-|14 april 2026| Shehbaaz | Nvt    |Mergen van een nieuwe branch met main zonder dataverlies | Zelf er achteraan gaan hoe ik de branch kan mergen zonder dataverlies en anders teamleden hulp vragen      |   Bezig     |
+|14 april 2026| Shehbaaz | Nvt    |Mergen van een nieuwe branch met main zonder dataverlies | Zelf er achteraan gaan hoe ik de branch kan mergen zonder dataverlies en anders teamleden hulp vragen      |   Opgelost     |
 |      |      |      |          |       |        |
 
 ---
