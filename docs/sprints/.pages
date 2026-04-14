@@ -1,9 +1,9 @@
 nav:
   - index.md
-  - sprint_0.md
-  - sprint_1.md
-  - sprint_2.md
-  - sprint_3.md
-  - sprint-review1.md
-  - retrospective_sprint_1.md
-  - retrospective_sprint_2.md
+  - sprint0/sprint_0.md
+  - sprint1/sprint_1.md
+  - sprint2/sprint_2.md
+  - sprint3/sprint_3.md
+  - sprint1/sprint-review1.md
+  - sprint1/retrospective_sprint_1.md
+  - sprint2/retrospective_sprint_2.md
