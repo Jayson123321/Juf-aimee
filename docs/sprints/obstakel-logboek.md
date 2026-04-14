@@ -10,7 +10,7 @@ Het is de bedoeling dat elk teamlid aan bod komt en dat de stand-up maximaal 15 
 
 | Datum | Issue | Obstakel | Actie | Status |
 |------|------|----------|-------|--------|
-| 13 april 2026|      |          |       |        |
+| 14 april 2026| geldend voor alle issues|niet alle issues hebben een label of zijn toegewezen|bericht sturen in teams zodat iedereen weet dat het gefixt moet worden.|Bezig|
 |      |      |          |       |        |
 |      |      |          |       |        |
 
