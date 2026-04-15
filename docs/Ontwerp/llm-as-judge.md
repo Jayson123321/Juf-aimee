@@ -3,13 +3,60 @@
 Hoofdvraag:
 Juf Aimee genereert een opdracht voor een leerling, maar hoe weet je of die opdracht goed genoeg is om aan het hoogbegaafde kind te geven? 
 
+
+## Onzekerheden
+
+### 1. Nu kan je niet verifiëren of de prompt altijd werkt
+Een LLM is niet deterministisch - dezelfde prompt kan de ene keer een goede 
+opdracht genereren en de andere keer een slechte. Zonder een judge heb je geen 
+zekerheid over de kwaliteit van de output. Dit risico is extra groot omdat de 
+doelgroep kinderen zijn (EU AI Act Art. 14).
+
+
+## Voordelen en nadelen van een judge
+### Voordelen
+
+- Bespaart kosten en vermindert handmatig werk drastisch - Uit het onderzoek van Saha et al.(2026) beschrijven zij een praktisch scenario waarin een team 10.000 
+prompt-response paren moet beoordelen. Menselijke beoordeling kost in dit 
+scenario $5 per beoordeling, wat neerkomt op $50.000 in totaal. Een LLM judge 
+doet hetzelfde voor $0.01 of minder per beoordeling.
+
+- Explainability - Met LLM-as-a-judge kan de judge niet alleen een score 
+geven, maar ook uitleggen waarom de gegenereerde opdracht goed of afgekeurd is. 
+Dit helpt de leerkracht om de beoordeling te begrijpen en indien nodig zelf 
+een beslissing te nemen.
+
+### Nadelen
+
+- De judge is niet altijd consistent - Een LLM is niet deterministisch. 
+Dezelfde opdracht kan de ene keer een andere score krijgen dan de andere keer 
+(Guo, 2025).
+
+- De judge is zo goed als het OPP-profiel - Als de leerkracht het 
+OPP-profiel niet regelmatig bijwerkt, kan de judge beoordelen op basis 
+van verouderde informatie. De kwaliteit van de beoordeling is dus 
+afhankelijk van hoe actueel de leerkracht het profiel houdt. De leerkracht 
+is daarom verantwoordelijk voor het regelmatig updaten van het profiel 
+wanneer zij veranderingen ziet in bijvoorbeeld de interesses of het 
+niveau van het kind (EU AI Act Art. 14).
+
+#### bronnen
+- Saha et al. (2026). *LLM-as-a-Judge on a Budget*. arXiv:2602.15481. 
+  Geraadpleegd via https://arxiv.org/html/2602.15481v1#S6
+
+- Guo, S. (2025). *LLM-as-a-Judge: A Practical Guide*. Towards Data Science. 
+  Geraadpleegd via https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
+
+## Een evaluatierubric voor de judge 
 Zonder evaluatierubric: de judge-AI krijgt een opdracht en zegt vaag "dit is goed" of "dit is slecht", maar niemand weet waarom, en je kunt het niet controleren of verbeteren.
 
 Met rubric: de judge-AI scoort de opdracht op 5 meetbare criteria (1–5), geeft per criterium een onderbouwing, en de beslislogica bepaalt automatisch wat er gebeurt. Transparant, controleerbaar, en uitlegbaar aan een leerkracht.
 
+
 ```
 Juf Aimee genereert opdracht → Judge scoort op rubric → Beslislogica zegt goedkeuren / flaggen / opnieuw genereren → Leerkracht ziet het resultaat
 ```
+![llm-as-judge-image](images/llm-as-judge-image.jpg)
 ## Evaluatiepipeline
 
 ```mermaid
@@ -28,6 +75,11 @@ flowchart LR
 ```
 
 ---
+### Welke llms zijn hiervoor getraind? 
+- JudgeLm
+- Prometheus 2
+#### Bronnen
+bron Prometheus 2: https://arxiv.org/abs/2405.01535
 ### Judge prompt (Nog agmaken)
 Example Prompt:
 ```
@@ -56,3 +108,6 @@ Retrieval Augmented Generation Assesment
 - **RAGAS**: Es et al. (2023) — https://arxiv.org/abs/2309.15217
 
 - Basisboek (Hoog)begaafdheid voor po en vo: 
+
+## bronnen
+- https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
