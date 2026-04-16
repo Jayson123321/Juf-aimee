@@ -78,6 +78,28 @@ flowchart LR
 ### Welke llms zijn hiervoor getraind? 
 - JudgeLm
 - Prometheus 2
+
+#### Prometheus 2 
+- Base model: Mistral-7B-Instruct-v0.2
+
+Speciaal finegetuned om te beoordelen op basis van een rubric. 
+
+Uit het onderzoek van Kim et al. (2024) - "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models"
+
+![De twee evaluatiemethoden van Prometheus 2: paarsgewijze vergelijking vs. directe beoordeling](images/direct-assesment-and-pairwise-ranking.png)
+
+Onderzoek prompt template:
+
+![Prometheus 2 onderzoek, kant en klare prompt templates](images/direct-assesment-prompt-template.png)
+
+Juf aimee judge prompt:
+1. Leerling profiel
+2. Gegenereerde opdracht
+3. Rubric 
+
+```
+
+```
 #### Bronnen
 bron Prometheus 2: https://arxiv.org/abs/2405.01535
 ### Judge prompt (Nog agmaken)
@@ -101,6 +123,10 @@ Retrieval Augmented Generation Assesment
 | 7 | Kan een leerkracht de opdracht makkelijk lezen, beoordelen en indien nodig aanpassen? | Ethiek / Wetgeving | EU AI Act Art. 14 |
 | 8 | Zijn alle elementen in de opdracht terug te herleiden naar het leerlingprofiel, zonder verzonnen info? | RAGAS | Es et al., 2023 — faithfulness metric |
 | 9 | Gebruikt de opdracht alleen relevante leerlinginfo en laat het irrelevante details weg? | RAGAS | Es et al., 2023 — context precision metric |
+
+## Volgende stappen 
+Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen worden.
+ 
 ## Wetenschappelijke Bronnen
 
 - **LLM-as-judge**: Zheng et al. (2023) — https://arxiv.org/abs/2306.05685
@@ -111,3 +137,16 @@ Retrieval Augmented Generation Assesment
 
 ## bronnen
 - https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
+
+
+## Tests 
+
+### Tests bij 'slechte' opdrachten voor hoogbegaafde leerlingen
+
+### Tests bij 'goede' opdrachten voor hoogbegaafde leerlingen
+
+#### Test 1 
+[text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)
+
+#### Test 2 
+![alt text](images/judge-test-2-selectie.png) ![alt text](images/judge-test-2-opdracht.png) ![alt text](images/judge-test-2-beoordeling-1.png) ![alt text](images/judge-test-2-beoordeling-2.png)
