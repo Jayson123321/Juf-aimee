@@ -1,96 +1,84 @@
-import type { Tool } from "ollama";
-import { prisma } from "@/lib/db";
-import { getEmbedding } from "@/lib/ollama";
+import { prisma } from "@/lib/db"
+import { getEmbedding } from "@/lib/ollama"
+import type { Tool } from "ollama"
 
 export const searchOppTool: Tool = {
   type: "function",
   function: {
     name: "search_opp",
-    description:
-      "Zoek relevante informatie op uit het OPP (ontwikkelingsperspectief) van de leerling.",
+    description: "Search the student's OPP for learning level, interests, goals or attention points.",
     parameters: {
       type: "object",
       properties: {
-        query: {
-          type: "string",
-          description: "Wat je wilt opzoeken, bijvoorbeeld leesniveau of aandachtspunten rekenen",
-        },
+        student_id: { type: "string" },
+        query: { type: "string" },
       },
-      required: ["query"],
+      required: ["student_id", "query"],
     },
   },
-};
+}
 
+// Basis functie — blijft intern
 export async function executeSearchOpp(
-  leerlingId: string,
+  studentId: string,
   query: string,
   limit = 3
-): Promise<string> {
-  try {
-    const vector = await getEmbedding(query);
-    const vectorStr = `[${vector.join(",")}]`;
+): Promise<string[]> {
+  const vector = await getEmbedding(query)
+  const vectorStr = `[${vector.join(",")}]`
 
-    const results = await prisma.$queryRaw<{ tekst: string; score: number }[]>`
-      SELECT tekst, 1 - (embedding <=> ${vectorStr}::vector) as score
-      FROM "OppChunk"
-      WHERE "studentId" = ${leerlingId}
-      ORDER BY embedding <=> ${vectorStr}::vector
-      LIMIT ${limit}
-    `;
+  const results = await prisma.$queryRaw<{ tekst: string; score: number }[]>`
+    SELECT tekst, 1 - (embedding <=> ${vectorStr}::vector) as score
+    FROM "OppChunk"
+    WHERE "studentId" = ${studentId}
+    ORDER BY embedding <=> ${vectorStr}::vector
+    LIMIT ${limit}
+  `
 
-    const validResults = results.filter(
-      (result) => typeof result.tekst === "string" && Number.isFinite(result.score)
-    );
+  return results.map((r) => r.tekst.trim()).filter(Boolean)
+}
 
-    if (validResults.length > 0) {
-      return validResults
-        .map(
-          (result, index) =>
-            `[Resultaat ${index + 1} - score: ${result.score.toFixed(3)}]\n${result.tekst}`
-        )
-        .join("\n\n");
-    }
-  } catch {
-    // Fall through to lexical search when embedding or vector search fails.
-  }
+// Aparte functie per onderwerp
+export async function zoekInteresses(studentId: string) {
+  return executeSearchOpp(studentId, "interesses hobby's passies van de leerling", 3)
+}
 
-  const normalizedTerms = query
-    .toLowerCase()
-    .split(/[,\s]+/)
-    .map((term) => term.trim())
-    .filter((term) => term.length >= 3)
-    .slice(0, 6);
+export async function zoekBeginsituatie(studentId: string) {
+  return executeSearchOpp(studentId, "beginsituatie leerniveau didactische ontwikkeling van de leerling", 3)
+}
 
-  const chunks = await prisma.oppChunk.findMany({
-    where: { studentId: leerlingId },
-    select: { tekst: true },
-    take: 100,
-  });
+export async function zoekOnderwijsbehoeften(studentId: string) {
+  return executeSearchOpp(studentId, "onderwijsbehoeften werkhouding motivatie autonomie van de leerling", 3)
+}
 
-  const scoredChunks = chunks
-    .map((chunk) => {
-      const haystack = chunk.tekst.toLowerCase();
-      const score = normalizedTerms.reduce((total, term) => {
-        if (!haystack.includes(term)) return total;
-        return total + (haystack.match(new RegExp(term, "g"))?.length ?? 1);
-      }, 0);
+export async function zoekIntelligentieprofiel(studentId: string) {
+  return executeSearchOpp(studentId, "intelligentie TIQ cognitief analytisch sterk van de leerling", 3)
+}
 
-      return { tekst: chunk.tekst, score };
-    })
-    .filter((chunk) => chunk.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+export async function zoekSchoolvak(studentId: string, focusArea: string) {
+  return executeSearchOpp(studentId, focusArea || "schoolvak leerstof", 3)
+}
 
-  if (scoredChunks.length === 0) {
-    const fallbackChunks = chunks.slice(0, limit);
-    if (fallbackChunks.length === 0) return "Geen relevante informatie gevonden in het OPP.";
+// Alles in één keer ophalen voor de generator
+export async function zoekVolledigProfiel(
+  studentId: string,
+  focusArea: string
+): Promise<string[]> {
+  const [interesses, beginsituatie, behoeften, intelligentie, schoolvak] =
+    await Promise.all([
+      zoekInteresses(studentId),
+      zoekBeginsituatie(studentId),
+      zoekOnderwijsbehoeften(studentId),
+      zoekIntelligentieprofiel(studentId),
+      zoekSchoolvak(studentId, focusArea),
+    ])
 
-    return fallbackChunks
-      .map((chunk, index) => `[Resultaat ${index + 1} - score: 0.000]\n${chunk.tekst}`)
-      .join("\n\n");
-  }
-
-  return scoredChunks
-    .map((chunk, index) => `[Resultaat ${index + 1} - score: ${chunk.score.toFixed(3)}]\n${chunk.tekst}`)
-    .join("\n\n");
+  // Combineer en verwijder duplicaten
+  return [...new Set([
+    ...interesses,
+    ...beginsituatie,
+    ...behoeften,
+    ...intelligentie,
+    ...schoolvak,
+  ])]
 }

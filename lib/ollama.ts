@@ -3,7 +3,7 @@ import { Ollama } from "ollama"
 export const ollama = new Ollama({ host: "http://localhost:11434" })
 export const EMBED_MODEL = "jeffh/intfloat-multilingual-e5-large:f16"
 export const GEN_MODEL = "qwen2.5"
-
+export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
 function sanitizeEmbeddingInput(text: string) {
   return text
     .normalize("NFKC")

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { executeSearchOpp } from "@/app/ai/tools/search_opp";
+import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
-import { deriveStudentPresentation, getBloomLevelLabel } from "@/lib/student-profile";
+import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
+import { evalueerOpdracht } from "@/lib/judge";
 
 type PrototypeAssignmentApiStudent = {
   id: string;
   fullName: string;
+  dateOfBirth?: Date | null;
   groep: string | null;
   bloomNiveau: number;
   profile: {
@@ -53,6 +55,62 @@ function parseGeneratedResponse(content: string) {
   return { title, assignment, rationale };
 }
 
+function inferDateOfBirthFromSources(sources: string[]): Date | null {
+  for (const source of sources) {
+    const lower = source.toLowerCase();
+    const hasBirthLabel = lower.includes("geboortedatum");
+    if (!hasBirthLabel) continue;
+
+    const match = source.match(/(\d{1,2})[\-/.](\d{1,2})[\-/.](\d{4})/);
+    if (!match) continue;
+
+    const day = Number.parseInt(match[1], 10);
+    const month = Number.parseInt(match[2], 10);
+    const year = Number.parseInt(match[3], 10);
+
+    if (!Number.isFinite(day) || !Number.isFinite(month) || !Number.isFinite(year)) {
+      continue;
+    }
+
+    if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+      continue;
+    }
+
+    const candidate = new Date(year, month - 1, day);
+    if (
+      candidate.getFullYear() === year &&
+      candidate.getMonth() === month - 1 &&
+      candidate.getDate() === day
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function extractProfileInterestsFromSources(sources: string[]): string[] {
+  const snippets = new Set<string>();
+  const patterns = [
+    /[^.\n]{0,80}interesse[^.\n]{0,140}[.\n]?/gi,
+    /[^.\n]{0,80}nieuwsgierig[^.\n]{0,140}[.\n]?/gi,
+    /[^.\n]{0,80}analytisch sterk[^.\n]{0,140}[.\n]?/gi,
+    /[^.\n]{0,80}wil graag autonomie[^.\n]{0,140}[.\n]?/gi,
+  ];
+
+  for (const source of sources) {
+    for (const pattern of patterns) {
+      const matches = source.match(pattern) ?? [];
+      for (const raw of matches) {
+        const cleaned = raw.replace(/\s+/g, " ").trim();
+        if (cleaned.length >= 12) snippets.add(cleaned);
+      }
+    }
+  }
+
+  return [...snippets].slice(0, 3);
+}
+
 function normalizeBloomLabel(label: string) {
   return label.replaceAll("ÃƒÂ«", "ë").replaceAll("Ã«", "ë");
 }
@@ -78,10 +136,8 @@ function bloomLevelToNumber(label: string) {
 
 function buildGenerationPrompt(args: {
   student: PrototypeAssignmentApiStudent;
-  schoolHistory?: string | null;
   resolvedBloom: string;
   focusArea: string;
-  sources: string[];
   teacherPrompt?: string;
   currentAssignment?: {
     title?: string;
@@ -89,68 +145,45 @@ function buildGenerationPrompt(args: {
     rationale?: string;
   } | null;
 }) {
-  const {
-    student,
-    schoolHistory,
-    resolvedBloom,
-    focusArea,
-    sources,
-    teacherPrompt,
-    currentAssignment,
-  } = args;
-  const presentation = deriveStudentPresentation({
-    fullName: student.fullName,
-    schoolHistory,
-    assignments: student.assignments,
-    oppTexts: sources,
-  });
+  const { student, resolvedBloom, focusArea, teacherPrompt, currentAssignment } = args;
 
-  return `Je bent Juf Aimee en genereert een gepersonaliseerde opdracht voor een hoogbegaafde leerling.
+  return `Je bent Juf Aimee: een deskundige in hoogbegaafdheidsonderwijs op de basisschool.
 
-BELANGRIJK: Als er in de OPP BRONNEN een regel staat die begint met "[LEERKRACHT FEEDBACK - afgekeurde opdracht]", dan moet je die feedback serieus nemen. Vermijd het onderwerp of de aanpak die is afgekeurd en kies een andere richting die wél aansluit op de leerling.
+Je taak is een gepersonaliseerde verrijkingsopdracht maken voor een hoogbegaafde leerling.
+Gebruik eenvoudig, helder Nederlands zonder abstracte begrippen, zodat de opdracht altijd begrijpelijk en motiverend is voor een basisschoolleerling.
+STAP 1 — Gebruik de search_opp tool om informatie op te halen:
+- Zoek naar interesses en passies van de leerling
+- Zoek naar beginsituatie en leerniveau
+- Zoek naar onderwijsbehoeften en werkhouding
 
-Noem in je uitleg expliciet wanneer je op basis van zo'n eerdere feedback juist een bepaald type opdracht of materiaal níet meer kiest (bijvoorbeeld geen fysieke waterfilter meer), en leg kort uit wat je daar in de nieuwe opdracht voor in de plaats doet.
+
+STAP 2 — Maak de opdracht op basis van wat je hebt gevonden.
+
+HARDE EISEN:
+1. De opdracht gaat over het schoolvak: ${focusArea || "een schoolvak naar keuze"}
+2. De opdracht past bij Bloom-niveau: ${resolvedBloom}
+3. Gebruik alleen informatie die je via search_opp hebt gevonden
+
+LEERLING
+Naam: ${student.fullName}
+Student ID: ${student.id}
+Groep: ${student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend"}
+Bloom niveau: ${resolvedBloom}
+
+HUIDIGE VERSIE
+${currentAssignment ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}` : "Er is nog geen eerdere versie."}
+
+INSTRUCTIE VAN DE LEERKRACHT
+${teacherPrompt || "Maak de best passende eerste versie."}
 
 Geef exact dit formaat terug:
 TITLE: <korte titel>
 ASSIGNMENT:
-<een concrete opdracht in verzorgd Nederlands, 5-8 zinnen, gericht aan de leerkracht>
+<concrete opdracht in verzorgd Nederlands, 5-8 zinnen>
 RATIONALE:
-<2-4 zinnen waarom deze opdracht past bij de leerling. Noem expliciet het geselecteerde Bloom-niveau (${resolvedBloom}) en leg kort uit waarom de opdracht goed aansluit bij dit Bloom-niveau. Verwijs ook kort naar de gebruikte informatiebronnen (bijvoorbeeld OPP-teksten, eerdere opdrachten, eerdere afgekeurde opdrachten/feedback of kenmerken van de leerling) waarop je redenering is gebaseerd.
-
-BELANGRIJK: Noem alléén interesses, sterktes, voorkeuren of kenmerken van de leerling die letterlijk of bijna letterlijk in de OPP BRONNEN, RECENTE OPDRACHTEN of INSTRUCTIE VAN DE LEERKRACHT voorkomen. Verzín geen nieuwe interesses of eigenschappen en gebruik geen synoniemen die niet in de bron staan (bijvoorbeeld niet "technologie" als in de bron alleen "muziek" staat).
-
-Noem daarbij minimaal één concreet kenmerk uit het leerlingprofiel of de OPP (bijvoorbeeld een interesse of sterkte) en citeer daarbij heel kort uit de bron. Gebruik hierbij een generiek format zoals: "Uit OPP-fragment: '<korte originele tekst uit de bron>' concludeer ik dat...". Gebruik nooit het voorbeeld uit deze instructie letterlijk; vul altijd een écht citaat uit de relevante bron in. Leg uit waarom het aansluiten bij die interesse belangrijk is voor een hoogbegaafde leerling (bijvoorbeeld omdat dit leidt tot meer gestimuleerd en taakgericht gedrag).
-
-Verwijs daarnaast altijd kort naar minimaal één echte onderwijskundige of psychologische bron (bijvoorbeeld een studie of theorie van Ryan & Deci over motivatie en autonomie, of een vergelijkbare bron) om te onderbouwen dat aansluiten bij interesses en autonomie belangrijk is voor de motivatie van (hoogbegaafde) leerlingen. Leg in één zin uit wat de kernboodschap van die studie/theorie is en hoe die jouw opdrachtkeuze ondersteunt. Varieer in de gekozen bron; gebruik niet in elke opdracht dezelfde auteurs, maar kies de studie die het beste past bij deze specifieke opdracht.
-
-Als er relevante [LEERKRACHT FEEDBACK - afgekeurde opdracht] is, benoem expliciet op basis van welk concreet feedbackfragment (kort citeren) je bepaalde keuzes juist níet meer maakt en welke alternatieve aanpak je daarvoor kiest.>
+<2-4 zinnen waarom deze opdracht past bij de leerling>
 SOURCES:
-<een korte bronregel per gebruikte bron. Maak duidelijk of de informatie uit een OPP-fragment, eerdere opdracht, theorie/studie (met APA-verwijzing) of andere context komt, zodat helder is waarop de opdrachtinhoud is gebaseerd. Zorg dat ten minste één bronregel een correcte, beknopte APA-bronvermelding bevat voor de onderwijskundige/psychologische studie of theorie die je in de RATIONALE noemt.>
-
-Gebruik alleen de onderstaande context.
-
-LEERLING
-Naam: ${student.fullName}
-Groep: ${student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend"}
-Bloom niveau: ${resolvedBloom}
-
-Gebruik de OPP BRONNEN en RECENTE OPDRACHTEN hieronder om interesses, leerstijl, werkmethode, concentratie en sterktes van de leerling af te leiden. Voeg géén extra leerlingkenmerken toe die niet uit deze databasebronnen komen.
-
-RECENTE OPDRACHTEN
-${student.assignments.map((assignment) => `- ${assignment.title} (${assignment.bloomLevel ?? "geen Bloom label"}, ${assignment.status})`).join("\n") || "- Geen recente opdrachten"}
-
-OPP BRONNEN
-${sources.join("\n\n") || "Geen OPP-bronnen gevonden."}
-
-FOCUSGEBIED
-${focusArea || "Kies een logisch focusgebied op basis van interesses en OPP."}
-
-HUIDIGE VERSIE
-${currentAssignment ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}\nMotivatie:\n${currentAssignment.rationale ?? ""}` : "Er is nog geen eerdere versie."}
-
-INSTRUCTIE VAN DE LEERKRACHT
-${teacherPrompt || "Maak de best passende eerste versie."}`;
+<bronnen die je hebt gebruikt>`
 }
 
 export async function POST(req: NextRequest) {
@@ -197,8 +230,7 @@ export async function POST(req: NextRequest) {
   const query = buildSearchQuery(focusArea, resolvedBloom, student.fullName);
 
   try {
-    const searchResults = await executeSearchOpp(student.id, query, 5);
-    const sources = parseSearchResults(searchResults);
+    const sources = await zoekVolledigProfiel(student.id, focusArea);
 
     if (action === "search") {
       return NextResponse.json({ sources, query });
@@ -267,25 +299,105 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+    const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(sources);
 
-    const prompt = buildGenerationPrompt({
-      student,
-      schoolHistory: student.profile?.schoolHistory,
-      resolvedBloom,
-      focusArea,
-      sources,
-      teacherPrompt,
-      currentAssignment,
-    });
+    if (!student.dateOfBirth && inferredDateOfBirth) {
+      await prisma.student.update({
+        where: { id: student.id },
+        data: { dateOfBirth: inferredDateOfBirth },
+      });
+    }
 
-    const response = await ollama.chat({
-      model: GEN_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      options: { temperature: 0.3, num_predict: 500 },
-    });
+    const leeftijd = getStudentAge(inferredDateOfBirth);
+    const leeftijdLabel = leeftijd ? `${leeftijd} jaar` : "onbekend";
+    const interestSnippets = extractProfileInterestsFromSources(sources);
+    const interessesLabel =
+      interestSnippets.length > 0
+        ? interestSnippets.map((snippet) => `"${snippet}"`).join("; ")
+        : "Niet expliciet benoemd in OPP-bronnen";
+    const beginsituatieBronnen = await zoekBeginsituatie(student.id)
+    const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) 
+  || "Geen OPP-informatie beschikbaar."
 
-    const content = response.message.content?.trim() ?? "";
-    const parsed = parseGeneratedResponse(content);
+
+    const MAX_POGINGEN = 2;
+    let poging = 0;
+    let parsed: ReturnType<typeof parseGeneratedResponse> | null = null;
+    const judgeResult: Awaited<ReturnType<typeof evalueerOpdracht>> | null = null;
+
+    while (poging < MAX_POGINGEN) {
+  poging++
+
+  const prompt = buildGenerationPrompt({
+  student,
+  resolvedBloom,
+  focusArea,
+  teacherPrompt,
+  currentAssignment,
+})
+
+  // Eerste aanroep met tool
+  const firstResponse = await ollama.chat({
+    model: GEN_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    tools: [searchOppTool],
+    options: { temperature: 0.3 },
+  })
+
+  const assistantContent = typeof firstResponse.message.content === "string"
+  ? firstResponse.message.content
+  : JSON.stringify(firstResponse.message.content ?? "")
+
+const messages: { role: string; content: string }[] = [
+  { role: "user", content: prompt },
+  { role: "assistant", content: assistantContent },
+]
+
+  // Tool calls verwerken
+  if (firstResponse.message.tool_calls) {
+  for (const toolCall of firstResponse.message.tool_calls) {
+    const { student_id, query } = toolCall.function.arguments
+    const toolResult = await executeSearchOpp(student_id, query, 3)
+    messages.push({ 
+      role: "tool", 
+      content: typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
+    })
+  }
+}
+
+  // Tweede aanroep zonder tools — nu met tool resultaten
+  const finalResponse = await ollama.chat({
+    model: GEN_MODEL,
+    messages,
+    options: { temperature: 0.3, num_predict: 500 },
+  })
+
+  const content = finalResponse.message.content?.trim() ?? ""
+  parsed = parseGeneratedResponse(content)
+
+  // Judge
+  /** 
+  try {
+    judgeResult = await evalueerOpdracht(
+      {
+        naam: student.fullName,
+        leeftijd: leeftijdLabel,
+        interesses: interessesLabel,
+        bloomNiveau: resolvedBloom,
+        vak: focusArea || "Algemeen",
+        beginsituatie,
+        gegenereerdeOpdracht: parsed.assignment,
+      },
+      poging,
+    )
+  } catch {
+    break
+  }
+
+  if (judgeResult.beslissing !== "opnieuw_genereren") break
+  */
+ break
+}
 
     return NextResponse.json({
       sources,
@@ -293,6 +405,7 @@ export async function POST(req: NextRequest) {
         ...parsed,
         sources,
       },
+      judgeResult,
     });
   } catch (error) {
     return NextResponse.json(
