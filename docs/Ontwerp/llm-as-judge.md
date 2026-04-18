@@ -60,18 +60,27 @@ Juf Aimee genereert opdracht → Judge scoort op rubric → Beslislogica zegt go
 ## Evaluatiepipeline
 
 ```mermaid
-%%{init: {'flowchart': {'useMaxWidth': true, 'nodeSpacing': 60, 'rankSpacing': 80}, 'themeVariables': {'fontSize': '50px'}}}%%
-flowchart LR
+flowchart TD
     A[Leerkracht vraagt opdracht aan] --> B[Agent haalt OPP-chunks op via search_opp]
     B --> C[Qwen2.5 genereert opdracht]
-    C --> D[LLM-as-judge beoordeelt opdracht]
-    D --> E{Score ≥ 0.75?}
-    E -- Ja --> F[Toon opdracht aan leerkracht]
-    E -- Nee --> G{Score ≥ 0.5?}
-    G -- Ja --> H[Flag voor menselijke review]
-    G -- Nee --> I{Minder dan 2 pogingen?}
-    I -- Ja --> C
-    I -- Nee --> J[Escaleer naar leerkracht]
+    C --> D[Judge beoordeelt op criteria]
+    D --> E{Gemiddelde score groter dan 0.75?}
+    E -- Ja --> J[Toon opdracht aan leerkracht met uitleg waarom opdracht geschikt is]
+    J --> K{Leerkracht beslist}
+    K -- Goedkeuren --> L[Opdracht toegewezen aan leerling]
+    K -- Afkeuren --> M[Leerkracht geeft reden]
+    M --> G
+    E -- Nee --> I{Gemiddelde score tussen 0.5 en 0.75?}
+    I -- Ja --> O[Toon opdracht aan leerkracht met uitleg welke criteria laag scoren]
+    O --> P{Leerkracht beslist}
+    P -- Toch goedkeuren --> L
+    P -- Opnieuw genereren --> Q[Leerkracht geeft optionele instructie]
+    Q --> G
+    I -- Nee --> F[Score te laag - Opnieuw genereren]
+    F --> G{Nog een poging mogelijk?}
+    G -- Ja --> C
+    G -- Nee --> H[Toon beste poging aan leerkracht met uitleg - Leerkracht beslist wat te doen]
+    H --> K
 ```
 
 ---
@@ -82,7 +91,7 @@ flowchart LR
 #### Prometheus 2 
 - Base model: Mistral-7B-Instruct-v0.2
 
-Speciaal finegetuned om te beoordelen op basis van een rubric. 
+Speciaal finegetuned om andere llms te beoordelen op basis van een rubric. 
 
 Uit het onderzoek van Kim et al. (2024) - "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models"
 
