@@ -127,11 +127,10 @@ Retrieval Augmented Generation Assesment
 | 2 | Past de moeilijkheidsgraad van de opdracht bij het opgegeven Bloom-niveau van de leerling? | Onderwijsspecifiek | Bloom's Taxonomy (Anderson & Krathwohl, 2001) |
 | 3 | Kan een leerling van deze leeftijd en dit niveau de opdracht zelfstandig uitvoeren? | Onderwijsspecifiek | Zone of Proximal Development (Vygotsky) |
 | 4 | Sluit de opdracht aan bij de beginsituatie van de leerling, niet alleen bij het einddoel? | Onderwijsspecifiek | Roberts & Inman (2023) via Basisboek Hoogbegaafdheid H22 |
-| 5 | Is de opdracht leeftijdspassend in taalgebruik, toon en inhoud voor dit kind? | Ethiek / Wetgeving | EU AI Act Art. 5 + AVG Art. 8 |
-| 6 | Bevat de opdracht geen aannames of stereotypes op basis van geslacht, cultuur of achtergrond? | Ethiek / Wetgeving | EU AI Act Art. 10 + Gelijke Behandelingswet |
-| 7 | Kan een leerkracht de opdracht makkelijk lezen, beoordelen en indien nodig aanpassen? | Ethiek / Wetgeving | EU AI Act Art. 14 |
-| 8 | Zijn alle elementen in de opdracht terug te herleiden naar het leerlingprofiel, zonder verzonnen info? | RAGAS | Es et al., 2023 — faithfulness metric |
-| 9 | Gebruikt de opdracht alleen relevante leerlinginfo en laat het irrelevante details weg? | RAGAS | Es et al., 2023 — context precision metric |
+| 5 | Is de opdracht leeftijdspassend in taalgebruik, toon en inhoud voor dit kind? | Ethiek / Wetgeving | EU AI Act Art. 5 + AVG Art. 8 || 
+| 6 | Kan een leerkracht de opdracht makkelijk lezen, beoordelen en indien nodig aanpassen? | Ethiek / Wetgeving | EU AI Act Art. 14 |
+| 7 | Zijn alle elementen in de opdracht terug te herleiden naar het leerlingprofiel, zonder verzonnen info? | RAGAS | Es et al., 2023 — faithfulness metric |
+| 8 | Gebruikt de opdracht alleen relevante leerlinginfo en laat het irrelevante details weg? | RAGAS | Es et al., 2023 — context precision metric |
 
 ## Volgende stappen 
 Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen worden.
@@ -150,9 +149,38 @@ Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen wo
 
 ## Tests 
 
+### Wat maakt een goede opdracht voor Noah Smit?
+
+Op basis van zijn OPP (groep 6, TIQ 141) zijn de belangrijkste factoren:
+
+- Sluit aan op zijn interesse in **wetenschap en experimenten**
+- Biedt **autonomie** en ruimte voor eigen keuzes
+- Is **cognitief uitdagend**: open vragen, eigen redenering, iets nieuws produceren
+- Heeft **duidelijke tussenstappen**: planning van grote taken vraagt nog sturing
+- Vraagt **geen zwaar schrijfwerk** als doel op zich
+- Bevat **geen herhaalwerk of routinetaken**: Noah haakt af en werkt slordig bij gebrek aan uitdaging
+- Is **individueel uitvoerbaar**: samenwerken is nog een ontwikkelpunt voor Noah
+
+
+---
+
 ### Tests bij 'slechte' opdrachten voor hoogbegaafde leerlingen
 
+Een 'slechte' opdracht voor Noah is een opdracht die:
+
+- **Geen aansluiting heeft op zijn interesses**: niets met wetenschap of experimenten
+- **Passief en gesloten is**: één correct antwoord, geen eigen redenering
+- **Herhaalwerk of routinewerk vraagt**: Noah haakt af en werkt slordig
+- **Geen autonomie biedt**: alles ligt vast, geen eigen keuzes
+- **Niet terug te herleiden is naar zijn OPP**: elk kind had deze opdracht kunnen krijgen
+
+---
+
 ### Tests bij 'goede' opdrachten voor hoogbegaafde leerlingen
+
+Een 'goede' opdracht voor Noah sluit aan op zijn interesses, geeft autonomie, vraagt eigen redenering en is volledig traceerbaar naar zijn OPP.
+
+**Testresultaat "Ontwerp je eigen weersysteem-experiment":** 35/40 (88%) → `goedkeuren`
 
 #### Test 1 
 [text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)
