@@ -108,7 +108,7 @@ function RagStep({
   );
 }
 
-export function PrototypeAiAssignmentClient({
+export function AiAssignmentClient({
   bloomOptions,
   student,
 }: {
@@ -733,9 +733,6 @@ export function PrototypeAiAssignmentClient({
                   placeholder="Bijv. te abstract voor deze leerling, sluit niet aan op de interesse..."
                   value={rejectReason}
                 />
-                <p className="text-xs leading-6 text-rose-700">
-                  HAX G7: de reden van afkeuring is contextuele kennis die alleen de leraar heeft — dit is het moment waarop die kennis het systeem binnenkomt.
-                </p>
                 <div className="flex gap-3">
                   <button
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"

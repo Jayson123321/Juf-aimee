@@ -102,6 +102,7 @@ model Assignment {
   bloomLevel  String?
   bloomNiveau Int              @default(1)
   uitleg      String?
+  studentTip  String?
   studentWork String?
   savedAt     DateTime?
   submittedAt DateTime?

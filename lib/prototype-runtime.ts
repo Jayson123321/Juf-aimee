@@ -181,6 +181,7 @@ function mapAssignments(
     bloomLevel: string | null;
     status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
     createdAt: Date;
+    teacherFeedback?: { content: string } | null;
   }>,
 ): PrototypeAssignment[] {
   return assignments.map((assignment) => ({
@@ -189,6 +190,7 @@ function mapAssignments(
     title: assignment.title,
     description: assignment.description ?? "Nog geen beschrijving beschikbaar.",
     rationale: assignment.uitleg ?? "Gegenereerde opdracht op basis van leerlingcontext en OPP.",
+    feedback: assignment.teacherFeedback?.content,
     bloomLevel: assignment.bloomLevel ?? "Toepassen",
     status: mapAssignmentStatus(assignment.status),
     createdAt: assignment.createdAt.toISOString(),
@@ -337,9 +339,31 @@ export async function getPrototypeAssignments(studentId: string) {
       bloomLevel: true,
       status: true,
       createdAt: true,
+      teacherFeedback: { select: { content: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 
   return mapAssignments(studentId, assignments);
+}
+
+export async function getPrototypeAssignment(assignmentId: string) {
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      uitleg: true,
+      bloomLevel: true,
+      status: true,
+      createdAt: true,
+      studentId: true,
+      teacherFeedback: { select: { content: true } },
+    },
+  });
+
+  if (!assignment) return null;
+
+  return mapAssignments(assignment.studentId, [assignment])[0];
 }

@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  ArrowLeft,
   BookOpen,
   CheckCircle2,
   Clock,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -51,24 +49,31 @@ function CardHeaderBlock({
   );
 }
 
+const statStyles = {
+  green:  { box: "bg-green-50  border border-green-200  shadow-[0_0_16px_rgba(34,197,94,0.15)]",  num: "text-green-600",  label: "text-green-700" },
+  amber:  { box: "bg-amber-50  border border-amber-200  shadow-[0_0_16px_rgba(251,191,36,0.15)]",  num: "text-amber-600",  label: "text-amber-700" },
+  violet: { box: "bg-violet-50 border border-violet-200 shadow-[0_0_16px_rgba(139,92,246,0.15)]", num: "text-violet-600", label: "text-violet-700" },
+} as const;
+
 function StatBox({
   icon,
   label,
   value,
-  tint,
+  color,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
-  tint: string;
+  color: keyof typeof statStyles;
 }) {
+  const s = statStyles[color];
   return (
-    <div className={`rounded-2xl p-4 ${tint}`}>
-      <div className="mb-2 flex items-center gap-2">
+    <div className={`rounded-2xl p-5 ${s.box}`}>
+      <div className="mb-3 flex items-center gap-2">
         {icon}
-        <span className="text-sm font-semibold sm:text-base">{label}</span>
+        <span className={`text-sm font-semibold ${s.label}`}>{label}</span>
       </div>
-      <p className="text-2xl font-bold text-slate-950">{value}</p>
+      <p className={`text-3xl font-bold ${s.num}`}>{value}</p>
     </div>
   );
 }
@@ -113,7 +118,7 @@ function AssignmentItem({ assignment, studentId }: { assignment: PrototypeAssign
   return (
     <Link
       className="block rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_8px_22px_rgba(109,123,166,0.05)] transition hover:border-violet-200 hover:shadow-[0_8px_28px_rgba(98,101,255,0.10)]"
-      href={`/prototype/hoogbegaafde-leerlingen/${studentId}/opdracht/${assignment.id}`}
+      href={`/student/${studentId}/opdrachten/${assignment.id}`}
     >
       <div className="mb-3 flex items-start justify-between gap-4">
         <div className="space-y-2">
@@ -142,33 +147,26 @@ function AssignmentItem({ assignment, studentId }: { assignment: PrototypeAssign
   );
 }
 
-export default async function PrototypeStudentProfilePage({
+export default async function StudentProfielPage({
   params,
 }: {
-  params: Promise<{ studentId: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { studentId } = await params;
-  const student = await getPrototypeStudent(studentId);
+  const { id } = await params;
+  const student = await getPrototypeStudent(id);
 
   if (!student) notFound();
 
-  const assignments = await getPrototypeAssignments(studentId);
-  const completedAssignments = assignments.filter((assignment) => assignment.status === "completed");
-  const inProgressAssignments = assignments.filter((assignment) => assignment.status === "in_progress");
-  const notStartedAssignments = assignments.filter((assignment) => assignment.status === "not_started");
+  const assignments = await getPrototypeAssignments(id);
+  const completedAssignments = assignments.filter((a) => a.status === "completed");
+  const inProgressAssignments = assignments.filter((a) => a.status === "in_progress");
+  const notStartedAssignments = assignments.filter((a) => a.status === "not_started");
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(171,194,255,0.2),transparent_30%),linear-gradient(180deg,#f7f9ff_0%,#eef4ff_100%)] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <Link
-          className="mb-6 inline-flex items-center gap-3 text-sm font-medium text-slate-900 transition hover:text-slate-700"
-          href="/prototype/hoogbegaafde-leerlingen"
-        >
-          <ArrowLeft className="size-4" />
-          Terug naar dashboard
-        </Link>
+    <div className="min-h-full bg-[radial-gradient(circle_at_top,rgba(171,194,255,0.2),transparent_30%),linear-gradient(180deg,#f7f9ff_0%,#eef4ff_100%)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-6">
 
-        <PageCard className="mb-6 p-6">
+        <PageCard className="p-6">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex size-[72px] items-center justify-center rounded-full bg-slate-100 text-5xl shadow-inner ring-1 ring-slate-200">
@@ -183,42 +181,17 @@ export default async function PrototypeStudentProfilePage({
                 </div>
               </div>
             </div>
-
-            <Link
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
-              href={`/prototype/leerling-portaal/${student.id}`}
-            >
-              Leerling Weergave
-            </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatBox
-              icon={<CheckCircle2 className="size-5 text-green-600" />}
-              label="Afgerond"
-              tint="bg-green-50"
-              value={completedAssignments.length}
-            />
-            <StatBox
-              icon={<Clock className="size-5 text-amber-600" />}
-              label="Bezig"
-              tint="bg-yellow-50"
-              value={inProgressAssignments.length}
-            />
-            <StatBox
-              icon={<BookOpen className="size-5 text-violet-600" />}
-              label="Te Starten"
-              tint="bg-violet-50"
-              value={notStartedAssignments.length}
-            />
+            <StatBox icon={<CheckCircle2 className="size-5 text-green-500" />} label="Afgerond" value={completedAssignments.length} color="green" />
+            <StatBox icon={<Clock className="size-5 text-amber-500" />} label="Bezig" value={inProgressAssignments.length} color="amber" />
+            <StatBox icon={<BookOpen className="size-5 text-violet-500" />} label="Te Starten" value={notStartedAssignments.length} color="violet" />
           </div>
         </PageCard>
 
-        <PageCard className="mb-6">
-          <CardHeaderBlock
-            title="Leerlingprofiel"
-            description="Uitgebreide informatie voor gepersonaliseerde opdrachten"
-          />
+        <PageCard>
+          <CardHeaderBlock title="Leerlingprofiel" description="Uitgebreide informatie voor gepersonaliseerde opdrachten" />
           <div className="grid grid-cols-1 gap-6 px-6 py-6 md:grid-cols-2">
             <div className="space-y-4">
               <div>
@@ -246,26 +219,16 @@ export default async function PrototypeStudentProfilePage({
               <div>
                 <p className="text-sm font-semibold text-slate-500">Sterktes</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {student.strengths.map((strength) => (
-                    <span
-                      key={strength}
-                      className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 ring-1 ring-slate-200"
-                    >
-                      {strength}
-                    </span>
+                  {student.strengths.map((s) => (
+                    <span key={s} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 ring-1 ring-slate-200">{s}</span>
                   ))}
                 </div>
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-500">Ondersteuningsbehoeften</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {student.supportNeeds.map((need) => (
-                    <span
-                      key={need}
-                      className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 ring-1 ring-blue-100"
-                    >
-                      {need}
-                    </span>
+                  {student.supportNeeds.map((n) => (
+                    <span key={n} className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 ring-1 ring-blue-100">{n}</span>
                   ))}
                 </div>
               </div>
@@ -273,19 +236,13 @@ export default async function PrototypeStudentProfilePage({
           </div>
         </PageCard>
 
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <PageCard>
-            <CardHeaderBlock
-              title="Interesses"
-              description={`Onderwerpen die ${student.name} motiveren`}
-            />
+            <CardHeaderBlock title="Interesses" description={`Onderwerpen die ${student.name} motiveren`} />
             <div className="space-y-3 px-6 py-6">
               {student.interests.map((interest) => (
-                <div
-                  key={interest}
-                  className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3"
-                >
-                  <span className="text-xl">{"\uD83D\uDCA1"}</span>
+                <div key={interest} className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3">
+                  <span className="text-xl">💡</span>
                   <span className="font-medium text-slate-900">{interest}</span>
                 </div>
               ))}
@@ -293,10 +250,7 @@ export default async function PrototypeStudentProfilePage({
           </PageCard>
 
           <PageCard>
-            <CardHeaderBlock
-              title="Voortgang"
-              description="Ontwikkeling op Bloom's Taxonomie"
-            />
+            <CardHeaderBlock title="Voortgang" description="Ontwikkeling op Bloom's Taxonomie" />
             <div className="space-y-5 px-6 py-6">
               <div>
                 <div className="mb-2 flex justify-between">
@@ -304,13 +258,9 @@ export default async function PrototypeStudentProfilePage({
                   <span className="text-sm font-semibold text-slate-700">{student.progress}%</span>
                 </div>
                 <div className="h-3 rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-slate-600"
-                    style={{ width: `${student.progress}%` }}
-                  />
+                  <div className="h-full rounded-full bg-slate-600" style={{ width: `${student.progress}%` }} />
                 </div>
               </div>
-
               <div className="border-t border-slate-200 pt-4">
                 <p className="mb-3 text-sm text-slate-500">Huidige Niveau:</p>
                 <div className="flex items-center gap-3">
@@ -325,11 +275,8 @@ export default async function PrototypeStudentProfilePage({
           </PageCard>
         </div>
 
-        <PageCard className="mb-6">
-          <CardHeaderBlock
-            title="Vakresultaten & Bewijsmateriaal"
-            description="Resultaten en observaties per vakgebied"
-          />
+        <PageCard>
+          <CardHeaderBlock title="Vakresultaten & Bewijsmateriaal" description="Resultaten en observaties per vakgebied" />
           <div className="space-y-4 px-6 py-6">
             {student.subjectScores.map((score) => (
               <SubjectScoreRow key={score.subject} score={score} />
@@ -337,26 +284,17 @@ export default async function PrototypeStudentProfilePage({
           </div>
         </PageCard>
 
-        <PageCard className="mb-6">
-          <CardHeaderBlock
-            title="Didactische Aanbevelingen"
-            description="Didactische richtlijnen voor lesontwerp en begeleiding"
-          />
+        <PageCard>
+          <CardHeaderBlock title="Didactische Aanbevelingen" description="Didactische richtlijnen voor lesontwerp en begeleiding" />
           <div className="space-y-4 px-6 py-6">
             <div>
               <p className="text-sm font-semibold text-slate-500">Motivatiefactoren</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {student.motivationFactors.map((factor) => (
-                  <span
-                    key={factor}
-                    className="rounded-full bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700 ring-1 ring-violet-100"
-                  >
-                    {factor}
-                  </span>
+                {student.motivationFactors.map((f) => (
+                  <span key={f} className="rounded-full bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700 ring-1 ring-violet-100">{f}</span>
                 ))}
               </div>
             </div>
-
             <div className="rounded-3xl bg-blue-50 px-5 py-5">
               <p className="mb-3 text-sm font-semibold text-slate-900">Aanbevelingen voor de leerkracht</p>
               <ul className="space-y-2 text-sm leading-7 text-slate-700">
@@ -372,28 +310,18 @@ export default async function PrototypeStudentProfilePage({
           <CardHeaderBlock
             title="AI-gegenereerde Opdrachten"
             description="Gepersonaliseerde opdrachten gebaseerd op interesses en niveau"
-            action={
-              <Link
-                className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600"
-                href={`/prototype/hoogbegaafde-leerlingen/${student.id}/ai-opdracht`}
-              >
-                <Sparkles className="mr-2 size-4" />
-                Nieuwe Opdracht
-              </Link>
-            }
           />
           <div className="space-y-4 px-6 py-6">
             {assignments.length === 0 ? (
-              <p className="py-8 text-center text-slate-500">
-                Nog geen opdrachten gegenereerd voor deze leerling
-              </p>
+              <p className="py-8 text-center text-slate-500">Nog geen opdrachten gegenereerd voor deze leerling</p>
             ) : (
               assignments.map((assignment) => (
-                <AssignmentItem assignment={assignment} key={assignment.id} studentId={studentId} />
+                <AssignmentItem assignment={assignment} key={assignment.id} studentId={id} />
               ))
             )}
           </div>
         </PageCard>
+
       </div>
     </div>
   );

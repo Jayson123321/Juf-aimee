@@ -4,7 +4,7 @@ import { executeSearchOpp } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
 import { deriveStudentPresentation, getBloomLevelLabel } from "@/lib/student-profile";
 
-type PrototypeAssignmentApiStudent = {
+type PrototypeAssignmentApiStudent  = {
   id: string;
   fullName: string;
   groep: string | null;
@@ -16,6 +16,7 @@ type PrototypeAssignmentApiStudent = {
     title: string;
     status: string;
     bloomLevel: string | null;
+    teacherFeedback: { content: string } | null;
   }>;
 };
 
@@ -43,14 +44,16 @@ function buildSearchQuery(focusArea: string, bloomLevel: string, fullName: strin
 
 function parseGeneratedResponse(content: string) {
   const titleMatch = content.match(/TITLE:\s*(.+)/i);
-  const assignmentMatch = content.match(/ASSIGN(?:MENT|ATION):\s*([\s\S]*?)RATIONALE:/i);
+  const assignmentMatch = content.match(/ASSIGNMENT:\s*([\s\S]*?)(?:STUDENT_TIP:|RATIONALE:)/i);
+  const studentTipMatch = content.match(/STUDENT_TIP:\s*([\s\S]*?)RATIONALE:/i);
   const rationaleMatch = content.match(/RATIONALE:\s*([\s\S]*?)SOURCES:/i);
 
   const title = titleMatch?.[1]?.trim() ?? "AI-gegenereerde opdracht";
   const assignment = assignmentMatch?.[1]?.trim() ?? content.trim();
+  const studentTip = studentTipMatch?.[1]?.trim() ?? "";
   const rationale = rationaleMatch?.[1]?.trim() ?? "";
 
-  return { title, assignment, rationale };
+  return { title, assignment, studentTip, rationale };
 }
 
 function normalizeBloomLabel(label: string) {
@@ -81,11 +84,13 @@ function buildGenerationPrompt(args: {
   schoolHistory?: string | null;
   resolvedBloom: string;
   focusArea: string;
+  estimatedTime: string;
   sources: string[];
   teacherPrompt?: string;
   currentAssignment?: {
     title?: string;
     assignment?: string;
+    studentTip?: string;
     rationale?: string;
   } | null;
 }) {
@@ -94,10 +99,12 @@ function buildGenerationPrompt(args: {
     schoolHistory,
     resolvedBloom,
     focusArea,
+    estimatedTime,
     sources,
     teacherPrompt,
     currentAssignment,
   } = args;
+
   const presentation = deriveStudentPresentation({
     fullName: student.fullName,
     schoolHistory,
@@ -105,52 +112,109 @@ function buildGenerationPrompt(args: {
     oppTexts: sources,
   });
 
-  return `Je bent Juf Aimee en genereert een gepersonaliseerde opdracht voor een hoogbegaafde leerling.
+  const recentAssignments =
+    student.assignments
+      .map((a) => {
+        const base = `- ${a.title} (Bloom: ${a.bloomLevel ?? "onbekend"}, status: ${a.status})`;
+        return a.teacherFeedback?.content
+          ? `${base}\n  [Feedback leraar]: "${a.teacherFeedback.content}"`
+          : base;
+      })
+      .join("\n") || "- Geen recente opdrachten";
 
-BELANGRIJK: Als er in de OPP BRONNEN een regel staat die begint met "[LEERKRACHT FEEDBACK - afgekeurde opdracht]", dan moet je die feedback serieus nemen. Vermijd het onderwerp of de aanpak die is afgekeurd en kies een andere richting die wél aansluit op de leerling.
+  const oppBronnen = sources.join("\n\n") || "Geen OPP-bronnen gevonden.";
 
-Noem in je uitleg expliciet wanneer je op basis van zo'n eerdere feedback juist een bepaald type opdracht of materiaal níet meer kiest (bijvoorbeeld geen fysieke waterfilter meer), en leg kort uit wat je daar in de nieuwe opdracht voor in de plaats doet.
-
-Geef exact dit formaat terug:
-TITLE: <korte titel>
-ASSIGNMENT:
-<een concrete opdracht in verzorgd Nederlands, 5-8 zinnen, gericht aan de leerkracht>
-RATIONALE:
-<2-4 zinnen waarom deze opdracht past bij de leerling. Noem expliciet het geselecteerde Bloom-niveau (${resolvedBloom}) en leg kort uit waarom de opdracht goed aansluit bij dit Bloom-niveau. Verwijs ook kort naar de gebruikte informatiebronnen (bijvoorbeeld OPP-teksten, eerdere opdrachten, eerdere afgekeurde opdrachten/feedback of kenmerken van de leerling) waarop je redenering is gebaseerd.
-
-BELANGRIJK: Noem alléén interesses, sterktes, voorkeuren of kenmerken van de leerling die letterlijk of bijna letterlijk in de OPP BRONNEN, RECENTE OPDRACHTEN of INSTRUCTIE VAN DE LEERKRACHT voorkomen. Verzín geen nieuwe interesses of eigenschappen en gebruik geen synoniemen die niet in de bron staan (bijvoorbeeld niet "technologie" als in de bron alleen "muziek" staat).
-
-Noem daarbij minimaal één concreet kenmerk uit het leerlingprofiel of de OPP (bijvoorbeeld een interesse of sterkte) en citeer daarbij heel kort uit de bron. Gebruik hierbij een generiek format zoals: "Uit OPP-fragment: '<korte originele tekst uit de bron>' concludeer ik dat...". Gebruik nooit het voorbeeld uit deze instructie letterlijk; vul altijd een écht citaat uit de relevante bron in. Leg uit waarom het aansluiten bij die interesse belangrijk is voor een hoogbegaafde leerling (bijvoorbeeld omdat dit leidt tot meer gestimuleerd en taakgericht gedrag).
-
-Verwijs daarnaast altijd kort naar minimaal één echte onderwijskundige of psychologische bron (bijvoorbeeld een studie of theorie van Ryan & Deci over motivatie en autonomie, of een vergelijkbare bron) om te onderbouwen dat aansluiten bij interesses en autonomie belangrijk is voor de motivatie van (hoogbegaafde) leerlingen. Leg in één zin uit wat de kernboodschap van die studie/theorie is en hoe die jouw opdrachtkeuze ondersteunt. Varieer in de gekozen bron; gebruik niet in elke opdracht dezelfde auteurs, maar kies de studie die het beste past bij deze specifieke opdracht.
-
-Als er relevante [LEERKRACHT FEEDBACK - afgekeurde opdracht] is, benoem expliciet op basis van welk concreet feedbackfragment (kort citeren) je bepaalde keuzes juist níet meer maakt en welke alternatieve aanpak je daarvoor kiest.>
-SOURCES:
-<een korte bronregel per gebruikte bron. Maak duidelijk of de informatie uit een OPP-fragment, eerdere opdracht, theorie/studie (met APA-verwijzing) of andere context komt, zodat helder is waarop de opdrachtinhoud is gebaseerd. Zorg dat ten minste één bronregel een correcte, beknopte APA-bronvermelding bevat voor de onderwijskundige/psychologische studie of theorie die je in de RATIONALE noemt.>
-
-Gebruik alleen de onderstaande context.
-
-LEERLING
-Naam: ${student.fullName}
+  const huidigeProfiel = `Naam: ${student.fullName}
 Groep: ${student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend"}
-Bloom niveau: ${resolvedBloom}
+Huidig Bloom-niveau: ${resolvedBloom}
+Geschatte tijd voor de opdracht: ${estimatedTime}
+Leeftijdsindicatie: basisschool hoogbegaafde leerling
 
-Gebruik de OPP BRONNEN en RECENTE OPDRACHTEN hieronder om interesses, leerstijl, werkmethode, concentratie en sterktes van de leerling af te leiden. Voeg géén extra leerlingkenmerken toe die niet uit deze databasebronnen komen.
+Afgeleid leerlingprofiel (gebaseerd op OPP en opdrachtenhistorie):
+- Interesses: ${presentation.interests.join(", ")}
+- Leerstijl: ${presentation.learningStyle}
+- Werkmethode: ${presentation.workMethod}
+- Concentratieboog: ${presentation.concentration}
+- Sterke punten: ${presentation.strengths.join(", ")}
+- Didactische tips: ${presentation.smartTips.join(" | ")}`;
 
+  const focusgebied = focusArea || presentation.interests[0] || "vrije verdieping";
+
+  const huidigVersie = currentAssignment
+    ? `Titel: ${currentAssignment.title ?? "onbekend"}
+Opdracht:
+${currentAssignment.assignment ?? ""}
+Motivatie:
+${currentAssignment.rationale ?? ""}`
+    : "Er is nog geen eerdere versie.";
+
+  const instructie = teacherPrompt?.trim() || "Maak de best passende eerste versie op basis van het leerlingprofiel.";
+
+  return `Je bent Juf Aimee, een AI-assistent voor basisschoolleraren die gepersonaliseerde opdrachten genereert voor hoogbegaafde leerlingen.
+
+Jouw taak: genereer één concrete, volledige opdracht die aansluit op het leerlingprofiel hieronder.
+
+───────────────────────────────
+LEERLINGPROFIEL
+───────────────────────────────
+${huidigeProfiel}
+
+───────────────────────────────
 RECENTE OPDRACHTEN
-${student.assignments.map((assignment) => `- ${assignment.title} (${assignment.bloomLevel ?? "geen Bloom label"}, ${assignment.status})`).join("\n") || "- Geen recente opdrachten"}
+───────────────────────────────
+${recentAssignments}
 
-OPP BRONNEN
-${sources.join("\n\n") || "Geen OPP-bronnen gevonden."}
+───────────────────────────────
+OPP BRONNEN (relevante fragmenten uit het ontwikkelingsperspectief)
+───────────────────────────────
+${oppBronnen}
 
-FOCUSGEBIED
-${focusArea || "Kies een logisch focusgebied op basis van interesses en OPP."}
+───────────────────────────────
+FOCUSGEBIED VOOR DEZE OPDRACHT
+───────────────────────────────
+${focusgebied}
 
-HUIDIGE VERSIE
-${currentAssignment ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}\nMotivatie:\n${currentAssignment.rationale ?? ""}` : "Er is nog geen eerdere versie."}
-
+───────────────────────────────
 INSTRUCTIE VAN DE LEERKRACHT
-${teacherPrompt || "Maak de best passende eerste versie."}`;
+───────────────────────────────
+${instructie}
+
+───────────────────────────────
+REGELS
+───────────────────────────────
+1. Sluit de opdracht aan op het Bloom-niveau "${resolvedBloom}" — gebruik de bijbehorende denkvaardigheden (zie hieronder).
+2. Gebruik de interesses, leerstijl en werkmethode uit het leerlingprofiel als basis voor de opdrachtopbouw.
+3. Als er OPP-bronnen zijn met "[LEERKRACHT FEEDBACK - afgekeurde opdracht]", vermijd dan expliciet die aanpak en kies een alternatief.
+4. Schrijf de ASSIGNMENT direct aan de leerling, in de tweede persoon ("Jij gaat...", "Maak een...", "Beschrijf..."). Gebruik NOOIT "Laat de leerling..." of de naam van de leerling in de opdrachttekst.
+5. De opdracht moet concreet en uitvoerbaar zijn: beschrijf wat de leerling doet en welk product er ontstaat. Begeleidingstips voor de leraar komen uitsluitend in TEACHER_NOTES.
+6. Verzin geen kenmerken die niet in het profiel of de OPP-bronnen staan.
+Pas de omvang, het aantal stappen en de diepgang van de opdracht aan op de geschatte tijd van ${estimatedTime}. Een opdracht van 15 minuten is kort en gericht; een weekopdracht heeft meerderefasen en een eindproduct. 
+
+Bloom-niveau "${resolvedBloom}" betekent:
+${resolvedBloom === "Onthouden" ? "- De leerling herhaalt, benoemt en reproduceert feiten en begrippen." : ""}${resolvedBloom === "Begrijpen" ? "- De leerling legt uit, omschrijft en interpreteert in eigen woorden." : ""}${resolvedBloom === "Toepassen" ? "- De leerling past kennis toe in een nieuwe situatie of bij een concreet probleem." : ""}${resolvedBloom === "Analyseren" ? "- De leerling ontleedt informatie, vergelijkt onderdelen en legt verbanden." : ""}${resolvedBloom === "Evalueren" ? "- De leerling beoordeelt, weegt argumenten af en onderbouwt een standpunt." : ""}${resolvedBloom === "Creëren" ? "- De leerling ontwerpt, maakt of stelt iets nieuws samen op basis van eigen inzichten." : ""}
+
+───────────────────────────────
+GEWENST UITVOERFORMAAT — volg dit exact
+───────────────────────────────
+TITLE: <korte, pakkende titel van de opdracht>
+ASSIGNMENT:
+<Volledige opdrachtbeschrijving, gericht aan de leraar. Beschrijf:
+  • wat de leerling concreet gaat doen
+  • welk product of resultaat er ontstaat
+  • hoe dit aansluit op de interesses en leerstijl van de leerling
+  • eventuele begeleidingstips voor de leraar>
+STUDENT_TIP:
+<Één korte, aanmoedigende tip van Juf Aimee direct aan de leerling. Max 2 zinnen. Gebruik de naam van de leerling niet. Schrijf warm en positief, passend bij het onderwerp van de opdracht.>
+RATIONALE:
+<2–4 zinnen die uitleggen waarom deze opdracht past bij de leerling. Benoem:
+  • het Bloom-niveau en waarom de opdracht daar specifiek op aansluit
+  • minimaal één kenmerk uit het leerlingprofiel of OPP (kort citeren: "Uit OPP: '...' blijkt dat...")
+  • één onderwijskundige of psychologische bron (APA-stijl, varieer per opdracht) die de keuze onderbouwt>
+SOURCES:
+<Één bronregel per gebruikte informatiebron. Onderscheid:
+  - OPP-fragment: korte omschrijving van het gebruikte fragment
+  - Eerdere opdracht: titel en relevantie
+  - Wetenschappelijke bron: volledige APA-verwijzing>`;
 }
 
 export async function POST(req: NextRequest) {
@@ -160,8 +224,11 @@ export async function POST(req: NextRequest) {
     studentId,
     focusArea = "",
     bloomLevel = "",
+    estimatedTime = "45 minuten",
     teacherPrompt = "",
     currentAssignment = null,
+    assignmentId = null,
+    feedback = "",
   } = body ?? {};
 
   if (!studentId || !action) {
@@ -182,6 +249,7 @@ export async function POST(req: NextRequest) {
           title: true,
           status: true,
           bloomLevel: true,
+          teacherFeedback: { select: { content: true } },
         },
         orderBy: { createdAt: "desc" },
         take: 5,
@@ -218,6 +286,7 @@ export async function POST(req: NextRequest) {
           title: currentAssignment.title,
           description: currentAssignment.assignment,
           uitleg: currentAssignment.rationale ?? "Goedgekeurde prototype-opdracht",
+          studentTip: currentAssignment.studentTip ?? null,
           bloomLevel: resolvedBloom,
           bloomNiveau: bloomLevelToNumber(resolvedBloom),
           status: "PENDING",
@@ -257,6 +326,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    if (action === "feedback") {
+      if (!assignmentId || !feedback.trim()) {
+        return NextResponse.json({ error: "assignmentId en feedback zijn verplicht." }, { status: 400 });
+      }
+
+      await prisma.teacherFeedback.upsert({
+        where: { assignmentId },
+        update: { content: feedback.trim() },
+        create: { assignmentId, content: feedback.trim() },
+      });
+
+      return NextResponse.json({ ok: true });
+    }
+
     if (action !== "generate" && action !== "revise") {
       return NextResponse.json({ error: "Onbekende actie." }, { status: 400 });
     }
@@ -276,15 +359,25 @@ export async function POST(req: NextRequest) {
       sources,
       teacherPrompt,
       currentAssignment,
+      estimatedTime,
     });
+
+    console.log("\n========== LLM PROMPT ==========");
+    console.log(prompt);
+    console.log("=================================\n");
 
     const response = await ollama.chat({
       model: GEN_MODEL,
       messages: [{ role: "user", content: prompt }],
-      options: { temperature: 0.3, num_predict: 500 },
+      options: { temperature: 0.3, num_predict: 900 },
     });
 
     const content = response.message.content?.trim() ?? "";
+
+    console.log("\n========== LLM RESPONSE ==========");
+    console.log(content);
+    console.log("===================================\n");
+
     const parsed = parseGeneratedResponse(content);
 
     return NextResponse.json({

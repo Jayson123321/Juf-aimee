@@ -1,6 +1,7 @@
 import { Ollama } from "ollama"
+const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434"
 
-export const ollama = new Ollama({ host: "http://localhost:11434" })
+export const ollama = new Ollama({ host: OLLAMA_HOST })
 export const EMBED_MODEL = "jeffh/intfloat-multilingual-e5-large:f16"
 export const GEN_MODEL = "qwen2.5"
 
