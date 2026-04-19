@@ -1,4 +1,4 @@
-# Authenticatie & Rolbeheer
+# Authenticatie & Autorisatie
 
 
 ## Rollen & Toegang

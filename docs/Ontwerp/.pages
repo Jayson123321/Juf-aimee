@@ -1,0 +1,9 @@
+nav:
+  - index.md
+  - designverantwoording.md
+  - dashboard.md
+  - advies-prototype.md
+  - Testplan-leraar.md
+  - testresultaten
+  - llm-as-judge.md
+  - Toegangscontrole-rolbeheer.md
