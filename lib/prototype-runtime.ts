@@ -33,6 +33,9 @@ export type PrototypeAssignment = {
   bloomLevel: string;
   status: "completed" | "in_progress" | "not_started";
   createdAt: string;
+  studentWork?: string | null;
+  teacherFeedback?: { content: string } | null;
+  reflection?: { content: string } | null;
 };
 
 export type PrototypeStudent = {
@@ -181,7 +184,9 @@ function mapAssignments(
     bloomLevel: string | null;
     status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
     createdAt: Date;
+    studentWork?: string | null;
     teacherFeedback?: { content: string } | null;
+    reflection?: { content: string } | null;
   }>,
 ): PrototypeAssignment[] {
   return assignments.map((assignment) => ({
@@ -194,6 +199,9 @@ function mapAssignments(
     bloomLevel: assignment.bloomLevel ?? "Toepassen",
     status: mapAssignmentStatus(assignment.status),
     createdAt: assignment.createdAt.toISOString(),
+    studentWork: assignment.studentWork ?? null,
+    teacherFeedback: assignment.teacherFeedback ?? null,
+    reflection: assignment.reflection ?? null,
   }));
 }
 
@@ -339,7 +347,13 @@ export async function getPrototypeAssignments(studentId: string) {
       bloomLevel: true,
       status: true,
       createdAt: true,
-      teacherFeedback: { select: { content: true } },
+      studentWork: true,
+      teacherFeedback: {
+        select: { content: true },
+      },
+      reflection: {
+        select: { content: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
