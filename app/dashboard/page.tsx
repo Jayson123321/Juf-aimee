@@ -239,7 +239,7 @@ function StudentCard({
             </Link>
             <Link
               className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-700 px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-gray-800"
-              href={`/prototype/hoogbegaafde-leerlingen/${student.id}/ai-opdracht`}
+              href={`/student/${student.id}/generate`}
             >
               <Sparkles className="size-4" />
               AI Opdracht

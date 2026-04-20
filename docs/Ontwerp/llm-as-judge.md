@@ -60,18 +60,27 @@ Juf Aimee genereert opdracht → Judge scoort op rubric → Beslislogica zegt go
 ## Evaluatiepipeline
 
 ```mermaid
-%%{init: {'flowchart': {'useMaxWidth': true, 'nodeSpacing': 60, 'rankSpacing': 80}, 'themeVariables': {'fontSize': '50px'}}}%%
-flowchart LR
+flowchart TD
     A[Leerkracht vraagt opdracht aan] --> B[Agent haalt OPP-chunks op via search_opp]
     B --> C[Qwen2.5 genereert opdracht]
-    C --> D[LLM-as-judge beoordeelt opdracht]
-    D --> E{Score ≥ 0.75?}
-    E -- Ja --> F[Toon opdracht aan leerkracht]
-    E -- Nee --> G{Score ≥ 0.5?}
-    G -- Ja --> H[Flag voor menselijke review]
-    G -- Nee --> I{Minder dan 2 pogingen?}
-    I -- Ja --> C
-    I -- Nee --> J[Escaleer naar leerkracht]
+    C --> D[Judge beoordeelt op criteria]
+    D --> E{Gemiddelde score groter dan 0.75?}
+    E -- Ja --> J[Toon opdracht aan leerkracht met uitleg waarom opdracht geschikt is]
+    J --> K{Leerkracht beslist}
+    K -- Goedkeuren --> L[Opdracht toegewezen aan leerling]
+    K -- Afkeuren --> M[Leerkracht geeft reden]
+    M --> G
+    E -- Nee --> I{Gemiddelde score tussen 0.5 en 0.75?}
+    I -- Ja --> O[Toon opdracht aan leerkracht met uitleg welke criteria laag scoren]
+    O --> P{Leerkracht beslist}
+    P -- Toch goedkeuren --> L
+    P -- Opnieuw genereren --> Q[Leerkracht geeft optionele instructie]
+    Q --> G
+    I -- Nee --> F[Score te laag - Opnieuw genereren]
+    F --> G{Nog een poging mogelijk?}
+    G -- Ja --> C
+    G -- Nee --> H[Toon beste poging aan leerkracht met uitleg - Leerkracht beslist wat te doen]
+    H --> K
 ```
 
 ---
@@ -82,7 +91,7 @@ flowchart LR
 #### Prometheus 2 
 - Base model: Mistral-7B-Instruct-v0.2
 
-Speciaal finegetuned om te beoordelen op basis van een rubric. 
+Speciaal finegetuned om andere llms te beoordelen op basis van een rubric. 
 
 Uit het onderzoek van Kim et al. (2024) - "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models"
 
@@ -118,11 +127,10 @@ Retrieval Augmented Generation Assesment
 | 2 | Past de moeilijkheidsgraad van de opdracht bij het opgegeven Bloom-niveau van de leerling? | Onderwijsspecifiek | Bloom's Taxonomy (Anderson & Krathwohl, 2001) |
 | 3 | Kan een leerling van deze leeftijd en dit niveau de opdracht zelfstandig uitvoeren? | Onderwijsspecifiek | Zone of Proximal Development (Vygotsky) |
 | 4 | Sluit de opdracht aan bij de beginsituatie van de leerling, niet alleen bij het einddoel? | Onderwijsspecifiek | Roberts & Inman (2023) via Basisboek Hoogbegaafdheid H22 |
-| 5 | Is de opdracht leeftijdspassend in taalgebruik, toon en inhoud voor dit kind? | Ethiek / Wetgeving | EU AI Act Art. 5 + AVG Art. 8 |
-| 6 | Bevat de opdracht geen aannames of stereotypes op basis van geslacht, cultuur of achtergrond? | Ethiek / Wetgeving | EU AI Act Art. 10 + Gelijke Behandelingswet |
-| 7 | Kan een leerkracht de opdracht makkelijk lezen, beoordelen en indien nodig aanpassen? | Ethiek / Wetgeving | EU AI Act Art. 14 |
-| 8 | Zijn alle elementen in de opdracht terug te herleiden naar het leerlingprofiel, zonder verzonnen info? | RAGAS | Es et al., 2023 — faithfulness metric |
-| 9 | Gebruikt de opdracht alleen relevante leerlinginfo en laat het irrelevante details weg? | RAGAS | Es et al., 2023 — context precision metric |
+| 5 | Is de opdracht leeftijdspassend in taalgebruik, toon en inhoud voor dit kind? | Ethiek / Wetgeving | EU AI Act Art. 5 + AVG Art. 8 || 
+| 6 | Kan een leerkracht de opdracht makkelijk lezen, beoordelen en indien nodig aanpassen? | Ethiek / Wetgeving | EU AI Act Art. 14 |
+| 7 | Zijn alle elementen in de opdracht terug te herleiden naar het leerlingprofiel, zonder verzonnen info? | RAGAS | Es et al., 2023 — faithfulness metric |
+| 8 | Gebruikt de opdracht alleen relevante leerlinginfo en laat het irrelevante details weg? | RAGAS | Es et al., 2023 — context precision metric |
 
 ## Volgende stappen 
 Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen worden.
@@ -141,9 +149,99 @@ Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen wo
 
 ## Tests 
 
-### Tests bij 'slechte' opdrachten voor hoogbegaafde leerlingen
+### Wat maakt een goede opdracht voor Noah Smit?
+
+Op basis van zijn OPP (groep 6) zijn de belangrijkste factoren:
+
+- Sluit aan op zijn interesse in **wetenschap en experimenten**
+- Biedt **autonomie** en ruimte voor eigen keuzes
+- Is **cognitief uitdagend**: open vragen, eigen redenering, iets nieuws produceren
+- Heeft **duidelijke tussenstappen**: planning van grote taken vraagt nog sturing
+- Vraagt **geen zwaar schrijfwerk** als doel op zich
+- Bevat **geen herhaalwerk of routinetaken**: Noah haakt af en werkt slordig bij gebrek aan uitdaging
+- Is **individueel uitvoerbaar**: samenwerken is nog een ontwikkelpunt voor Noah
+
+```
+Titel: Ontwerp je eigen weersysteem-experiment
+
+Noah, jij wordt klimaatwetenschapper. Kies één klimaatzone op aarde (bijv.
+woestijn, tropisch regenwoud of toendra) en doe onderzoek naar waarom het
+daar zo regent — of juist niet.
+
+Stap 1 — Formuleer een hypothese
+Bedenk een verklaring: waarom valt er in jouw gekozen klimaatzone zo veel of
+zo weinig neerslag? Schrijf dit op als een echte wetenschappelijke hypothese
+("Ik denk dat... omdat...").
+
+Stap 2 — Test je hypothese met data
+Zoek klimaatdata op (temperatuur, neerslag, wind) van jouw zone. Vergelijk
+minstens twee maanden met elkaar. Klopt jouw hypothese? Pas hem aan als dat
+nodig is.
+
+Stap 3 — Ontwerp een experiment
+Beschrijf een experiment dat je in de klas zou kunnen uitvoeren om één aspect
+van jouw klimaatzone na te bootsen (bijv. verdamping, condensatie,
+regenschaduw). Wat heb je nodig? Wat meet je? Wat verwacht je te zien?
+
+Eindproduct: een onderzoeksverslag met hypothese, data-analyse en
+experimentontwerp.
+```
+#### Resultaten (Screenshots)
+C1:
+
+C2:
+
+C3:
+
+C4:
+
+C5:
+
+C6:
+
+C7:
+
+
+---
+
+### Wat maakt een slechte opdracht voor Noah Smit?
+
+- **Geen aansluiting heeft op zijn interesses**: niets met wetenschap of experimenten
+- **Passief en gesloten is**: één correct antwoord, geen eigen redenering
+- **Herhaalwerk of routinewerk vraagt**: Noah haakt af en werkt slordig
+- **Geen autonomie biedt**: alles ligt vast, geen eigen keuzes
+- **Niet terug te herleiden is naar zijn OPP**: elk kind had deze opdracht kunnen krijgen
+
+```
+Titel: Landen kleuren
+
+Kleur de landen van Europa in op de kaart. Gebruik verschillende kleuren.
+Schrijf bij elk land de hoofdstad op. Maak het mooi en netjes. Zorg dat je
+binnen de lijnen kleurt.
+```
+#### Resulaten (screenshots)
+C1:
+
+C2:
+
+C3:
+
+C4:
+
+C5:
+
+C6:
+
+C7:
+
+
+---
 
 ### Tests bij 'goede' opdrachten voor hoogbegaafde leerlingen
+
+Een 'goede' opdracht voor Noah sluit aan op zijn interesses, geeft autonomie, vraagt eigen redenering en is volledig traceerbaar naar zijn OPP.
+
+
 
 #### Test 1 
 [text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)

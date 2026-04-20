@@ -43,7 +43,7 @@ export async function executeListStudents(): Promise<string> {
   return students
     .map(
       (student) =>
-        `ID: ${student.id} | ${student.fullName} | Groep ${student.groep ?? "Onbekend"} | Bloom niveau ${student.bloomNiveau}`
+        `ID: ${student.id} | ${student.fullName} | Groep ${student.groep ?? "Onbekend"} | Bloom niveau ${student.bloomNiveau ?? "onbekend"}`
     )
     .join("\n");
 }
@@ -72,6 +72,6 @@ export async function executeGetStudentInfo(leerlingId: string): Promise<string>
       : "  Nog geen opdrachten.";
 
   return `Naam: ${student.fullName}\nGroep: ${student.groep ?? "Onbekend"}\nBloom niveau: ${
-    student.bloomNiveau
+    student.bloomNiveau ?? "onbekend"
   }\nRecente opdrachten:\n${recent}`;
 }

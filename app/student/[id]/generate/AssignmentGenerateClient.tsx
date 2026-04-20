@@ -2,26 +2,21 @@
 
 import { useState } from "react";
 import {
-  Check,
   Brain,
-  BookOpen,
+  Check,
   CheckCircle2,
-  Clock,
   Cylinder,
   Database,
-  FileText,
-  MessageSquare,
-  PencilLine,
-  RotateCcw,
   Lightbulb,
   Loader2,
   Lock,
+  PencilLine,
+  RotateCcw,
   Scale,
   Search,
   Sparkles,
   Target,
 } from "lucide-react";
-import type { PrototypeBloomLevel, PrototypeStudent } from "@/lib/prototype-runtime";
 
 type GeneratedAssignment = {
   title: string;
@@ -45,13 +40,13 @@ type JudgeResult = {
   beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren" | "escaleren";
 };
 
-const OPEN_FOCUS_OPTIONS = ["Zelfgekozen onderwerp", "Actuele gebeurtenissen", "Eigen experiment opzetten"] as const;
-
-const FOCUS_AREA_OPTIONS = [
-  { group: "Vakgebied", options: ["Rekenen en wiskunde", "Taal en schrijven", "Wereldoriëntatie", "Natuur en techniek", "Kunst en creativiteit"] },
-  { group: "Denkvaardigheden", options: ["Verbanden leggen tussen begrippen", "Argumenteren en standpunt onderbouwen", "Hypothese opstellen en testen", "Ontwerpen en prototypen", "Kritisch bronnen vergelijken"] },
-  { group: "Interesses", options: ["Programmeren en logica", "Creatief schrijven en verhalen", "Onderzoek en presenteren", "Bouwen en constructies", "Tekstanalyse en media"] },
-  { group: "Open", options: OPEN_FOCUS_OPTIONS },
+const BLOOM_OPTIONS = [
+  "Onthouden",
+  "Begrijpen",
+  "Toepassen",
+  "Analyseren",
+  "Evalueren",
+  "Creëren",
 ] as const;
 
 const BASISSCHOOL_VAKKEN = [
@@ -73,16 +68,19 @@ const BASISSCHOOL_VAKKEN = [
   "Burgerschap",
 ] as const;
 
-const TIME_OPTIONS = [
-  "15 minuten",
-  "30 minuten",
-  "45 minuten",
-  "1 uur",
-  "1,5 uur",
-  "2 uur",
-  "Meerdere lessen (2–3)",
-  "Weekopdracht",
-] as const;
+export type StudentProps = {
+  id: string;
+  fullName: string;
+  bloomLevel: string;
+  age: number | null;
+  emoji: string;
+  interests: string[];
+  learningStyle: string;
+  workMethod: string;
+  concentration: string;
+  strengths: string[];
+  smartTips: string[];
+};
 
 function SectionCard({
   className = "",
@@ -143,24 +141,9 @@ function RagStep({
   );
 }
 
-export function AiAssignmentClient({
-  bloomOptions,
-  student,
-}: {
-  bloomOptions: PrototypeBloomLevel[];
-  student: PrototypeStudent;
-}) {
-  const [selectedBloom, setSelectedBloom] = useState(student.status);
+export function AssignmentGenerateClient({ student }: { student: StudentProps }) {
+  const [selectedBloom, setSelectedBloom] = useState(student.bloomLevel || "Toepassen");
   const [selectedVak, setSelectedVak] = useState<string>(BASISSCHOOL_VAKKEN[0]);
-  const [focusArea, setFocusArea] = useState("");
-  const [customFocusArea, setCustomFocusArea] = useState("");
-  const [estimatedTime, setEstimatedTime] = useState("45 minuten");
-
-  const isOpenFocus = (OPEN_FOCUS_OPTIONS as readonly string[]).includes(focusArea);
-  const resolvedFocusArea = isOpenFocus && customFocusArea.trim()
-    ? customFocusArea.trim()
-    : focusArea || selectedVak;
-
   const [searching, setSearching] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [revising, setRevising] = useState(false);
@@ -169,10 +152,6 @@ export function AiAssignmentClient({
   const [analysisError, setAnalysisError] = useState<string>("");
   const [teacherPrompt, setTeacherPrompt] = useState("");
   const [approvalMessage, setApprovalMessage] = useState("");
-  const [savedAssignmentId, setSavedAssignmentId] = useState<string | null>(null);
-  const [teacherFeedback, setTeacherFeedback] = useState("");
-  const [savingFeedback, setSavingFeedback] = useState(false);
-  const [feedbackSaved, setFeedbackSaved] = useState(false);
   const [generatedAssignment, setGeneratedAssignment] = useState<GeneratedAssignment | null>(null);
   const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
   const [judgeSteps, setJudgeSteps] = useState<CriteriumScore[]>([]);
@@ -193,7 +172,7 @@ export function AiAssignmentClient({
         body: JSON.stringify({
           action: "search",
           studentId: student.id,
-          focusArea: resolvedFocusArea,
+          focusArea: selectedVak,
           bloomLevel: selectedBloom,
         }),
       });
@@ -225,9 +204,8 @@ export function AiAssignmentClient({
         body: JSON.stringify({
           action,
           studentId: student.id,
-          focusArea: resolvedFocusArea,
+          focusArea: selectedVak,
           bloomLevel: selectedBloom,
-          estimatedTime,
           teacherPrompt: action === "revise" ? teacherPrompt : undefined,
           currentAssignment: action === "revise" ? generatedAssignment : undefined,
         }),
@@ -287,7 +265,6 @@ export function AiAssignmentClient({
 
   async function approveAssignment() {
     if (!generatedAssignment) return;
-
     setApproving(true);
     setAnalysisError("");
     setApprovalMessage("");
@@ -299,7 +276,7 @@ export function AiAssignmentClient({
         body: JSON.stringify({
           action: "approve",
           studentId: student.id,
-          focusArea: resolvedFocusArea,
+          focusArea: selectedVak,
           bloomLevel: selectedBloom,
           currentAssignment: generatedAssignment,
         }),
@@ -307,39 +284,11 @@ export function AiAssignmentClient({
 
       const data = await response.json();
       if (!response.ok) throw new Error((data as { error?: string }).error ?? "Opdracht goedkeuren mislukt.");
-      setSavedAssignmentId((data as { savedAssignmentId?: string }).savedAssignmentId ?? null);
-      setFeedbackSaved(false);
-      setTeacherFeedback("");
-      setApprovalMessage("Opdracht opgeslagen. Voeg hieronder feedback toe voor toekomstige generaties.");
+      setApprovalMessage("Opdracht opgeslagen als nieuwe assignment.");
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "Opdracht goedkeuren mislukt.");
     } finally {
       setApproving(false);
-    }
-  }
-
-  async function saveFeedback() {
-    if (!savedAssignmentId || !teacherFeedback.trim()) return;
-
-    setSavingFeedback(true);
-    try {
-      const response = await fetch("/api/prototype/assignment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "feedback",
-          studentId: student.id,
-          assignmentId: savedAssignmentId,
-          feedback: teacherFeedback.trim(),
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error((data as { error?: string }).error ?? "Feedback opslaan mislukt.");
-      setFeedbackSaved(true);
-    } catch (error) {
-      setAnalysisError(error instanceof Error ? error.message : "Feedback opslaan mislukt.");
-    } finally {
-      setSavingFeedback(false);
     }
   }
 
@@ -362,8 +311,6 @@ export function AiAssignmentClient({
     }
 
     setGeneratedAssignment(null);
-    setJudgeResult(null);
-    setJudgeSteps([]);
     setTeacherPrompt(rejectReason);
     setApprovalMessage("");
     setAnalysisError("");
@@ -383,28 +330,20 @@ export function AiAssignmentClient({
               <h1 className="text-[2.2rem] font-semibold tracking-tight text-slate-950">
                 AI Opdracht Genereren
               </h1>
-              <p className="text-[1.2rem] text-slate-500">Voor {student.name}</p>
+              <p className="text-[1.2rem] text-slate-500">Voor {student.fullName}</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-3xl bg-slate-100 px-8 py-7">
-            <div className="flex items-center gap-5">
-              <div className="text-5xl">{student.emoji}</div>
-              <div>
-                <p className="text-[1.1rem] font-semibold text-slate-950">
-                  {student.name}
-                  {student.age ? `, ${student.age} jaar` : ""}
-                </p>
-                <p className="text-[1.05rem] text-slate-600">
-                  Interesses: {student.interests.join(", ")}
-                </p>
-              </div>
-            </div>
-            <div
-              className={`inline-flex items-center gap-2 rounded-full px-5 py-3 text-[1.05rem] font-semibold ${student.badgeClassName}`}
-            >
-              <span>{student.badgeEmoji}</span>
-              {student.status}
+          <div className="flex items-center gap-5 rounded-3xl bg-slate-100 px-8 py-7">
+            <div className="text-5xl">{student.emoji}</div>
+            <div>
+              <p className="text-[1.1rem] font-semibold text-slate-950">
+                {student.fullName}
+                {student.age ? `, ${student.age} jaar` : ""}
+              </p>
+              <p className="text-[1.05rem] text-slate-600">
+                Interesses: {student.interests.join(", ")}
+              </p>
             </div>
           </div>
 
@@ -413,32 +352,29 @@ export function AiAssignmentClient({
               <label className="block text-[1.05rem] font-semibold text-slate-950">
                 Bloom&apos;s Taxonomie Niveau
               </label>
-              <div className="relative">
-                <select
-                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                  onChange={(event) => setSelectedBloom(event.target.value)}
-                  value={selectedBloom}
-                >
-                  {bloomOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                onChange={(e) => setSelectedBloom(e.target.value)}
+                value={selectedBloom}
+              >
+                {BLOOM_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               <p className="text-[1.05rem] text-slate-500">
-                Huidig niveau van {student.name}: {student.status}
+                Huidig niveau van {student.fullName}: {student.bloomLevel || "onbekend"}
               </p>
             </div>
 
             <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="vak-select">
+              <label className="block text-[1.05rem] font-semibold text-slate-950">
                 Schoolvak
               </label>
               <select
                 className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                id="vak-select"
-                onChange={(event) => setSelectedVak(event.target.value)}
+                onChange={(e) => setSelectedVak(e.target.value)}
                 value={selectedVak}
               >
                 {BASISSCHOOL_VAKKEN.map((vak) => (
@@ -449,63 +385,6 @@ export function AiAssignmentClient({
               </select>
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="focus-select">
-                Focusgebied <span className="font-normal text-slate-400">(optioneel)</span>
-              </label>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                id="focus-select"
-                onChange={(event) => { setFocusArea(event.target.value); setCustomFocusArea(""); }}
-                value={focusArea}
-              >
-                <option value="">— Automatisch op basis van leerlingprofiel —</option>
-                {FOCUS_AREA_OPTIONS.map((group) => (
-                  <optgroup key={group.group} label={group.group}>
-                    {group.options.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">
-                Laat leeg om automatisch aan te sluiten op de interesses van de leerling
-              </p>
-              {isOpenFocus && (
-                <input
-                  autoFocus
-                  className="h-12 w-full rounded-2xl border border-violet-200 bg-violet-50 px-4 text-[1.05rem] text-slate-950 outline-none ring-2 ring-violet-300 placeholder:text-slate-400"
-                  onChange={(e) => setCustomFocusArea(e.target.value)}
-                  placeholder={
-                    focusArea === "Zelfgekozen onderwerp" ? "Bijv. klimaatverandering, middeleeuwen..." :
-                    focusArea === "Actuele gebeurtenissen" ? "Bijv. ruimtevaart, olympische spelen..." :
-                    "Bijv. water zuiveren, brugconstructies..."
-                  }
-                  type="text"
-                  value={customFocusArea}
-                />
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="tijd-select">
-                Geschatte tijd
-              </label>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                id="tijd-select"
-                onChange={(event) => setEstimatedTime(event.target.value)}
-                value={estimatedTime}
-              >
-                {TIME_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">
-                De AI past de omvang en diepgang van de opdracht hierop aan
-              </p>
-            </div>
-
             <div className="space-y-4">
               <button
                 className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-slate-600 to-slate-700 text-[1.15rem] font-semibold text-white shadow-md transition hover:from-slate-700 hover:to-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
@@ -514,7 +393,7 @@ export function AiAssignmentClient({
                 type="button"
               >
                 {searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}
-                Zoek Bronnen met AI
+                Zoek bronnen met AI
               </button>
               <button
                 className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
@@ -522,8 +401,12 @@ export function AiAssignmentClient({
                 onClick={() => runGenerateStream("generate")}
                 type="button"
               >
-                {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                Genereer Opdracht met AI
+                {generating ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Sparkles className="size-5" />
+                )}
+                Genereer opdracht met AI
               </button>
             </div>
 
@@ -541,45 +424,42 @@ export function AiAssignmentClient({
           <div className="flex items-center gap-3">
             <Brain className="size-6 text-violet-600" />
             <h2 className="text-[1.15rem] font-semibold text-slate-950">
-              AI-Criteria voor Opdracht Generatie
+              AI-criteria voor opdrachtgeneratie
             </h2>
           </div>
-
           <p className="text-[1.1rem] leading-8 text-slate-700">
             De AI gebruikt de volgende criteria om een passende opdracht te genereren voor{" "}
-            {student.name}:
+            {student.fullName}:
           </p>
-
           <div className="space-y-4">
             <CriteriaRow
-              description="Opdracht sluit aan bij wat de leerling motiveert"
-              label="Leerling Interesse"
-              value={focusArea || student.interests[0] || "Algemene verdieping"}
+              label="Schoolvak"
+              value={selectedVak}
+              description="Opdracht sluit aan bij het gekozen schoolvak."
             />
             <CriteriaRow
-              description={`Past bij huidig niveau (${selectedBloom}) of daagt uit naar hoger niveau`}
-              label="Bloom Niveau"
+              label="Bloom niveau"
               value={selectedBloom}
+              description="Past de moeilijkheid en het type denkopdracht aan op het actuele niveau."
             />
             <CriteriaRow
-              description="Opdracht is aangepast aan de voorkeurs-leerstijl"
               label="Leerstijl"
               value={student.learningStyle}
+              description="De opdracht sluit aan op de voorkeur voor verwerken en leren."
             />
             <CriteriaRow
-              description="Opdracht kan op de gewenste manier uitgevoerd worden"
               label="Werkmethode"
               value={student.workMethod}
+              description="De opbouw van de opdracht past bij de gewenste manier van werken."
             />
             <CriteriaRow
-              description="Omvang opdracht past bij concentratievermogen"
-              label="Concentratieboog"
+              label="Concentratievermogen"
               value={student.concentration}
+              description="Helpt bij het bepalen van lengte, zelfstandigheid en complexiteit."
             />
           </div>
-
           <div className="rounded-[18px] bg-sky-50 px-5 py-4 text-[1.03rem] leading-7 text-slate-700">
-            <span className="font-semibold text-slate-900">Leraar Regie:</span> U behoudt
+            <span className="font-semibold text-slate-900">Leraar regie:</span> U behoudt
             volledige controle. U kunt de opdracht aanpassen, opnieuw genereren of afwijzen
             voordat deze aan de leerling wordt gegeven.
           </div>
@@ -591,12 +471,11 @@ export function AiAssignmentClient({
           <div className="flex items-center gap-3">
             <Lightbulb className="size-6 text-blue-500" />
             <h2 className="text-[1.15rem] font-semibold text-slate-950">
-              Snelle Didactische Tips voor {student.name}
+              Slimme detectietips voor {student.fullName}
             </h2>
           </div>
-
           <ul className="space-y-3 text-[1.05rem] leading-7 text-slate-700">
-            {student.didacticTips.map((tip) => (
+            {student.smartTips.map((tip) => (
               <li className="flex items-start gap-3" key={tip}>
                 <span className="mt-1 text-lg">💡</span>
                 <span>{tip}</span>
@@ -611,30 +490,28 @@ export function AiAssignmentClient({
           <div className="flex items-center gap-3">
             <Cylinder className="size-6 text-emerald-600" />
             <h2 className="text-[1.15rem] font-semibold text-slate-950">
-              RAG Proces - Retrieval-Augmented Generation
+              RAG proces - Retrieval-Augmented Generation
             </h2>
           </div>
-
           <p className="text-[1.1rem] leading-8 text-slate-700">
             Het AI-systeem gebruikt bestaande onderwijsmaterialen uit het OPP en leerlingcontext
             uit de database om nieuwe, gepersonaliseerde opdrachten te genereren.
           </p>
-
           <div className="space-y-5">
             <RagStep
-              description="AI zoekt relevante OPP-passages en context in de database"
               icon={<Search className="size-7" />}
               title="1. Zoeken (Retrieval)"
+              description="AI zoekt relevante OPP-passages en context in de database."
             />
             <RagStep
-              description="Gevonden context wordt verrijkt met leerlingprofiel en Bloom-niveau"
               icon={<Database className="size-7" />}
-              title="2. Context Verrijken (Augmented)"
+              title="2. Context verrijken (Augmented)"
+              description="Gevonden context wordt verrijkt met leerlingprofiel en Bloom-niveau."
             />
             <RagStep
-              description="Qwen genereert daarna een nieuwe opdracht op basis van de gevonden bronnen"
               icon={<Sparkles className="size-7" />}
               title="3. Genereren (Generation)"
+              description="Er ontstaat een nieuwe opdracht op basis van bronmateriaal en profieldata."
             />
           </div>
 
@@ -652,83 +529,31 @@ export function AiAssignmentClient({
           ) : null}
 
           <div className="rounded-[14px] border border-slate-200 bg-white px-4 py-3 text-[1.02rem] leading-7 text-slate-600">
-            <span className="font-semibold text-slate-900">Transparantie:</span> Alle
-            gegenereerde opdrachten zijn gebaseerd op geverifieerde onderwijsmaterialen uit de
-            database. Bronnen worden altijd vermeld.
+            <span className="font-semibold text-slate-900">Transparantie:</span> AI-gegenereerde
+            opdrachten zijn afgeleid uit bestaande bronnen. De gebruikte context blijft altijd
+            uitlegbaar.
           </div>
         </div>
       </SectionCard>
 
       {generatedAssignment ? (
-        <SectionCard className="border-violet-300 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,248,255,0.95))] shadow-[0_24px_60px_rgba(109,77,200,0.10)]">
-          <div className="space-y-8">
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_8px_20px_rgba(98,101,255,0.25)]">
-                  <FileText className="size-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">AI-gegenereerde opdracht</p>
-                  <h2 className="text-[1.15rem] font-semibold text-slate-950">Klaar voor beoordeling</h2>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                  {selectedBloom}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                  <Clock className="size-3" />
-                  {estimatedTime}
-                </span>
-              </div>
+        <SectionCard className="border-slate-200/80">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Sparkles className="size-6 text-violet-600" />
+              <h2 className="text-[1.2rem] font-semibold text-slate-950">Gegenereerde opdracht</h2>
             </div>
-
-            <div className="rounded-3xl bg-gradient-to-r from-violet-600 to-blue-600 px-7 py-6 text-white shadow-[0_12px_30px_rgba(98,101,255,0.22)]">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-widest opacity-75">Opdrachttitel</p>
-              <h3 className="text-[1.6rem] font-bold leading-snug">{generatedAssignment.title}</h3>
-            </div>
-
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-slate-700">
-                <BookOpen className="size-4 shrink-0" />
-                <p className="text-sm font-semibold uppercase tracking-wide">Opdrachtbeschrijving</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-[1.06rem] leading-8 text-slate-800 shadow-[0_4px_12px_rgba(15,23,42,0.04)] whitespace-pre-wrap">
+              <h3 className="text-2xl font-semibold text-slate-950">{generatedAssignment.title}</h3>
+              <div className="rounded-2xl bg-slate-50 px-5 py-4 text-[1.04rem] leading-8 text-slate-700 whitespace-pre-wrap">
                 {generatedAssignment.assignment}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-violet-700">
-                <Brain className="size-4 shrink-0" />
-                <p className="text-sm font-semibold uppercase tracking-wide">Onderbouwing</p>
-              </div>
-              <div className="rounded-2xl border border-violet-100 bg-violet-50 px-6 py-5">
-                <p className="text-[1.04rem] leading-8 text-slate-700">{generatedAssignment.rationale}</p>
-              </div>
+            <div className="rounded-2xl bg-violet-50 px-5 py-4">
+              <p className="mb-1 text-sm font-semibold text-slate-900">Waarom deze opdracht?</p>
+              <p className="text-sm leading-7 text-slate-700">{generatedAssignment.rationale}</p>
             </div>
 
-            {generatedAssignment.sources.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Search className="size-4 shrink-0" />
-                  <p className="text-sm font-semibold uppercase tracking-wide">Gebruikte bronnen</p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4">
-                  <ul className="space-y-2">
-                    {generatedAssignment.sources.map((source, i) => (
-                      <li className="flex items-start gap-3 text-sm leading-6 text-slate-600" key={i}>
-                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">{i + 1}</span>
-                        {source}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {/* LLM-as-Judge */}
             {(judging || judgeSteps.length > 0 || judgeResult) ? (
               <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
                 <div className="flex items-center justify-between gap-3">
@@ -770,7 +595,9 @@ export function AiAssignmentClient({
                         style={{ width: `${(judgeSteps.length / judgeTotal) * 100}%` }}
                       />
                     </div>
-                    <span className="text-xs text-slate-500">{judgeSteps.length}/{judgeTotal}</span>
+                    <span className="text-xs text-slate-500">
+                      {judgeSteps.length}/{judgeTotal}
+                    </span>
                   </div>
                 )}
 
@@ -806,7 +633,11 @@ export function AiAssignmentClient({
                         </p>
                         <span
                           className={`ml-2 shrink-0 text-xs font-bold ${
-                            s.score >= 4 ? "text-emerald-600" : s.score >= 3 ? "text-amber-600" : "text-rose-600"
+                            s.score >= 4
+                              ? "text-emerald-600"
+                              : s.score >= 3
+                                ? "text-amber-600"
+                                : "text-rose-600"
                           }`}
                         >
                           {s.score}/5
@@ -827,49 +658,6 @@ export function AiAssignmentClient({
               </div>
             ) : null}
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-emerald-700">
-                <MessageSquare className="size-4 shrink-0" />
-                <p className="text-sm font-semibold uppercase tracking-wide">Feedback van de leraar</p>
-              </div>
-              {savedAssignmentId ? (
-                feedbackSaved ? (
-                  <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
-                    <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
-                    Feedback opgeslagen en wordt meegenomen in toekomstige opdrachten.
-                  </div>
-                ) : (
-                  <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-5 py-5">
-                    <p className="text-sm text-emerald-800">
-                      Hoe is de opdracht verlopen? Deze feedback wordt opgeslagen en gebruikt bij het genereren van volgende opdrachten.
-                    </p>
-                    <textarea
-                      autoFocus
-                      className="min-h-[100px] w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
-                      onChange={(e) => setTeacherFeedback(e.target.value)}
-                      placeholder="Bijv. de leerling werkte enthousiast maar had moeite met de planning. Volgende keer meer structuur bieden."
-                      value={teacherFeedback}
-                    />
-                    <button
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled={savingFeedback || !teacherFeedback.trim()}
-                      onClick={saveFeedback}
-                      type="button"
-                    >
-                      {savingFeedback ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                      Feedback opslaan
-                    </button>
-                  </div>
-                )
-              ) : (
-                <div className="rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 px-6 py-5 text-sm text-slate-400 italic">
-                  Keur de opdracht goed om feedback toe te voegen na uitvoering.
-                </div>
-              )}
-            </div>
-
-            <hr className="border-slate-200" />
-
             <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
               <label className="block text-sm font-semibold text-slate-900" htmlFor="teacher-prompt">
                 Aanpassen met instructie
@@ -877,13 +665,10 @@ export function AiAssignmentClient({
               <textarea
                 className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
                 id="teacher-prompt"
-                onChange={(event) => setTeacherPrompt(event.target.value)}
+                onChange={(e) => setTeacherPrompt(e.target.value)}
                 placeholder="Bijvoorbeeld: maak de opdracht korter, voeg een creatief onderdeel toe of laat haar werken met actuele bronnen."
                 value={teacherPrompt}
               />
-              <p className="text-xs leading-6 text-slate-500">
-                Deze instructie wordt gebruikt om de huidige opdracht gericht aan te passen.
-              </p>
             </div>
 
             {rejectMode ? (
@@ -895,10 +680,14 @@ export function AiAssignmentClient({
                   autoFocus
                   className="min-h-[100px] w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
                   id="reject-reason"
-                  onChange={(event) => setRejectReason(event.target.value)}
+                  onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Bijv. te abstract voor deze leerling, sluit niet aan op de interesse..."
                   value={rejectReason}
                 />
+                <p className="text-xs leading-6 text-rose-700">
+                  De reden van afkeuring wordt opgeslagen zodat de AI dit meeneemt bij de volgende
+                  generatie.
+                </p>
                 <div className="flex gap-3">
                   <button
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -921,7 +710,7 @@ export function AiAssignmentClient({
             ) : (
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving || !teacherPrompt.trim()}
                   onClick={() => runGenerateStream("revise")}
                   type="button"
@@ -930,7 +719,7 @@ export function AiAssignmentClient({
                   Aanpassen
                 </button>
                 <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving}
                   onClick={() => setRejectMode(true)}
                   type="button"
@@ -939,20 +728,19 @@ export function AiAssignmentClient({
                   Afkeuren
                 </button>
                 <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving}
                   onClick={approveAssignment}
                   type="button"
                 >
                   {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                  Goedkeuren &amp; opslaan
+                  Goedkeuren
                 </button>
               </div>
             )}
 
             {approvalMessage ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
-                <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {approvalMessage}
               </div>
             ) : null}
@@ -966,13 +754,11 @@ export function AiAssignmentClient({
             <Target className="size-6 text-amber-500" />
             <h2 className="text-[1.15rem] font-semibold text-slate-950">Verantwoorde AI</h2>
           </div>
-
           <p className="text-[1.1rem] leading-8 text-slate-700">
             Juf Aimee gebruikt uitlegbare AI om transparantie te bieden over waarom opdrachten
             worden gegenereerd. De leraar houdt altijd de regie en kan opdrachten aanpassen of
             opnieuw genereren.
           </p>
-
           <div className="flex flex-wrap gap-3">
             <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-[1rem] text-slate-700 ring-1 ring-slate-200">
               <Lock className="size-4 text-amber-500" />

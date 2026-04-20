@@ -19,6 +19,6 @@ export async function executeListStudents(): Promise<string> {
   if (students.length === 0) return "No students found."
 
   return students
-    .map((s) => `student_id: ${s.id} | ${s.fullName} | Group ${s.groep} | Bloom level ${s.bloomNiveau}`)
+    .map((s) => `student_id: ${s.id} | ${s.fullName} | Group ${s.groep} | Bloom level ${s.bloomNiveau ?? "unknown"}`)
     .join("\n")
 }

@@ -32,7 +32,7 @@ export async function executeTool(
     case "search_opp": {
       const leerlingId = context.leerlingId ?? (args.leerling_id as string)
       if (!leerlingId) return "Geen leerling ID beschikbaar voor OPP zoekopdracht."
-      return executeSearchOpp(leerlingId, args.query as string)
+      return executeSearchOpp(leerlingId, args.query as string).then((results) => results.join("\n\n"))
     }
     case "list_students":
       return executeListStudents()
