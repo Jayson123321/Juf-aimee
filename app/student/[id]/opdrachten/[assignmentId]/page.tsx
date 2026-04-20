@@ -39,6 +39,7 @@ export default async function StudentAssignmentDetailPage({
         bloomLevel: true,
         status: true,
         studentWork: true,
+        teacherFeedback: { select: { content: true } },
       },
     }),
   ]);
@@ -127,6 +128,7 @@ export default async function StudentAssignmentDetailPage({
           initialWork={assignment.studentWork ?? ""}
           isCompleted={assignment.status === "COMPLETED"}
           studentId={student.id}
+          teacherFeedback={assignment.teacherFeedback?.content ?? null}
         />
 
       </div>
