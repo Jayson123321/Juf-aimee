@@ -232,8 +232,25 @@ export async function POST(req: NextRequest) {
     feedback = "",
   } = body ?? {};
 
-  if (!studentId || !action) {
-    return NextResponse.json({ error: "studentId en action zijn verplicht." }, { status: 400 });
+  if (!action) {
+    return NextResponse.json({ error: "action is verplicht." }, { status: 400 });
+  }
+
+  // feedback action heeft geen studentId nodig — vroeg afhandelen
+  if (action === "feedback") {
+    if (!assignmentId || !feedback.trim()) {
+      return NextResponse.json({ error: "assignmentId en feedback zijn verplicht." }, { status: 400 });
+    }
+    await prisma.teacherFeedback.upsert({
+      where: { assignmentId },
+      update: { content: feedback.trim() },
+      create: { assignmentId, content: feedback.trim() },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (!studentId) {
+    return NextResponse.json({ error: "studentId is verplicht." }, { status: 400 });
   }
 
   const student = await prisma.student.findUnique({
@@ -322,20 +339,6 @@ export async function POST(req: NextRequest) {
           VALUES (${student.id}, ${feedbackText})
         `;
       }
-
-      return NextResponse.json({ ok: true });
-    }
-
-    if (action === "feedback") {
-      if (!assignmentId || !feedback.trim()) {
-        return NextResponse.json({ error: "assignmentId en feedback zijn verplicht." }, { status: 400 });
-      }
-
-      await prisma.teacherFeedback.upsert({
-        where: { assignmentId },
-        update: { content: feedback.trim() },
-        create: { assignmentId, content: feedback.trim() },
-      });
 
       return NextResponse.json({ ok: true });
     }

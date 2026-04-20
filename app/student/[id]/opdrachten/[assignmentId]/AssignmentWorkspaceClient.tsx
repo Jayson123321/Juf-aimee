@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Lightbulb,
   Loader2,
+  MessageSquare,
   Save,
   Send,
   Sparkles,
@@ -16,12 +17,14 @@ export function AssignmentWorkspaceClient({
   initialWork,
   isCompleted,
   studentId,
+  teacherFeedback,
 }: {
   assignmentId: string;
   firstName: string;
   initialWork: string;
   isCompleted: boolean;
   studentId: string;
+  teacherFeedback?: string | null;
 }) {
   const [work, setWork] = useState(initialWork);
   const [tips, setTips] = useState<string[]>([]);
@@ -103,24 +106,43 @@ export function AssignmentWorkspaceClient({
 
   if (completed) {
     return (
-      <div className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
-        <div className="flex flex-col items-center gap-4 px-7 py-10 text-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100">
-            <CheckCircle2 className="size-8 text-emerald-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-950">Goed gedaan, {firstName}! 🎉</h3>
-            <p className="mt-2 text-sm leading-7 text-slate-500">
-              Je hebt je opdracht ingeleverd. Je leraar bekijkt het binnenkort.
-            </p>
-          </div>
-          {work && (
-            <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Jouw antwoord</p>
-              <p className="text-sm leading-7 text-slate-700 whitespace-pre-wrap">{work}</p>
+      <div className="space-y-4">
+        <div className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
+          <div className="flex flex-col items-center gap-4 px-7 py-10 text-center">
+            <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle2 className="size-8 text-emerald-600" />
             </div>
-          )}
+            <div>
+              <h3 className="text-xl font-bold text-slate-950">Goed gedaan, {firstName}! 🎉</h3>
+              <p className="mt-2 text-sm leading-7 text-slate-500">
+                Je hebt je opdracht ingeleverd. Je leraar bekijkt het binnenkort.
+              </p>
+            </div>
+            {work && (
+              <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Jouw antwoord</p>
+                <p className="text-sm leading-7 text-slate-700 whitespace-pre-wrap">{work}</p>
+              </div>
+            )}
+          </div>
         </div>
+
+        {teacherFeedback && (
+          <div className="overflow-hidden rounded-3xl border border-violet-200 bg-[linear-gradient(180deg,#faf8ff_0%,#f3f0ff_100%)] shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
+            <div className="flex items-center gap-3 border-b border-violet-100 px-6 py-4">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-violet-100">
+                <MessageSquare className="size-4 text-violet-600" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-slate-950">Feedback van je leraar</h2>
+                <p className="text-xs text-slate-500">Jouw leraar heeft feedback gegeven op deze opdracht</p>
+              </div>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm leading-7 text-slate-700 whitespace-pre-wrap">{teacherFeedback}</p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

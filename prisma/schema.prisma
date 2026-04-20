@@ -115,6 +115,7 @@ model Assignment {
 
   teacherFeedback TeacherFeedback?
   reflection      Reflection?
+  submissions     AssignmentSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -134,6 +135,17 @@ model Reflection {
   assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   content      String
   createdAt    DateTime   @default(now())
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  fileName     String
+  filePath     String
+  mimeType     String
+  fileSize     Int
+  uploadedAt   DateTime   @default(now())
 }
 
 model OppChunk {
