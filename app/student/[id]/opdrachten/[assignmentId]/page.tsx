@@ -20,17 +20,17 @@ const bloomDescriptions: Record<string, string> = {
   "Creëren": "Maak iets nieuws op basis van wat je weet.",
 };
 
-export default async function PrototypeStudentAssignmentDetailPage({
+export default async function StudentAssignmentDetailPage({
   params,
 }: {
-  params: Promise<{ studentId: string; assignmentId: string }>;
+  params: Promise<{ id: string; assignmentId: string }>;
 }) {
-  const { studentId, assignmentId } = await params;
+  const { id, assignmentId } = await params;
 
   const [student, assignment] = await Promise.all([
-    getPrototypeStudent(studentId),
+    getPrototypeStudent(id),
     prisma.assignment.findFirst({
-      where: { id: assignmentId, studentId },
+      where: { id: assignmentId, studentId: id },
       select: {
         id: true,
         title: true,
@@ -39,6 +39,7 @@ export default async function PrototypeStudentAssignmentDetailPage({
         bloomLevel: true,
         status: true,
         studentWork: true,
+        teacherFeedback: { select: { content: true } },
       },
     }),
   ]);
@@ -52,12 +53,12 @@ export default async function PrototypeStudentAssignmentDetailPage({
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,rgba(171,194,255,0.22),transparent_40%),linear-gradient(180deg,#f5f7ff_0%,#edf2ff_100%)] px-4 py-8 sm:px-6">
-      <div className="mx-auto max-w-[780px] space-y-6">
+      <div className="mx-auto max-w-[1100px] space-y-6">
 
         {/* Back */}
         <Link
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
-          href={`/prototype/leerling-portaal/${student.id}/opdrachten`}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:from-violet-700 hover:to-blue-600"
+          href={`/student/${student.id}/opdrachten`}
         >
           <ArrowLeft className="size-4" />
           Terug naar mijn opdrachten
@@ -127,6 +128,7 @@ export default async function PrototypeStudentAssignmentDetailPage({
           initialWork={assignment.studentWork ?? ""}
           isCompleted={assignment.status === "COMPLETED"}
           studentId={student.id}
+          teacherFeedback={assignment.teacherFeedback?.content ?? null}
         />
 
       </div>

@@ -1,4 +1,4 @@
-# Retrospective Verslag — Sprint 
+# Retrospective Verslag — Sprint 2
 
 **Datum:** 08-04-2026  
 **Aanwezig:** Jayson, Ruben, Shehbaaz, Mazen  

@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
         ],
         oppTexts: [
           ...assignment.student.oppChunks.map((chunk) => chunk.tekst),
-          oppResults,
+          ...oppResults,
         ],
       });
 
@@ -133,7 +133,7 @@ Beschrijving: ${assignment.description ?? "Geen extra beschrijving."}
 Waarom deze opdracht: ${assignment.uitleg ?? "Geen extra uitleg."}
 
 OPP CONTEXT
-${oppResults}`;
+${oppResults.join("\n")}`;
 
       const response = await ollama.chat({
         model: GEN_MODEL,

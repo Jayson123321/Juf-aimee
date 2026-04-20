@@ -2,17 +2,24 @@
 
 ## Table of Contents
 
-1. [Background](#1-background)
-2. [How It Used to Work — Agentic RAG](#2-how-it-used-to-work--agentic-rag)
-3. [The Problem with Two Steps](#3-the-problem-with-two-steps)
-4. [The New Approach — Unified RAS](#4-the-new-approach--unified-ras)
-5. [What RAS Retrieves](#5-what-ras-retrieves)
-6. [Full Pipeline Comparison](#6-full-pipeline-comparison)
-7. [Technical Architecture](#7-technical-architecture)
-8. [The Unified Prompt Structure](#8-the-unified-prompt-structure)
-9. [Data Model Changes](#9-data-model-changes)
-10. [Implementation Steps](#10-implementation-steps)
-11. [File Overview](#11-file-overview)
+- [From RAG to RAS — Unified Assignment Generation Pipeline](#from-rag-to-ras--unified-assignment-generation-pipeline)
+  - [Table of Contents](#table-of-contents)
+  - [1. Background](#1-background)
+  - [2. How It Used to Work — Agentic RAG](#2-how-it-used-to-work--agentic-rag)
+    - [Step 1 — Generate from OPP (RAG)](#step-1--generate-from-opp-rag)
+    - [Step 2 — Optimize based on rejection (partial RAS)](#step-2--optimize-based-on-rejection-partial-ras)
+  - [3. The Problem with Two Steps](#3-the-problem-with-two-steps)
+  - [4. The New Approach — Unified RAS](#4-the-new-approach--unified-ras)
+  - [5. What RAS Retrieves](#5-what-ras-retrieves)
+    - [Channel 1 — OPP Chunks (Vector Search)](#channel-1--opp-chunks-vector-search)
+    - [Channel 2 — Portfolio (Structured Query)](#channel-2--portfolio-structured-query)
+  - [6. Full Pipeline Comparison](#6-full-pipeline-comparison)
+  - [7. Technical Architecture](#7-technical-architecture)
+    - [Data flow](#data-flow)
+    - [Folder structure (relevant files)](#folder-structure-relevant-files)
+  - [8. The Unified Prompt Structure](#8-the-unified-prompt-structure)
+  - [9. Data Model Changes](#9-data-model-changes)
+  - [10. Sources](#10-sources)
 
 ---
 
@@ -314,3 +321,10 @@ model Reflection {
 > **Note:** The portfolio itself requires no new model. It is derived by querying `Assignment` records with status `COMPLETED`, including their `teacherFeedback` and `reflection` relations.
 
 ---
+
+## 10. Sources
+
+- Likun Lin (2025). Reading notes: A survey on retrieval and structuring augmented generation with large language models. Medium. https://medium.com/@ll3713/reading-notes-a-survey-on-retrieval-and-structuring-augmented-generation-with-large-language-735e9b2b12f0
+- Pengcheng J, Siru O, Yizhu J, Ming Z, Runchu T, Jiawei H. (2025). A survey on retrieval and structuring augmented generation with large language models. arXiv. https://arxiv.org/abs/2509.10697
+
+
