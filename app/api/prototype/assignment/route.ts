@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
-import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
+import { deriveStudentPresentation, getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdracht } from "@/lib/judge";
 
 type PrototypeAssignmentApiStudent  = {
@@ -84,6 +84,7 @@ function bloomLevelToNumber(label: string) {
 function buildGenerationPrompt(args: {
   student: PrototypeAssignmentApiStudent;
   resolvedBloom: string;
+  focusVak: string;
   focusArea: string;
   estimatedTime: string;
   sources: string[];
@@ -94,11 +95,13 @@ function buildGenerationPrompt(args: {
     studentTip?: string;
     rationale?: string;
   } | null;
+  schoolHistory?: string | null;
 }) {
   const {
     student,
     schoolHistory,
     resolvedBloom,
+    focusVak,
     focusArea,
     estimatedTime,
     sources,
@@ -171,9 +174,10 @@ OPP BRONNEN (relevante fragmenten uit het ontwikkelingsperspectief)
 ${oppBronnen}
 
 ───────────────────────────────
-FOCUSGEBIED VOOR DEZE OPDRACHT
+SCHOOLVAK EN FOCUSGEBIED
 ───────────────────────────────
-${focusgebied}
+Schoolvak: ${focusVak || "niet opgegeven"}
+Focusgebied: ${focusgebied}
 
 ───────────────────────────────
 INSTRUCTIE VAN DE LEERKRACHT
@@ -223,6 +227,7 @@ export async function POST(req: NextRequest) {
   const {
     action,
     studentId,
+    focusVak = "",
     focusArea = "",
     bloomLevel = "",
     estimatedTime = "45 minuten",
@@ -353,7 +358,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-    const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(sources);
+    const inferredDateOfBirth = student.dateOfBirth ?? null;
 
     if (!student.dateOfBirth && inferredDateOfBirth) {
       await prisma.student.update({
@@ -364,7 +369,7 @@ export async function POST(req: NextRequest) {
 
     const leeftijd = getStudentAge(inferredDateOfBirth);
     const leeftijdLabel = leeftijd ? `${leeftijd} jaar` : "onbekend";
-    const interestSnippets = extractProfileInterestsFromSources(sources);
+    const interestSnippets: string[] = [];
     const interessesLabel =
       interestSnippets.length > 0
         ? interestSnippets.map((snippet) => `"${snippet}"`).join("; ")
@@ -386,6 +391,7 @@ export async function POST(req: NextRequest) {
       student,
       schoolHistory: student.profile?.schoolHistory,
       resolvedBloom,
+      focusVak,
       focusArea,
       sources,
       teacherPrompt,
@@ -409,7 +415,7 @@ export async function POST(req: NextRequest) {
     console.log(content);
     console.log("===================================\n");
 
-    const parsed = parseGeneratedResponse(content);
+    parsed = parseGeneratedResponse(content);
 
     return NextResponse.json({
       sources,
@@ -419,6 +425,7 @@ export async function POST(req: NextRequest) {
       },
       judgeResult,
     });
+    }
   } catch (error) {
     return NextResponse.json(
       {

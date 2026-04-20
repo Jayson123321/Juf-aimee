@@ -38,6 +38,25 @@ const FOCUS_AREA_OPTIONS = [
   { group: "Open", options: OPEN_FOCUS_OPTIONS },
 ] as const;
 
+const BASISSCHOOL_VAKKEN = [
+  "Rekenen / Wiskunde",
+  "Nederlandse taal",
+  "Begrijpend lezen",
+  "Spelling",
+  "Technisch lezen",
+  "Schrijven",
+  "Engels",
+  "Aardrijkskunde",
+  "Geschiedenis",
+  "Natuur & Techniek",
+  "Biologie",
+  "Verkeer",
+  "Beeldende vorming",
+  "Muziek",
+  "Bewegingsonderwijs",
+  "Burgerschap",
+] as const;
+
 const TIME_OPTIONS = [
   "15 minuten",
   "30 minuten",
@@ -116,6 +135,7 @@ export function AiAssignmentClient({
   student: PrototypeStudent;
 }) {
   const [selectedBloom, setSelectedBloom] = useState(student.status);
+  const [selectedVak, setSelectedVak] = useState<string>(BASISSCHOOL_VAKKEN[0]);
   const [focusArea, setFocusArea] = useState("");
   const [customFocusArea, setCustomFocusArea] = useState("");
   const [estimatedTime, setEstimatedTime] = useState("45 minuten");
@@ -150,6 +170,7 @@ export function AiAssignmentClient({
         body: JSON.stringify({
           action: "search",
           studentId: student.id,
+          focusVak: selectedVak,
           focusArea,
           bloomLevel: selectedBloom,
         }),
@@ -177,6 +198,7 @@ export function AiAssignmentClient({
         body: JSON.stringify({
           action: "generate",
           studentId: student.id,
+          focusVak: selectedVak,
           focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           estimatedTime,
@@ -209,6 +231,7 @@ export function AiAssignmentClient({
         body: JSON.stringify({
           action: "revise",
           studentId: student.id,
+          focusVak: selectedVak,
           focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           estimatedTime,
@@ -371,6 +394,25 @@ export function AiAssignmentClient({
               <p className="text-[1.05rem] text-slate-500">
                 Huidig niveau van {student.name}: {student.status}
               </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-[1.05rem] font-semibold text-slate-950">
+                Schoolvak
+              </label>
+              <div className="relative">
+                <select
+                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                  onChange={(event) => setSelectedVak(event.target.value)}
+                  value={selectedVak}
+                >
+                  {BASISSCHOOL_VAKKEN.map((vak) => (
+                    <option key={vak} value={vak}>
+                      {vak}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-3">

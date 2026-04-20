@@ -213,7 +213,7 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "generate",
           studentId: student.id,
-          focusArea: selectedVak,
+          focusVak: selectedVak,
           focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           estimatedTime,
@@ -247,7 +247,7 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "revise",
           studentId: student.id,
-          focusArea: selectedVak,
+          focusVak: selectedVak,
           focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           estimatedTime,
@@ -283,7 +283,8 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "approve",
           studentId: student.id,
-          focusArea: selectedVak,
+          focusVak: selectedVak,
+          focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           currentAssignment: generatedAssignment,
         }),
@@ -485,7 +486,7 @@ export function PrototypeAiAssignmentClient({
               </p>
             </div>
 
-            {/* <div className="space-y-3">
+            <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950">
                 <span className="inline-flex items-center gap-2">
                   <Clock className="size-4 text-slate-500" />
@@ -504,6 +505,10 @@ export function PrototypeAiAssignmentClient({
               <p className="text-[1.05rem] text-slate-500">
                 De AI past de omvang en diepgang van de opdracht hierop aan
               </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-[1.05rem] font-semibold text-slate-950">
                 Schoolvak
               </label>
               <div className="relative">
@@ -519,7 +524,7 @@ export function PrototypeAiAssignmentClient({
                   ))}
                 </select>
               </div>
-            </div> */}
+            </div>
 
             <div className="space-y-4">
               <button
@@ -564,7 +569,7 @@ export function PrototypeAiAssignmentClient({
             De AI gebruikt de volgende criteria om een passende opdracht te genereren voor{" "}
             {student.name}:
           </p>
-{/* 
+
           <div className="space-y-4">
             <CriteriaRow
               description="Opdracht sluit aan bij wat de leerling motiveert"
@@ -674,11 +679,10 @@ export function PrototypeAiAssignmentClient({
         </div>
       </SectionCard>
 
-      {generatedAssignment ? (
+      {generatedAssignment && (
         <SectionCard className="border-violet-300 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,248,255,0.95))] shadow-[0_24px_60px_rgba(109,77,200,0.10)]">
           <div className="space-y-8">
 
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_8px_20px_rgba(98,101,255,0.25)]">
@@ -790,7 +794,7 @@ export function PrototypeAiAssignmentClient({
               )}
             </div>
 
-            {judgeResult ? (
+            {judgeResult && (
               <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">LLM-as-Judge beoordeling</p>
@@ -843,7 +847,7 @@ export function PrototypeAiAssignmentClient({
                   ))}
                 </div>
               </div>
-            ) : null}
+            )}
 
             <hr className="border-slate-200" />
 
@@ -940,7 +944,7 @@ export function PrototypeAiAssignmentClient({
             ) : null}
           </div>
         </SectionCard>
-      ) : null}
+      )}
 
       <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(252,250,255,0.96),rgba(247,243,255,0.92))]">
         <div className="space-y-6">
