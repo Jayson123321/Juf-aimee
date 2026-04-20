@@ -1,13 +1,8 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { User, MapPin, GraduationCap, Pencil } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -30,79 +25,66 @@ export default async function StudentProfilePage({
     : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{student.fullName}</h1>
-        <div className="flex items-center gap-3">
-          <Button asChild variant="secondary">
-            <Link href={`/student/${id}/generate`}>AI opdracht</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/student/${id}/edit`}>Profiel bewerken</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="min-h-full bg-slate-50 px-4 py-10">
+      <div className="mx-auto max-w-2xl space-y-6">
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Persoonlijke gegevens</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <ProfileField label="Naam" value={student.fullName} />
-            <ProfileField label="Geboortedatum" value={dob} />
-            <ProfileField label="Geslacht" value={student.gender} />
-            <ProfileField label="E-mail" value={student.email} />
-            <ProfileField label="Telefoon" value={student.phoneNumber} />
+        <Button asChild variant="outline" className="w-full border-2 border-slate-300 hover:border-slate-400">
+          <Link href={`/student/${id}/edit`} className="flex items-center justify-center gap-2">
+            <Pencil className="size-4" />
+            Profiel bewerken
+          </Link>
+        </Button>
+
+        {/* Persoonlijke gegevens */}
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
+            <User className="size-4 text-slate-500" />
+            <h2 className="text-sm font-semibold text-slate-800">Persoonlijke gegevens</h2>
+          </div>
+          <dl className="divide-y divide-slate-100">
+            <ProfileRow label="Naam" value={student.fullName} />
+            <ProfileRow label="Geboortedatum" value={dob} />
+            <ProfileRow label="Geslacht" value={student.gender} />
+            <ProfileRow label="E-mail" value={student.email} />
+            <ProfileRow label="Telefoon" value={student.phoneNumber} />
           </dl>
-        </CardContent>
-      </Card>
+        </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Adres</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <ProfileField label="Straat" value={student.addressLine} />
-            <ProfileField label="Postcode" value={student.postalCode} />
-            <ProfileField label="Stad" value={student.city} />
+        {/* Adres */}
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
+            <MapPin className="size-4 text-slate-500" />
+            <h2 className="text-sm font-semibold text-slate-800">Adres</h2>
+          </div>
+          <dl className="divide-y divide-slate-100">
+            <ProfileRow label="Straat" value={student.addressLine} />
+            <ProfileRow label="Postcode" value={student.postalCode} />
+            <ProfileRow label="Stad" value={student.city} />
           </dl>
-        </CardContent>
-      </Card>
+        </section>
 
-      {student.profile && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Schoolgegevens</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <ProfileField
-                label="Registratienummer"
-                value={student.profile.registrationNumber}
-              />
-              <ProfileField
-                label="Schooljaar"
-                value={student.profile.currentSchoolYearGroup}
-              />
-              <ProfileField
-                label="Huidige docent"
-                value={student.profile.currentTeacher}
-              />
-              <ProfileField
-                label="School van herkomst"
-                value={student.profile.schoolOfOrigin}
-              />
+        {/* Schoolgegevens */}
+        {student.profile && (
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
+              <GraduationCap className="size-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Schoolgegevens</h2>
+            </div>
+            <dl className="divide-y divide-slate-100">
+              <ProfileRow label="Registratienummer" value={student.profile.registrationNumber} />
+              <ProfileRow label="Schooljaar" value={student.profile.currentSchoolYearGroup} />
+              <ProfileRow label="Huidige docent" value={student.profile.currentTeacher} />
+              <ProfileRow label="School van herkomst" value={student.profile.schoolOfOrigin} />
             </dl>
-          </CardContent>
-        </Card>
-      )}
+          </section>
+        )}
+
+      </div>
     </div>
   );
 }
 
-function ProfileField({
+function ProfileRow({
   label,
   value,
 }: {
@@ -110,9 +92,11 @@ function ProfileField({
   value: string | null | undefined;
 }) {
   return (
-    <>
-      <dt className="font-medium text-muted-foreground">{label}</dt>
-      <dd>{value ?? <span className="text-muted-foreground italic">—</span>}</dd>
-    </>
+    <div className="flex items-center justify-between px-6 py-3.5 text-sm">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="font-medium text-slate-900">
+        {value ?? <span className="text-slate-400 italic">—</span>}
+      </dd>
+    </div>
   );
 }

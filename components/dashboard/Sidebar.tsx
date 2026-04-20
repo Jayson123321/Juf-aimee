@@ -3,9 +3,8 @@ import type { ElementType } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Users, BookOpen, TrendingUp, Calendar,
-  GraduationCap, Settings, User, ChevronLeft, ChevronRight, School,
-  
+  LayoutDashboard, Users, BookOpen,
+  GraduationCap, Settings, User, ChevronLeft, ChevronRight, School, Sparkles, MessageSquare,
 } from "lucide-react"
 import { useDashboard, UserRole } from "./role-context"
 import { cn } from "@/lib/utils"
@@ -25,7 +24,7 @@ const adminItems: NavItem[] = [
 ]
 
 const roleLabels: Record<UserRole, string> = {
-  STUDENT: "Student",
+  STUDENT: "Leerling",
   TEACHER: "Leraar",
   ADMIN: "Beheerder",
 }
@@ -35,19 +34,20 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
   const pathname = usePathname()
 
   const studentId = profileHref.split("/").pop()
-  const opdrachtenHref = `/prototype/leerling-portaal/${studentId}/opdrachten`
+  const opdrachtenHref = `/student/${studentId}/opdrachten`
 
   const studentItems: NavItem[] = [
-    { href: `/prototype/leerling-portaal/${studentId}`,  icon: User,     label: "Profiel" },
-    { href: opdrachtenHref,                              icon: BookOpen, label: "Opdrachten" },
-    { href: profileHref,                                 icon: Settings, label: "Instellingen" }
+    { href: `/student/${studentId}/profiel`,                           icon: User,     label: "Profiel" },
+    { href: opdrachtenHref,                                             icon: BookOpen, label: "Opdrachten" },
+    { href: `/student/${studentId}/chat`,                               icon: MessageSquare, label: "Chat" },
+    { href: `/student/${studentId}`,                                    icon: Settings, label: "Instellingen" },
   ]
 
   const teacherItems: NavItem[] = [
-    { href: "/dashboard",   icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/students",    icon: Users,           label: "Studenten" },
-    { href: opdrachtenHref, icon: BookOpen,        label: "Opdrachten" },
-    { href: "/rooster",     icon: Calendar,        label: "Rooster" },
+    { href: "/dashboard",                      icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/students",                       icon: Users,           label: "Studenten" },
+    { href: opdrachtenHref,                    icon: BookOpen,        label: "Opdrachten" },
+    { href: `/student/${studentId}/generate`,  icon: Sparkles,        label: "Genereer" },
   ]
 
   const items = role === "STUDENT" ? studentItems : role === "TEACHER" ? teacherItems : adminItems
@@ -76,7 +76,7 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
       {/* Nav links */}
       <nav className="flex-1 px-2 py-4 space-y-0.5">
         {items.map(({ href, icon: Icon, label }) => {
-          const isActive = pathname === href || (href !== "/dashboard" && href !== "/admin" && pathname.startsWith(href))
+          const isActive = pathname === href || (href !== "/dashboard" && href !== "/admin" && !href.match(/\/student\/[^/]+$/) && pathname.startsWith(href))
           return (
             <Link
               key={href}

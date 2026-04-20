@@ -49,40 +49,6 @@ const TIME_OPTIONS = [
   "Weekopdracht",
 ] as const;
 
-type CriteriumScore = {
-  criterium: number;
-  naam: string;
-  feedback: string;
-  score: number;
-};
-
-type JudgeResult = {
-  scores: CriteriumScore[];
-  totaalScore: number;
-  maxScore: number;
-  genormaliseerdeScore: number;
-  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren" | "escaleren";
-};
-
-const BASISSCHOOL_VAKKEN = [
-  "Rekenen / Wiskunde",
-  "Nederlandse taal",
-  "Begrijpend lezen",
-  "Spelling",
-  "Technisch lezen",
-  "Schrijven",
-  "Engels",
-  "Aardrijkskunde",
-  "Geschiedenis",
-  "Natuur & Techniek",
-  "Biologie",
-  "Verkeer",
-  "Beeldende vorming",
-  "Muziek",
-  "Bewegingsonderwijs",
-  "Burgerschap",
-] as const;
-
 function SectionCard({
   className = "",
   children,
@@ -142,7 +108,7 @@ function RagStep({
   );
 }
 
-export function PrototypeAiAssignmentClient({
+export function AiAssignmentClient({
   bloomOptions,
   student,
 }: {
@@ -156,7 +122,6 @@ export function PrototypeAiAssignmentClient({
 
   const isOpenFocus = (OPEN_FOCUS_OPTIONS as readonly string[]).includes(focusArea);
   const resolvedFocusArea = isOpenFocus && customFocusArea.trim() ? customFocusArea.trim() : focusArea;
-  const [selectedVak, setSelectedVak] = useState<string>(BASISSCHOOL_VAKKEN[0]);
   const [searching, setSearching] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [revising, setRevising] = useState(false);
@@ -170,7 +135,6 @@ export function PrototypeAiAssignmentClient({
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [feedbackSaved, setFeedbackSaved] = useState(false);
   const [generatedAssignment, setGeneratedAssignment] = useState<GeneratedAssignment | null>(null);
-  const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -186,7 +150,7 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "search",
           studentId: student.id,
-          focusArea: selectedVak,
+          focusArea,
           bloomLevel: selectedBloom,
         }),
       });
@@ -213,7 +177,6 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "generate",
           studentId: student.id,
-          focusArea: selectedVak,
           focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           estimatedTime,
@@ -224,7 +187,6 @@ export function PrototypeAiAssignmentClient({
       if (!response.ok) throw new Error(data.error ?? "Opdracht genereren mislukt.");
       setSources(data.sources ?? []);
       setGeneratedAssignment(data.assignment ?? null);
-      setJudgeResult(data.judgeResult ?? null);
       setTeacherPrompt("");
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "Opdracht genereren mislukt.");
@@ -247,7 +209,6 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "revise",
           studentId: student.id,
-          focusArea: selectedVak,
           focusArea: resolvedFocusArea,
           bloomLevel: selectedBloom,
           estimatedTime,
@@ -260,7 +221,6 @@ export function PrototypeAiAssignmentClient({
       if (!response.ok) throw new Error(data.error ?? "Opdracht aanpassen mislukt.");
       setSources(data.sources ?? []);
       setGeneratedAssignment(data.assignment ?? null);
-      setJudgeResult(data.judgeResult ?? null);
       setTeacherPrompt("");
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "Opdracht aanpassen mislukt.");
@@ -283,7 +243,7 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "approve",
           studentId: student.id,
-          focusArea: selectedVak,
+          focusArea,
           bloomLevel: selectedBloom,
           currentAssignment: generatedAssignment,
         }),
@@ -416,21 +376,7 @@ export function PrototypeAiAssignmentClient({
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950">
                 Focusgebied
-                Schoolvak
               </label>
-              <div className="relative">
-                <select
-                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                  onChange={(event) => setSelectedVak(event.target.value)}
-                  value={selectedVak}
-                >
-                  {BASISSCHOOL_VAKKEN.map((vak) => (
-                    <option key={vak} value={vak}>
-                      {vak}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <select
                 className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
                 onChange={(event) => { setFocusArea(event.target.value); setCustomFocusArea(""); }}
@@ -485,42 +431,6 @@ export function PrototypeAiAssignmentClient({
               </p>
             </div>
 
-            {/* <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950">
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="size-4 text-slate-500" />
-                  Geschatte tijd
-                </span>
-              </label>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                onChange={(event) => setEstimatedTime(event.target.value)}
-                value={estimatedTime}
-              >
-                {TIME_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">
-                De AI past de omvang en diepgang van de opdracht hierop aan
-              </p>
-                Schoolvak
-              </label>
-              <div className="relative">
-                <select
-                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                  onChange={(event) => setSelectedVak(event.target.value)}
-                  value={selectedVak}
-                >
-                  {BASISSCHOOL_VAKKEN.map((vak) => (
-                    <option key={vak} value={vak}>
-                      {vak}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div> */}
-
             <div className="space-y-4">
               <button
                 className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
@@ -564,12 +474,12 @@ export function PrototypeAiAssignmentClient({
             De AI gebruikt de volgende criteria om een passende opdracht te genereren voor{" "}
             {student.name}:
           </p>
-{/* 
+
           <div className="space-y-4">
             <CriteriaRow
               description="Opdracht sluit aan bij wat de leerling motiveert"
-              label="Schoolvak"
-              value={selectedVak}
+              label="Leerling Interesse"
+              value={focusArea || student.interests[0] || "Algemene verdieping"}
             />
             <CriteriaRow
               description={`Past bij huidig niveau (${selectedBloom}) of daagt uit naar hoger niveau`}
@@ -790,61 +700,6 @@ export function PrototypeAiAssignmentClient({
               )}
             </div>
 
-            {judgeResult ? (
-              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900">LLM-as-Judge beoordeling</p>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                      judgeResult.beslissing === "goedkeuren"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : judgeResult.beslissing === "flaggen"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-rose-100 text-rose-800"
-                    }`}
-                  >
-                    {judgeResult.beslissing === "goedkeuren"
-                      ? "Goedgekeurd"
-                      : judgeResult.beslissing === "flaggen"
-                        ? "Menselijke review nodig"
-                        : judgeResult.beslissing === "escaleren"
-                          ? "Geëscaleerd"
-                          : "Opnieuw genereren"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        judgeResult.genormaliseerdeScore >= 0.75
-                          ? "bg-emerald-500"
-                          : judgeResult.genormaliseerdeScore >= 0.5
-                            ? "bg-amber-400"
-                            : "bg-rose-500"
-                      }`}
-                      style={{ width: `${judgeResult.genormaliseerdeScore * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-700">
-                    {judgeResult.totaalScore}/{judgeResult.maxScore} ({Math.round(judgeResult.genormaliseerdeScore * 100)}%)
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {judgeResult.scores.map((s) => (
-                    <div key={s.criterium} className="rounded-xl bg-white px-4 py-3 ring-1 ring-slate-100">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-slate-700">C{s.criterium}: {s.naam}</p>
-                        <span className={`ml-2 shrink-0 text-xs font-bold ${s.score >= 4 ? "text-emerald-600" : s.score >= 3 ? "text-amber-600" : "text-rose-600"}`}>
-                          {s.score}/5
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">{s.feedback}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
             <hr className="border-slate-200" />
 
             {/* Revise with instruction */}
@@ -878,9 +733,6 @@ export function PrototypeAiAssignmentClient({
                   placeholder="Bijv. te abstract voor deze leerling, sluit niet aan op de interesse..."
                   value={rejectReason}
                 />
-                <p className="text-xs leading-6 text-rose-700">
-                  HAX G7: de reden van afkeuring is contextuele kennis die alleen de leraar heeft — dit is het moment waarop die kennis het systeem binnenkomt.
-                </p>
                 <div className="flex gap-3">
                   <button
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"

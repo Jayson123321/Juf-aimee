@@ -33,6 +33,9 @@ export type PrototypeAssignment = {
   bloomLevel: string;
   status: "completed" | "in_progress" | "not_started";
   createdAt: string;
+  studentWork?: string | null;
+  teacherFeedback?: { content: string } | null;
+  reflection?: { content: string } | null;
 };
 
 export type PrototypeStudent = {
@@ -181,6 +184,9 @@ function mapAssignments(
     bloomLevel: string | null;
     status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
     createdAt: Date;
+    studentWork?: string | null;
+    teacherFeedback?: { content: string } | null;
+    reflection?: { content: string } | null;
   }>,
 ): PrototypeAssignment[] {
   return assignments.map((assignment) => ({
@@ -189,9 +195,13 @@ function mapAssignments(
     title: assignment.title,
     description: assignment.description ?? "Nog geen beschrijving beschikbaar.",
     rationale: assignment.uitleg ?? "Gegenereerde opdracht op basis van leerlingcontext en OPP.",
+    feedback: assignment.teacherFeedback?.content,
     bloomLevel: assignment.bloomLevel ?? "Toepassen",
     status: mapAssignmentStatus(assignment.status),
     createdAt: assignment.createdAt.toISOString(),
+    studentWork: assignment.studentWork ?? null,
+    teacherFeedback: assignment.teacherFeedback ?? null,
+    reflection: assignment.reflection ?? null,
   }));
 }
 
@@ -337,9 +347,37 @@ export async function getPrototypeAssignments(studentId: string) {
       bloomLevel: true,
       status: true,
       createdAt: true,
+      studentWork: true,
+      teacherFeedback: {
+        select: { content: true },
+      },
+      reflection: {
+        select: { content: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
 
   return mapAssignments(studentId, assignments);
+}
+
+export async function getPrototypeAssignment(assignmentId: string) {
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      uitleg: true,
+      bloomLevel: true,
+      status: true,
+      createdAt: true,
+      studentId: true,
+      teacherFeedback: { select: { content: true } },
+    },
+  });
+
+  if (!assignment) return null;
+
+  return mapAssignments(assignment.studentId, [assignment])[0];
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { User, MapPin } from "lucide-react";
 import { updateStudent } from "./actions";
 
 export default async function EditStudentPage({
@@ -21,96 +22,67 @@ export default async function EditStudentPage({
   const action = updateStudent.bind(null, id);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Profiel bewerken</h1>
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/student/${id}`}>Annuleren</Link>
-        </Button>
-      </div>
+    <div className="min-h-full bg-slate-50 px-4 py-10">
+      <div className="mx-auto max-w-2xl space-y-6">
 
-      <form action={action} className="space-y-6">
-        <fieldset className="space-y-4">
-          <legend className="text-base font-semibold">Persoonlijke gegevens</legend>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              label="Volledige naam *"
-              name="fullName"
-              defaultValue={student.fullName}
-              required
-            />
-            <FormField
-              label="Geboortedatum"
-              name="dateOfBirth"
-              type="date"
-              defaultValue={dobValue}
-            />
-            <div className="flex flex-col gap-1">
-              <label htmlFor="gender" className="text-sm font-medium">
-                Geslacht
-              </label>
-              <select
-                id="gender"
-                name="gender"
-                defaultValue={student.gender ?? ""}
-                className="h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
-              >
-                <option value="">— selecteer —</option>
-                <option value="Man">Man</option>
-                <option value="Vrouw">Vrouw</option>
-                <option value="Anders">Anders</option>
-              </select>
-            </div>
-            <FormField
-              label="E-mail"
-              name="email"
-              type="email"
-              defaultValue={student.email ?? ""}
-            />
-            <FormField
-              label="Telefoonnummer"
-              name="phoneNumber"
-              defaultValue={student.phoneNumber ?? ""}
-            />
-          </div>
-        </fieldset>
-
-        <fieldset className="space-y-4">
-          <legend className="text-base font-semibold">Adres</legend>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <FormField
-                label="Straat en huisnummer"
-                name="addressLine"
-                defaultValue={student.addressLine ?? ""}
-              />
-            </div>
-            <FormField
-              label="Postcode"
-              name="postalCode"
-              defaultValue={student.postalCode ?? ""}
-            />
-            <FormField
-              label="Stad"
-              name="city"
-              defaultValue={student.city ?? ""}
-            />
-          </div>
-        </fieldset>
-
-        <div className="flex gap-3">
-          <Button type="submit">Opslaan</Button>
+        {/* Top actions */}
+        <div className="flex items-center justify-between">
+          <Button type="submit" form="edit-form">Opslaan</Button>
           <Button asChild variant="outline">
             <Link href={`/student/${id}`}>Annuleren</Link>
           </Button>
         </div>
-      </form>
+
+        <form id="edit-form" action={action} className="space-y-6">
+
+          {/* Persoonlijke gegevens */}
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
+              <User className="size-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Persoonlijke gegevens</h2>
+            </div>
+            <div className="divide-y divide-slate-100">
+              <FormRow label="Volledige naam *" name="fullName" defaultValue={student.fullName} required />
+              <FormRow label="Geboortedatum" name="dateOfBirth" type="date" defaultValue={dobValue} />
+              <div className="flex items-center justify-between px-6 py-3.5">
+                <label htmlFor="gender" className="text-sm text-slate-500">Geslacht</label>
+                <select
+                  id="gender"
+                  name="gender"
+                  defaultValue={student.gender ?? ""}
+                  className="w-56 h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                >
+                  <option value="">— selecteer —</option>
+                  <option value="Man">Man</option>
+                  <option value="Vrouw">Vrouw</option>
+                  <option value="Anders">Anders</option>
+                </select>
+              </div>
+              <FormRow label="E-mail" name="email" type="email" defaultValue={student.email ?? ""} />
+              <FormRow label="Telefoonnummer" name="phoneNumber" defaultValue={student.phoneNumber ?? ""} />
+            </div>
+          </section>
+
+          {/* Adres */}
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
+              <MapPin className="size-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Adres</h2>
+            </div>
+            <div className="divide-y divide-slate-100">
+              <FormRow label="Straat en huisnummer" name="addressLine" defaultValue={student.addressLine ?? ""} />
+              <FormRow label="Postcode" name="postalCode" defaultValue={student.postalCode ?? ""} />
+              <FormRow label="Stad" name="city" defaultValue={student.city ?? ""} />
+            </div>
+          </section>
+
+        </form>
+      </div>
     </div>
   );
 }
 
-function FormField({
+function FormRow({
   label,
   name,
   type = "text",
@@ -124,17 +96,15 @@ function FormField({
   required?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="text-sm font-medium">
-        {label}
-      </label>
+    <div className="flex items-center justify-between px-6 py-3.5">
+      <label htmlFor={name} className="text-sm text-slate-500">{label}</label>
       <input
         id={name}
         name={name}
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
+        className="w-56 h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
       />
     </div>
   );
