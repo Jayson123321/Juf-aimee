@@ -15,6 +15,7 @@ import {
   Search,
   Sparkles,
   Target,
+  Scale,
 } from "lucide-react";
 import type { PrototypeBloomLevel, PrototypeStudent } from "@/lib/prototype-runtime";
 
@@ -137,6 +138,9 @@ export function PrototypeAiAssignmentClient({
   const [approvalMessage, setApprovalMessage] = useState("");
   const [generatedAssignment, setGeneratedAssignment] = useState<GeneratedAssignment | null>(null);
   const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
+  const [judgeSteps, setJudgeSteps] = useState<CriteriumScore[]>([]);
+  const [judgeTotal, setJudgeTotal] = useState(0);
+  const [judging, setJudging] = useState(false);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -167,68 +171,92 @@ export function PrototypeAiAssignmentClient({
     }
   }
 
-  async function generateAssignment() {
-    setGenerating(true);
+  async function runGenerateStream(action: "generate" | "revise") {
+    const setLoading = action === "generate" ? setGenerating : setRevising;
+    setLoading(true);
     setAnalysisError("");
     setApprovalMessage("");
+    setJudgeResult(null);
+    setJudgeSteps([]);
+    setJudgeTotal(0);
+    setJudging(false);
 
     try {
       const response = await fetch("/api/prototype/assignment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "generate",
+          action,
           studentId: student.id,
           focusArea: selectedVak,
           bloomLevel: selectedBloom,
+          teacherPrompt: action === "revise" ? teacherPrompt : undefined,
+          currentAssignment: action === "revise" ? generatedAssignment : undefined,
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Opdracht genereren mislukt.");
-      setSources(data.sources ?? []);
-      setGeneratedAssignment(data.assignment ?? null);
-      setJudgeResult(data.judgeResult ?? null);
-      setTeacherPrompt("");
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? "Opdracht genereren mislukt.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const event = JSON.parse(trimmed) as {
+              type: string;
+              data: unknown;
+            };
+
+            if (event.type === "sources") {
+              setSources(event.data as string[]);
+            } else if (event.type === "assignment") {
+              setGeneratedAssignment(event.data as GeneratedAssignment);
+              setTeacherPrompt("");
+            } else if (event.type === "judge_start") {
+              setJudging(true);
+              setJudgeTotal((event.data as { total: number }).total);
+            } else if (event.type === "judge_step") {
+              setJudgeSteps((prev) => [...prev, event.data as CriteriumScore]);
+            } else if (event.type === "judge_done") {
+              setJudgeResult(event.data as JudgeResult);
+              setJudging(false);
+            } else if (event.type === "error") {
+              throw new Error((event.data as { message: string }).message);
+            }
+          } catch (parseError) {
+            if (parseError instanceof SyntaxError) continue;
+            throw parseError;
+          }
+        }
+      }
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "Opdracht genereren mislukt.");
+      setJudging(false);
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
+  }
+
+  async function generateAssignment() {
+    return runGenerateStream("generate");
   }
 
   async function reviseAssignment() {
     if (!generatedAssignment) return;
-
-    setRevising(true);
-    setAnalysisError("");
-    setApprovalMessage("");
-
-    try {
-      const response = await fetch("/api/prototype/assignment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "revise",
-          studentId: student.id,
-          focusArea: selectedVak,
-          bloomLevel: selectedBloom,
-          teacherPrompt,
-          currentAssignment: generatedAssignment,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Opdracht aanpassen mislukt.");
-      setSources(data.sources ?? []);
-      setGeneratedAssignment(data.assignment ?? null);
-      setJudgeResult(data.judgeResult ?? null);
-      setTeacherPrompt("");
-    } catch (error) {
-      setAnalysisError(error instanceof Error ? error.message : "Opdracht aanpassen mislukt.");
-    } finally {
-      setRevising(false);
-    }
+    return runGenerateStream("revise");
   }
 
   async function approveAssignment() {
@@ -541,57 +569,118 @@ export function PrototypeAiAssignmentClient({
               <p className="text-sm leading-7 text-slate-700">{generatedAssignment.rationale}</p>
             </div>
 
-            {judgeResult ? (
+            {(judging || judgeSteps.length > 0 || judgeResult) ? (
               <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900">LLM-as-Judge beoordeling</p>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                      judgeResult.beslissing === "goedkeuren"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : judgeResult.beslissing === "flaggen"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-rose-100 text-rose-800"
-                    }`}
-                  >
-                    {judgeResult.beslissing === "goedkeuren"
-                      ? "Goedgekeurd"
-                      : judgeResult.beslissing === "flaggen"
-                        ? "Menselijke review nodig"
-                        : judgeResult.beslissing === "escaleren"
-                          ? "Geëscaleerd"
-                          : "Opnieuw genereren"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        judgeResult.genormaliseerdeScore >= 0.75
-                          ? "bg-emerald-500"
-                          : judgeResult.genormaliseerdeScore >= 0.5
-                            ? "bg-amber-400"
-                            : "bg-rose-500"
-                      }`}
-                      style={{ width: `${judgeResult.genormaliseerdeScore * 100}%` }}
-                    />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Scale className="size-4 text-violet-600" />
+                    <p className="text-sm font-semibold text-slate-900">LLM-as-Judge beoordeling</p>
                   </div>
-                  <span className="text-xs font-semibold text-slate-700">
-                    {judgeResult.totaalScore}/{judgeResult.maxScore} ({Math.round(judgeResult.genormaliseerdeScore * 100)}%)
-                  </span>
+                  {judgeResult ? (
+                    <span
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                        judgeResult.beslissing === "goedkeuren"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : judgeResult.beslissing === "flaggen"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-rose-100 text-rose-800"
+                      }`}
+                    >
+                      {judgeResult.beslissing === "goedkeuren"
+                        ? "✓ Goedgekeurd"
+                        : judgeResult.beslissing === "flaggen"
+                          ? "⚠ Menselijke review nodig"
+                          : judgeResult.beslissing === "escaleren"
+                            ? "↑ Geëscaleerd"
+                            : "↺ Opnieuw genereren"}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                      <Loader2 className="size-3 animate-spin" />
+                      Beoordeelt...
+                    </span>
+                  )}
                 </div>
+
+                {judgeTotal > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-1.5 rounded-full bg-violet-400 transition-all duration-500"
+                        style={{ width: `${(judgeSteps.length / judgeTotal) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      {judgeSteps.length}/{judgeTotal}
+                    </span>
+                  </div>
+                )}
+
+                {judgeResult && (
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-700 ${
+                          judgeResult.genormaliseerdeScore >= 0.75
+                            ? "bg-emerald-500"
+                            : judgeResult.genormaliseerdeScore >= 0.5
+                              ? "bg-amber-400"
+                              : "bg-rose-500"
+                        }`}
+                        style={{ width: `${judgeResult.genormaliseerdeScore * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {judgeResult.totaalScore}/{judgeResult.maxScore} ({Math.round(judgeResult.genormaliseerdeScore * 100)}%)
+                    </span>
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  {judgeResult.scores.map((s) => (
-                    <div key={s.criterium} className="rounded-xl bg-white px-4 py-3 ring-1 ring-slate-100">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-slate-700">C{s.criterium}: {s.naam}</p>
-                        <span className={`ml-2 shrink-0 text-xs font-bold ${s.score >= 4 ? "text-emerald-600" : s.score >= 3 ? "text-amber-600" : "text-rose-600"}`}>
+                  {judgeSteps.map((s) => (
+                    <div
+                      key={s.criterium}
+                      className="animate-in fade-in slide-in-from-bottom-1 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-100 duration-300"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-semibold text-slate-700">
+                          C{s.criterium}: {s.naam}
+                        </p>
+                        <span
+                          className={`ml-2 shrink-0 text-xs font-bold ${
+                            s.score >= 4
+                              ? "text-emerald-600"
+                              : s.score >= 3
+                                ? "text-amber-600"
+                                : "text-rose-600"
+                          }`}
+                        >
                           {s.score}/5
                         </span>
                       </div>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">{s.feedback}</p>
+                      <div className="mt-1 space-y-1">
+                        {s.feedback.split("\n").filter(Boolean).map((line, i) => {
+                          const oppMatch = line.match(/^\*\*OPP:\*\*\s*(.*)/)
+                          if (oppMatch) {
+                            return (
+                              <p key={i} className="rounded bg-slate-100 px-2 py-1 text-xs leading-5 text-slate-600 italic">
+                                {oppMatch[1]}
+                              </p>
+                            )
+                          }
+                          return <p key={i} className="text-xs leading-5 text-slate-500">{line}</p>
+                        })}
+                      </div>
                     </div>
                   ))}
+                  {judging && judgeSteps.length < judgeTotal && (
+                    <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-100">
+                      <Loader2 className="size-3 shrink-0 animate-spin text-violet-500" />
+                      <p className="text-xs text-slate-500">
+                        Criterium {judgeSteps.length + 1} wordt beoordeeld...
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : null}

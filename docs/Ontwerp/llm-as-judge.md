@@ -151,7 +151,7 @@ Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen wo
 
 ### Wat maakt een goede opdracht voor Noah Smit?
 
-Op basis van zijn OPP (groep 6, TIQ 141) zijn de belangrijkste factoren:
+Op basis van zijn OPP (groep 6) zijn de belangrijkste factoren:
 
 - Sluit aan op zijn interesse in **wetenschap en experimenten**
 - Biedt **autonomie** en ruimte voor eigen keuzes
@@ -161,12 +161,50 @@ Op basis van zijn OPP (groep 6, TIQ 141) zijn de belangrijkste factoren:
 - Bevat **geen herhaalwerk of routinetaken**: Noah haakt af en werkt slordig bij gebrek aan uitdaging
 - Is **individueel uitvoerbaar**: samenwerken is nog een ontwikkelpunt voor Noah
 
+```
+Titel: Ontwerp je eigen weersysteem-experiment
+
+Noah, jij wordt klimaatwetenschapper. Kies één klimaatzone op aarde (bijv.
+woestijn, tropisch regenwoud of toendra) en doe onderzoek naar waarom het
+daar zo regent — of juist niet.
+
+Stap 1 — Formuleer een hypothese
+Bedenk een verklaring: waarom valt er in jouw gekozen klimaatzone zo veel of
+zo weinig neerslag? Schrijf dit op als een echte wetenschappelijke hypothese
+("Ik denk dat... omdat...").
+
+Stap 2 — Test je hypothese met data
+Zoek klimaatdata op (temperatuur, neerslag, wind) van jouw zone. Vergelijk
+minstens twee maanden met elkaar. Klopt jouw hypothese? Pas hem aan als dat
+nodig is.
+
+Stap 3 — Ontwerp een experiment
+Beschrijf een experiment dat je in de klas zou kunnen uitvoeren om één aspect
+van jouw klimaatzone na te bootsen (bijv. verdamping, condensatie,
+regenschaduw). Wat heb je nodig? Wat meet je? Wat verwacht je te zien?
+
+Eindproduct: een onderzoeksverslag met hypothese, data-analyse en
+experimentontwerp.
+```
+#### Resultaten (Screenshots)
+C1:
+
+C2:
+
+C3:
+
+C4:
+
+C5:
+
+C6:
+
+C7:
+
 
 ---
 
-### Tests bij 'slechte' opdrachten voor hoogbegaafde leerlingen
-
-Een 'slechte' opdracht voor Noah is een opdracht die:
+### Wat maakt een slechte opdracht voor Noah Smit?
 
 - **Geen aansluiting heeft op zijn interesses**: niets met wetenschap of experimenten
 - **Passief en gesloten is**: één correct antwoord, geen eigen redenering
@@ -174,13 +212,36 @@ Een 'slechte' opdracht voor Noah is een opdracht die:
 - **Geen autonomie biedt**: alles ligt vast, geen eigen keuzes
 - **Niet terug te herleiden is naar zijn OPP**: elk kind had deze opdracht kunnen krijgen
 
+```
+Titel: Landen kleuren
+
+Kleur de landen van Europa in op de kaart. Gebruik verschillende kleuren.
+Schrijf bij elk land de hoofdstad op. Maak het mooi en netjes. Zorg dat je
+binnen de lijnen kleurt.
+```
+#### Resulaten (screenshots)
+C1:
+
+C2:
+
+C3:
+
+C4:
+
+C5:
+
+C6:
+
+C7:
+
+
 ---
 
 ### Tests bij 'goede' opdrachten voor hoogbegaafde leerlingen
 
 Een 'goede' opdracht voor Noah sluit aan op zijn interesses, geeft autonomie, vraagt eigen redenering en is volledig traceerbaar naar zijn OPP.
 
-**Testresultaat "Ontwerp je eigen weersysteem-experiment":** 35/40 (88%) → `goedkeuren`
+
 
 #### Test 1 
 [text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)

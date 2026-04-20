@@ -41,7 +41,7 @@ model Student {
   custodyDetails String?
 
   groep       String?
-  bloomNiveau Int     @default(1)
+  bloomNiveau Int?
 
   primaryTeacherId String?
   primaryTeacher   User?   @relation("StudentPrimaryTeacher", fields: [primaryTeacherId], references: [id], onDelete: SetNull)
@@ -100,7 +100,7 @@ model Assignment {
   status      AssignmentStatus @default(PENDING)
   dueDate     DateTime?
   bloomLevel  String?
-  bloomNiveau Int              @default(1)
+  bloomNiveau Int?
   uitleg      String?
   studentWork String?
   savedAt     DateTime?

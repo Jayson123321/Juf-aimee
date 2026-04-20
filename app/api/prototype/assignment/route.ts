@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
-import { evalueerOpdracht } from "@/lib/judge";
+import { evalueerOpdrachtStreaming } from "@/lib/judge";
 
 type PrototypeAssignmentApiStudent = {
   id: string;
@@ -134,6 +134,11 @@ function bloomLevelToNumber(label: string) {
   }
 }
 
+type RejectedAssignment = {
+  title: string;
+  reason: string;
+};
+
 function buildGenerationPrompt(args: {
   student: PrototypeAssignmentApiStudent;
   resolvedBloom: string;
@@ -144,25 +149,30 @@ function buildGenerationPrompt(args: {
     assignment?: string;
     rationale?: string;
   } | null;
+  rejectedAssignments?: RejectedAssignment[];
 }) {
-  const { student, resolvedBloom, focusArea, teacherPrompt, currentAssignment } = args;
+  const { student, resolvedBloom, focusArea, teacherPrompt, currentAssignment, rejectedAssignments } = args;
 
   return `Je bent Juf Aimee: een deskundige in hoogbegaafdheidsonderwijs op de basisschool.
 
 Je taak is een gepersonaliseerde verrijkingsopdracht maken voor een hoogbegaafde leerling.
-Gebruik eenvoudig, helder Nederlands zonder abstracte begrippen, zodat de opdracht altijd begrijpelijk en motiverend is voor een basisschoolleerling.
-STAP 1 — Gebruik de search_opp tool om informatie op te halen:
-- Zoek naar interesses en passies van de leerling
-- Zoek naar beginsituatie en leerniveau
-- Zoek naar onderwijsbehoeften en werkhouding
+Gebruik eenvoudig, helder Nederlands zonder abstracte begrippen.
 
+STAP 1 — Gebruik de search_opp tool om het volgende op te halen:
+- Zoek naar interesses en passies van de leerling (dit zijn de ENIGE interesses die je mag gebruiken)
+- Zoek naar afgekeurde opdrachten en leerkrachtfeedback — deze onderwerpen en formats zijn VERBODEN
+- Zoek naar beginsituatie, leerniveau en werkhouding
+- Zoek naar zwakke vakgebieden van de leerling
 
 STAP 2 — Maak de opdracht op basis van wat je hebt gevonden.
 
 HARDE EISEN:
 1. De opdracht gaat over het schoolvak: ${focusArea || "een schoolvak naar keuze"}
 2. De opdracht past bij Bloom-niveau: ${resolvedBloom}
-3. Gebruik alleen informatie die je via search_opp hebt gevonden
+3. Gebruik ALLEEN interesses die je via search_opp hebt gevonden — negeer alle andere profieldata over interesses
+4. Als de leerling zwak is in schrijven/taal: maak GEEN schrijfopdracht tenzij het vak dit vereist
+5. Afgekeurde opdrachten: genereer NOOIT een opdracht die lijkt op eerder afgekeurde opdrachten qua thema of format
+6. De opdracht is praktisch en concreet, niet abstract
 
 LEERLING
 Naam: ${student.fullName}
@@ -171,17 +181,24 @@ Groep: ${student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend"}
 Bloom niveau: ${resolvedBloom}
 
 HUIDIGE VERSIE
-${currentAssignment ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}` : "Er is nog geen eerdere versie."}
+${currentAssignment
+  ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}`
+  : "Er is nog geen eerdere versie."}
 
 INSTRUCTIE VAN DE LEERKRACHT
 ${teacherPrompt || "Maak de best passende eerste versie."}
+
+VERBODEN ONDERWERPEN EN FORMATS (uit afgekeurde opdrachten)
+${rejectedAssignments?.length
+  ? rejectedAssignments.map((r: RejectedAssignment) => `- "${r.title}": ${r.reason}`).join("\n")
+  : "Geen afgekeurde opdrachten bekend."}
 
 Geef exact dit formaat terug:
 TITLE: <korte titel>
 ASSIGNMENT:
 <concrete opdracht in verzorgd Nederlands, 5-8 zinnen>
 RATIONALE:
-<2-4 zinnen waarom deze opdracht past bij de leerling>
+<2-4 zinnen waarom deze opdracht past bij de leerling, met verwijzing naar specifieke interesses uit het OPP>
 SOURCES:
 <bronnen die je hebt gebruikt>`
 }
@@ -316,97 +333,148 @@ export async function POST(req: NextRequest) {
         ? interestSnippets.map((snippet) => `"${snippet}"`).join("; ")
         : "Niet expliciet benoemd in OPP-bronnen";
     const beginsituatieBronnen = await zoekBeginsituatie(student.id)
-    const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) 
+    const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800)
   || "Geen OPP-informatie beschikbaar."
 
-
-    const MAX_POGINGEN = 2;
-    let poging = 0;
-    let parsed: ReturnType<typeof parseGeneratedResponse> | null = null;
-    const judgeResult: Awaited<ReturnType<typeof evalueerOpdracht>> | null = null;
-
-    while (poging < MAX_POGINGEN) {
-  poging++
-
-  const prompt = buildGenerationPrompt({
-  student,
-  resolvedBloom,
-  focusArea,
-  teacherPrompt,
-  currentAssignment,
-})
-
-  // Eerste aanroep met tool
-  const firstResponse = await ollama.chat({
-    model: GEN_MODEL,
-    messages: [{ role: "user", content: prompt }],
-    tools: [searchOppTool],
-    options: { temperature: 0.3 },
-  })
-
-  const assistantContent = typeof firstResponse.message.content === "string"
-  ? firstResponse.message.content
-  : JSON.stringify(firstResponse.message.content ?? "")
-
-const messages: { role: string; content: string }[] = [
-  { role: "user", content: prompt },
-  { role: "assistant", content: assistantContent },
-]
-
-  // Tool calls verwerken
-  if (firstResponse.message.tool_calls) {
-  for (const toolCall of firstResponse.message.tool_calls) {
-    const { student_id, query } = toolCall.function.arguments
-    const toolResult = await executeSearchOpp(student_id, query, 3)
-    messages.push({ 
-      role: "tool", 
-      content: typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
-    })
-  }
-}
-
-  // Tweede aanroep zonder tools — nu met tool resultaten
-  const finalResponse = await ollama.chat({
-    model: GEN_MODEL,
-    messages,
-    options: { temperature: 0.3, num_predict: 500 },
-  })
-
-  const content = finalResponse.message.content?.trim() ?? ""
-  parsed = parseGeneratedResponse(content)
-
-  // Judge
-  /** 
-  try {
-    judgeResult = await evalueerOpdracht(
-      {
-        naam: student.fullName,
-        leeftijd: leeftijdLabel,
-        interesses: interessesLabel,
-        bloomNiveau: resolvedBloom,
-        vak: focusArea || "Algemeen",
-        beginsituatie,
-        gegenereerdeOpdracht: parsed.assignment,
+    const rejectedChunks = await prisma.oppChunk.findMany({
+      where: {
+        studentId: student.id,
+        tekst: { contains: "[LEERKRACHT FEEDBACK - afgekeurde opdracht]" },
       },
-      poging,
-    )
-  } catch {
-    break
-  }
-
-  if (judgeResult.beslissing !== "opnieuw_genereren") break
-  */
- break
-}
-
-    return NextResponse.json({
-      sources,
-      assignment: {
-        ...parsed,
-        sources,
-      },
-      judgeResult,
+      select: { tekst: true },
     });
+
+    const rejectedAssignments: RejectedAssignment[] = rejectedChunks.map(({ tekst }) => {
+      const titleMatch = tekst.match(/Opdrachttitel:\s*"([^"]+)"/);
+      const reasonMatch = tekst.match(/Reden van afkeuring:\s*"([^"]+)"/);
+      return {
+        title: titleMatch?.[1] ?? "onbekend",
+        reason: reasonMatch?.[1] ?? tekst,
+      };
+    });
+
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        function send(event: Record<string, unknown>) {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"))
+        }
+
+        try {
+          send({ type: "sources", data: sources })
+
+          const MAX_POGINGEN = 2
+          let poging = 0
+          let parsed: ReturnType<typeof parseGeneratedResponse> | null = null
+          let judgeResult: Awaited<ReturnType<typeof evalueerOpdrachtStreaming>> | null = null
+
+          while (poging < MAX_POGINGEN) {
+            poging++
+
+            const prompt = buildGenerationPrompt({
+              student,
+              resolvedBloom,
+              focusArea,
+              teacherPrompt,
+              currentAssignment,
+              rejectedAssignments,
+            })
+
+            // Eerste aanroep met tool
+            const firstResponse = await ollama.chat({
+              model: GEN_MODEL,
+              messages: [{ role: "user", content: prompt }],
+              tools: [searchOppTool],
+              options: { temperature: 0.3 },
+            })
+
+            const assistantContent =
+              typeof firstResponse.message.content === "string"
+                ? firstResponse.message.content
+                : JSON.stringify(firstResponse.message.content ?? "")
+
+            const messages: { role: string; content: string }[] = [
+              { role: "user", content: prompt },
+              { role: "assistant", content: assistantContent },
+            ]
+
+            // Tool calls verwerken
+            if (firstResponse.message.tool_calls) {
+              for (const toolCall of firstResponse.message.tool_calls) {
+                const { student_id, query } = toolCall.function.arguments
+                const toolResult = await executeSearchOpp(student_id, query, 3)
+                messages.push({
+                  role: "tool",
+                  content: typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult),
+                })
+              }
+            }
+
+            // Tweede aanroep zonder tools
+            const finalResponse = await ollama.chat({
+              model: GEN_MODEL,
+              messages,
+              options: { temperature: 0.3, num_predict: 500 },
+            })
+
+            const content = finalResponse.message.content?.trim() ?? ""
+            parsed = parseGeneratedResponse(content)
+
+            send({
+              type: "assignment",
+              data: { ...parsed, sources },
+            })
+
+            // Judge — elk criterium wordt live gestreamd
+            send({ type: "judge_start", data: { total: 8 } })
+
+            try {
+              judgeResult = await evalueerOpdrachtStreaming(
+                {
+                  naam: student.fullName,
+                  leeftijd: leeftijdLabel,
+                  interesses: interessesLabel,
+                  bloomNiveau: resolvedBloom,
+                  vak: focusArea || "Algemeen",
+                  beginsituatie,
+                  gegenereerdeOpdracht: parsed.assignment,
+                  volledigOpp: sources.join("\n\n---\n\n"),
+                },
+                (step) => send({ type: "judge_step", data: step }),
+                poging,
+              )
+
+              send({ type: "judge_done", data: judgeResult })
+            } catch {
+              break
+            }
+
+            if (judgeResult.beslissing !== "opnieuw_genereren") break
+          }
+
+          controller.close()
+        } catch (error) {
+          send({
+            type: "error",
+            data: {
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Opdracht genereren mislukt.",
+            },
+          })
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "application/x-ndjson",
+        "Transfer-Encoding": "chunked",
+        "Cache-Control": "no-cache",
+      },
+    })
   } catch (error) {
     return NextResponse.json(
       {
