@@ -24,7 +24,7 @@ const adminItems: NavItem[] = [
 ]
 
 const roleLabels: Record<UserRole, string> = {
-  STUDENT: "Student",
+  STUDENT: "Leerling",
   TEACHER: "Leraar",
   ADMIN: "Beheerder",
 }
