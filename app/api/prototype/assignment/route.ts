@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { executeSearchOpp } from "@/app/ai/tools/search_opp";
+import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
-import { deriveStudentPresentation, getBloomLevelLabel } from "@/lib/student-profile";
+import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
+import { evalueerOpdracht } from "@/lib/judge";
 
 type PrototypeAssignmentApiStudent  = {
   id: string;
   fullName: string;
+  dateOfBirth?: Date | null;
   groep: string | null;
   bloomNiveau: number;
   profile: {
@@ -81,7 +83,6 @@ function bloomLevelToNumber(label: string) {
 
 function buildGenerationPrompt(args: {
   student: PrototypeAssignmentApiStudent;
-  schoolHistory?: string | null;
   resolvedBloom: string;
   focusArea: string;
   estimatedTime: string;
@@ -265,8 +266,7 @@ export async function POST(req: NextRequest) {
   const query = buildSearchQuery(focusArea, resolvedBloom, student.fullName);
 
   try {
-    const searchResults = await executeSearchOpp(student.id, query, 5);
-    const sources = parseSearchResults(searchResults);
+    const sources = await zoekVolledigProfiel(student.id, focusArea);
 
     if (action === "search") {
       return NextResponse.json({ sources, query });
@@ -350,6 +350,34 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+    const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(sources);
+
+    if (!student.dateOfBirth && inferredDateOfBirth) {
+      await prisma.student.update({
+        where: { id: student.id },
+        data: { dateOfBirth: inferredDateOfBirth },
+      });
+    }
+
+    const leeftijd = getStudentAge(inferredDateOfBirth);
+    const leeftijdLabel = leeftijd ? `${leeftijd} jaar` : "onbekend";
+    const interestSnippets = extractProfileInterestsFromSources(sources);
+    const interessesLabel =
+      interestSnippets.length > 0
+        ? interestSnippets.map((snippet) => `"${snippet}"`).join("; ")
+        : "Niet expliciet benoemd in OPP-bronnen";
+    const beginsituatieBronnen = await zoekBeginsituatie(student.id)
+    const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) 
+  || "Geen OPP-informatie beschikbaar."
+
+
+    const MAX_POGINGEN = 2;
+    let poging = 0;
+    let parsed: ReturnType<typeof parseGeneratedResponse> | null = null;
+    const judgeResult: Awaited<ReturnType<typeof evalueerOpdracht>> | null = null;
+
+    while (poging < MAX_POGINGEN) {
+  poging++
 
     const prompt = buildGenerationPrompt({
       student,
@@ -386,6 +414,7 @@ export async function POST(req: NextRequest) {
         ...parsed,
         sources,
       },
+      judgeResult,
     });
   } catch (error) {
     return NextResponse.json(
