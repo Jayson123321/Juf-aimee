@@ -100,7 +100,7 @@ function mapStudent(student: {
   fullName: string;
   dateOfBirth: Date | null;
   groep: string | null;
-  bloomNiveau: number;
+  bloomNiveau: number | null;
   profile: {
     currentSchoolYearGroup: string | null;
     currentTeacher: string | null;

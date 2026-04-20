@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
-import { deriveStudentPresentation, getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
+import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
 
 type PrototypeAssignmentApiStudent = {
@@ -10,7 +10,7 @@ type PrototypeAssignmentApiStudent = {
   fullName: string;
   dateOfBirth?: Date | null;
   groep: string | null;
-  bloomNiveau: number;
+  bloomNiveau: number | null;
   profile: {
     currentSchoolYearGroup: string | null;
   } | null;
@@ -18,6 +18,7 @@ type PrototypeAssignmentApiStudent = {
     title: string;
     status: string;
     bloomLevel: string | null;
+    teacherFeedback?: { content: string } | null;
   }>;
 };
 
@@ -139,6 +140,36 @@ type RejectedAssignment = {
   reason: string;
 };
 
+// function buildGenerationPrompt(args: {
+//   student: PrototypeAssignmentApiStudent;
+//   resolvedBloom: string;
+//   focusVak?: string;
+//   focusArea: string;
+//   estimatedTime?: string;
+//   sources: string[];
+//   schoolHistory?: string | null;
+//   teacherPrompt?: string;
+//   currentAssignment?: {
+//     title?: string;
+//     assignment?: string;
+//     rationale?: string;
+//   } | null;
+//   rejectedAssignments?: RejectedAssignment[];
+// }) {
+//   const {
+//     student, schoolHistory, resolvedBloom, focusVak, focusArea,
+//     estimatedTime = "45 minuten", sources, teacherPrompt, currentAssignment, rejectedAssignments,
+//   } = args;
+//   const presentation = deriveStudentPresentation({ fullName: student.fullName, schoolHistory, assignments: student.assignments, oppTexts: sources });
+//   const recentAssignments = student.assignments.map((a) => { const base = `- ${a.title} (Bloom: ${a.bloomLevel ?? "onbekend"}, status: ${a.status})`; return a.teacherFeedback?.content ? `${base}\n  [Feedback leraar]: "${a.teacherFeedback.content}"` : base; }).join("\n") || "- Geen recente opdrachten";
+//   const oppBronnen = sources.join("\n\n") || "Geen OPP-bronnen gevonden.";
+//   const focusgebied = focusArea || presentation.interests[0] || "vrije verdieping";
+//   const instructie = teacherPrompt?.trim() || "Maak de best passende eerste versie op basis van het leerlingprofiel.";
+//   const huidigVersie = currentAssignment ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}\nMotivatie:\n${currentAssignment.rationale ?? ""}` : "Er is nog geen eerdere versie.";
+//   return `[NIEUWE PROMPT MET LEERLINGPROFIEL - zie git history]`;
+// }
+
+// ─── ACTIEVE PROMPT (oud) ────────────────────────────────────────────────────
 function buildGenerationPrompt(args: {
   student: PrototypeAssignmentApiStudent;
   resolvedBloom: string;
@@ -149,7 +180,6 @@ function buildGenerationPrompt(args: {
     assignment?: string;
     rationale?: string;
   } | null;
-  schoolHistory?: string | null;
   rejectedAssignments?: RejectedAssignment[];
 }) {
   const { student, resolvedBloom, focusArea, teacherPrompt, currentAssignment, rejectedAssignments } = args;
@@ -178,91 +208,14 @@ HARDE EISEN:
 LEERLING
 Naam: ${student.fullName}
 Student ID: ${student.id}
-  const {
-    student,
-    schoolHistory,
-    resolvedBloom,
-    focusVak,
-    focusArea,
-    estimatedTime,
-    sources,
-    teacherPrompt,
-    currentAssignment,
-  } = args;
-
-  const presentation = deriveStudentPresentation({
-    fullName: student.fullName,
-    schoolHistory,
-    assignments: student.assignments,
-    oppTexts: sources,
-  });
-
-  const recentAssignments =
-    student.assignments
-      .map((a) => {
-        const base = `- ${a.title} (Bloom: ${a.bloomLevel ?? "onbekend"}, status: ${a.status})`;
-        return a.teacherFeedback?.content
-          ? `${base}\n  [Feedback leraar]: "${a.teacherFeedback.content}"`
-          : base;
-      })
-      .join("\n") || "- Geen recente opdrachten";
-
-  const oppBronnen = sources.join("\n\n") || "Geen OPP-bronnen gevonden.";
-
-  const huidigeProfiel = `Naam: ${student.fullName}
 Groep: ${student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend"}
-Huidig Bloom-niveau: ${resolvedBloom}
-Geschatte tijd voor de opdracht: ${estimatedTime}
-Leeftijdsindicatie: basisschool hoogbegaafde leerling
+Bloom niveau: ${resolvedBloom}
 
-Afgeleid leerlingprofiel (gebaseerd op OPP en opdrachtenhistorie):
-- Interesses: ${presentation.interests.join(", ")}
-- Leerstijl: ${presentation.learningStyle}
-- Werkmethode: ${presentation.workMethod}
-- Concentratieboog: ${presentation.concentration}
-- Sterke punten: ${presentation.strengths.join(", ")}
-- Didactische tips: ${presentation.smartTips.join(" | ")}`;
+HUIDIGE VERSIE
+${currentAssignment
+  ? `Titel: ${currentAssignment.title ?? "onbekend"}\nOpdracht:\n${currentAssignment.assignment ?? ""}`
+  : "Er is nog geen eerdere versie."}
 
-  const focusgebied = focusArea || presentation.interests[0] || "vrije verdieping";
-
-  const huidigVersie = currentAssignment
-   
-  ? `Titel: ${currentAssignment.title ?? "onbekend"}
-Opdracht:
-${currentAssignment.assignment ?? ""}
-Motivatie:
-${currentAssignment.rationale ?? ""}`
-   
-  : "Er is nog geen eerdere versie.";
-
-  const instructie = teacherPrompt?.trim() || "Maak de best passende eerste versie op basis van het leerlingprofiel.";
-
-  return `Je bent Juf Aimee, een AI-assistent voor basisschoolleraren die gepersonaliseerde opdrachten genereert voor hoogbegaafde leerlingen.
-
-Jouw taak: genereer één concrete, volledige opdracht die aansluit op het leerlingprofiel hieronder.
-
-───────────────────────────────
-LEERLINGPROFIEL
-───────────────────────────────
-${huidigeProfiel}
-
-───────────────────────────────
-RECENTE OPDRACHTEN
-───────────────────────────────
-${recentAssignments}
-
-───────────────────────────────
-OPP BRONNEN (relevante fragmenten uit het ontwikkelingsperspectief)
-───────────────────────────────
-${oppBronnen}
-
-───────────────────────────────
-SCHOOLVAK EN FOCUSGEBIED
-───────────────────────────────
-Schoolvak: ${focusVak || "niet opgegeven"}
-Focusgebied: ${focusgebied}
-
-───────────────────────────────
 INSTRUCTIE VAN DE LEERKRACHT
 ${teacherPrompt || "Maak de best passende eerste versie."}
 
@@ -273,36 +226,12 @@ ${rejectedAssignments?.length
 
 Geef exact dit formaat terug:
 TITLE: <korte titel>
-───────────────────────────────
-${instructie}
-
-───────────────────────────────
-REGELS
-───────────────────────────────
-1. Sluit de opdracht aan op het Bloom-niveau "${resolvedBloom}" — gebruik de bijbehorende denkvaardigheden (zie hieronder).
-2. Gebruik de interesses, leerstijl en werkmethode uit het leerlingprofiel als basis voor de opdrachtopbouw.
-3. Als er OPP-bronnen zijn met "[LEERKRACHT FEEDBACK - afgekeurde opdracht]", vermijd dan expliciet die aanpak en kies een alternatief.
-4. Schrijf de ASSIGNMENT direct aan de leerling, in de tweede persoon ("Jij gaat...", "Maak een...", "Beschrijf..."). Gebruik NOOIT "Laat de leerling..." of de naam van de leerling in de opdrachttekst.
-5. De opdracht moet concreet en uitvoerbaar zijn: beschrijf wat de leerling doet en welk product er ontstaat. Begeleidingstips voor de leraar komen uitsluitend in TEACHER_NOTES.
-6. Verzin geen kenmerken die niet in het profiel of de OPP-bronnen staan.
-Pas de omvang, het aantal stappen en de diepgang van de opdracht aan op de geschatte tijd van ${estimatedTime}. Een opdracht van 15 minuten is kort en gericht; een weekopdracht heeft meerderefasen en een eindproduct. 
-
-Bloom-niveau "${resolvedBloom}" betekent:
-${resolvedBloom === "Onthouden" ? "- De leerling herhaalt, benoemt en reproduceert feiten en begrippen." : ""}${resolvedBloom === "Begrijpen" ? "- De leerling legt uit, omschrijft en interpreteert in eigen woorden." : ""}${resolvedBloom === "Toepassen" ? "- De leerling past kennis toe in een nieuwe situatie of bij een concreet probleem." : ""}${resolvedBloom === "Analyseren" ? "- De leerling ontleedt informatie, vergelijkt onderdelen en legt verbanden." : ""}${resolvedBloom === "Evalueren" ? "- De leerling beoordeelt, weegt argumenten af en onderbouwt een standpunt." : ""}${resolvedBloom === "Creëren" ? "- De leerling ontwerpt, maakt of stelt iets nieuws samen op basis van eigen inzichten." : ""}
-
-───────────────────────────────
-GEWENST UITVOERFORMAAT — volg dit exact
-───────────────────────────────
-TITLE: <korte, pakkende titel van de opdracht>
 ASSIGNMENT:
 <concrete opdracht in verzorgd Nederlands, 5-8 zinnen>
 RATIONALE:
-<2–4 zinnen die uitleggen waarom deze opdracht past bij de leerling, met verwijzing naar specifieke interesses uit het OPP. Benoem:
-  • het Bloom-niveau en waarom de opdracht daar specifiek op aansluit
-  • minimaal één kenmerk uit het leerlingprofiel of OPP (kort citeren: "Uit OPP: '...' blijkt dat...")
-  • één onderwijskundige of psychologische bron (APA-stijl, varieer per opdracht) die de keuze onderbouwt>
+<2-4 zinnen waarom deze opdracht past bij de leerling, met verwijzing naar specifieke interesses uit het OPP>
 SOURCES:
-<bronnen die je hebt gebruikt>`
+<bronnen die je hebt gebruikt>`;
 }
 
 export async function POST(req: NextRequest) {
@@ -313,6 +242,7 @@ export async function POST(req: NextRequest) {
     focusArea = "",
     bloomLevel = "",
     teacherPrompt = "",
+    // estimatedTime = "45 minuten", // niet gebruikt door actieve prompt
     currentAssignment = null,
   } = body ?? {};
 
@@ -403,6 +333,32 @@ export async function POST(req: NextRequest) {
           INSERT INTO "OppChunk" ("studentId", "tekst")
           VALUES (${student.id}, ${feedbackText})
         `;
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "feedback") {
+      const { assignmentId, feedback } = body ?? {};
+
+      if (!feedback?.trim()) {
+        return NextResponse.json({ error: "Feedback is verplicht." }, { status: 400 });
+      }
+
+      const feedbackText = "[LEERKRACHT FEEDBACK - goedgekeurde opdracht]\nOpdracht ID: \"" + (assignmentId ?? "onbekend") + "\"\nFeedback: \"" + feedback.trim() + "\"";
+
+      try {
+        const embedding = await getEmbedding(feedbackText);
+        const vectorStr = "[" + embedding.join(",") + "]";
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "OppChunk" ("studentId", "tekst", "embedding") VALUES ($1, $2, $3::vector)`,
+          student.id, feedbackText, vectorStr,
+        );
+      } catch {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "OppChunk" ("studentId", "tekst") VALUES ($1, $2)`,
+          student.id, feedbackText,
+        );
       }
 
       return NextResponse.json({ ok: true });
@@ -577,45 +533,6 @@ export async function POST(req: NextRequest) {
         "Cache-Control": "no-cache",
       },
     })
-    const prompt = buildGenerationPrompt({
-      student,
-      schoolHistory: student.profile?.schoolHistory,
-      resolvedBloom,
-      focusVak,
-      focusArea,
-      sources,
-      teacherPrompt,
-      currentAssignment,
-      estimatedTime,
-    });
-
-    console.log("\n========== LLM PROMPT ==========");
-    console.log(prompt);
-    console.log("=================================\n");
-
-    const response = await ollama.chat({
-      model: GEN_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      options: { temperature: 0.3, num_predict: 900 },
-    });
-
-    const content = response.message.content?.trim() ?? "";
-
-    console.log("\n========== LLM RESPONSE ==========");
-    console.log(content);
-    console.log("===================================\n");
-
-    parsed = parseGeneratedResponse(content);
-
-    return NextResponse.json({
-      sources,
-      assignment: {
-        ...parsed,
-        sources,
-      },
-      judgeResult,
-    });
-    }
   } catch (error) {
     return NextResponse.json(
       {

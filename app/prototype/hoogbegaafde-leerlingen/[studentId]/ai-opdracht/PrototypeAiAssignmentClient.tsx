@@ -4,13 +4,9 @@ import { useState } from "react";
 import {
   Check,
   Brain,
-  BookOpen,
   CheckCircle2,
-  Clock,
   Cylinder,
   Database,
-  FileText,
-  MessageSquare,
   PencilLine,
   RotateCcw,
   Lightbulb,
@@ -29,26 +25,6 @@ type GeneratedAssignment = {
   rationale: string;
   sources: string[];
 };
-
-const OPEN_FOCUS_OPTIONS = ["Zelfgekozen onderwerp", "Actuele gebeurtenissen", "Eigen experiment opzetten"] as const;
-
-const FOCUS_AREA_OPTIONS = [
-  { group: "Vakgebied", options: ["Rekenen en wiskunde", "Taal en schrijven", "Wereldoriëntatie", "Natuur en techniek", "Kunst en creativiteit"] },
-  { group: "Denkvaardigheden", options: ["Verbanden leggen tussen begrippen", "Argumenteren en standpunt onderbouwen", "Hypothese opstellen en testen", "Ontwerpen en prototypen", "Kritisch bronnen vergelijken"] },
-  { group: "Interesses", options: ["Programmeren en logica", "Creatief schrijven en verhalen", "Onderzoek en presenteren", "Bouwen en constructies", "Tekstanalyse en media"] },
-  { group: "Open", options: OPEN_FOCUS_OPTIONS },
-] as const;
-
-const TIME_OPTIONS = [
-  "15 minuten",
-  "30 minuten",
-  "45 minuten",
-  "1 uur",
-  "1,5 uur",
-  "2 uur",
-  "Meerdere lessen (2–3)",
-  "Weekopdracht",
-] as const;
 
 type CriteriumScore = {
   criterium: number;
@@ -151,12 +127,6 @@ export function PrototypeAiAssignmentClient({
   student: PrototypeStudent;
 }) {
   const [selectedBloom, setSelectedBloom] = useState(student.status);
-  const [focusArea, setFocusArea] = useState("");
-  const [customFocusArea, setCustomFocusArea] = useState("");
-  const [estimatedTime, setEstimatedTime] = useState("45 minuten");
-
-  const isOpenFocus = (OPEN_FOCUS_OPTIONS as readonly string[]).includes(focusArea);
-  const resolvedFocusArea = isOpenFocus && customFocusArea.trim() ? customFocusArea.trim() : focusArea;
   const [selectedVak, setSelectedVak] = useState<string>(BASISSCHOOL_VAKKEN[0]);
   const [searching, setSearching] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -166,10 +136,6 @@ export function PrototypeAiAssignmentClient({
   const [analysisError, setAnalysisError] = useState<string>("");
   const [teacherPrompt, setTeacherPrompt] = useState("");
   const [approvalMessage, setApprovalMessage] = useState("");
-  const [savedAssignmentId, setSavedAssignmentId] = useState<string | null>(null);
-  const [teacherFeedback, setTeacherFeedback] = useState("");
-  const [savingFeedback, setSavingFeedback] = useState(false);
-  const [feedbackSaved, setFeedbackSaved] = useState(false);
   const [generatedAssignment, setGeneratedAssignment] = useState<GeneratedAssignment | null>(null);
   const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
   const [judgeSteps, setJudgeSteps] = useState<CriteriumScore[]>([]);
@@ -222,10 +188,8 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action,
           studentId: student.id,
-          focusVak: selectedVak,
-          focusArea: resolvedFocusArea,
+          focusArea: selectedVak,
           bloomLevel: selectedBloom,
-          estimatedTime,
           teacherPrompt: action === "revise" ? teacherPrompt : undefined,
           currentAssignment: action === "revise" ? generatedAssignment : undefined,
         }),
@@ -309,8 +273,7 @@ export function PrototypeAiAssignmentClient({
         body: JSON.stringify({
           action: "approve",
           studentId: student.id,
-          focusVak: selectedVak,
-          focusArea: resolvedFocusArea,
+          focusArea: selectedVak,
           bloomLevel: selectedBloom,
           currentAssignment: generatedAssignment,
         }),
@@ -318,39 +281,11 @@ export function PrototypeAiAssignmentClient({
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Opdracht goedkeuren mislukt.");
-      setSavedAssignmentId(data.savedAssignmentId ?? null);
-      setFeedbackSaved(false);
-      setTeacherFeedback("");
-      setApprovalMessage("Opdracht opgeslagen. Voeg hieronder feedback toe voor toekomstige generaties.");
+      setApprovalMessage("Opdracht opgeslagen in de database als nieuwe assignment.");
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "Opdracht goedkeuren mislukt.");
     } finally {
       setApproving(false);
-    }
-  }
-
-  async function saveFeedback() {
-    if (!savedAssignmentId || !teacherFeedback.trim()) return;
-
-    setSavingFeedback(true);
-    try {
-      const response = await fetch("/api/prototype/assignment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "feedback",
-          studentId: student.id,
-          assignmentId: savedAssignmentId,
-          feedback: teacherFeedback.trim(),
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Feedback opslaan mislukt.");
-      setFeedbackSaved(true);
-    } catch (error) {
-      setAnalysisError(error instanceof Error ? error.message : "Feedback opslaan mislukt.");
-    } finally {
-      setSavingFeedback(false);
     }
   }
 
@@ -442,99 +377,6 @@ export function PrototypeAiAssignmentClient({
 
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950">
-                Focusgebied
-                Schoolvak
-              </label>
-              <div className="relative">
-                <select
-                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                  onChange={(event) => setSelectedVak(event.target.value)}
-                  value={selectedVak}
-                >
-                  {BASISSCHOOL_VAKKEN.map((vak) => (
-                    <option key={vak} value={vak}>
-                      {vak}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                onChange={(event) => { setFocusArea(event.target.value); setCustomFocusArea(""); }}
-                value={focusArea}
-              >
-                <option value="">— Automatisch op basis van leerlingprofiel —</option>
-                {FOCUS_AREA_OPTIONS.map((group) => (
-                  <optgroup key={group.group} label={group.group}>
-                    {group.options.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">
-                Laat leeg om automatisch aan te sluiten op de interesses van de leerling
-              </p>
-              {isOpenFocus && (
-                <input
-                  autoFocus
-                  className="h-12 w-full rounded-2xl border border-violet-200 bg-violet-50 px-4 text-[1.05rem] text-slate-950 outline-none ring-2 ring-violet-300 placeholder:text-slate-400"
-                  onChange={(e) => setCustomFocusArea(e.target.value)}
-                  placeholder={
-                    focusArea === "Zelfgekozen onderwerp" ? "Bijv. klimaatverandering, middeleeuwen..." :
-                    focusArea === "Actuele gebeurtenissen" ? "Bijv. ruimtevaart, olympische spelen..." :
-                    "Bijv. water zuiveren, brugconstructies..."
-                  }
-                  type="text"
-                  value={customFocusArea}
-                />
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950">
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="size-4 text-slate-500" />
-                  Geschatte tijd
-                </span>
-              </label>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                onChange={(event) => setEstimatedTime(event.target.value)}
-                value={estimatedTime}
-              >
-                {TIME_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">
-                De AI past de omvang en diepgang van de opdracht hierop aan
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950">
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="size-4 text-slate-500" />
-                  Geschatte tijd
-                </span>
-              </label>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                onChange={(event) => setEstimatedTime(event.target.value)}
-                value={estimatedTime}
-              >
-                {TIME_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">
-                De AI past de omvang en diepgang van de opdracht hierop aan
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950">
                 Schoolvak
               </label>
               <div className="relative">
@@ -559,7 +401,7 @@ export function PrototypeAiAssignmentClient({
                 onClick={searchSources}
                 type="button"
               >
-                <span>{searching ? <Loader2 className="size-5 animate-spin" /> : <Brain className="size-5" />}</span>
+                {searching ? <Loader2 className="size-5 animate-spin" /> : <Brain className="size-5" />}
                 Zoek Bronnen met AI
               </button>
               <button
@@ -568,7 +410,11 @@ export function PrototypeAiAssignmentClient({
                 onClick={generateAssignment}
                 type="button"
               >
-                <span>{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                {generating ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <Sparkles className="size-5" />
+                )}
                 Genereer Opdracht met AI
               </button>
             </div>
@@ -705,57 +551,22 @@ export function PrototypeAiAssignmentClient({
         </div>
       </SectionCard>
 
-      {generatedAssignment && (
-        <SectionCard className="border-violet-300 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,248,255,0.95))] shadow-[0_24px_60px_rgba(109,77,200,0.10)]">
-          <div className="space-y-8">
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_8px_20px_rgba(98,101,255,0.25)]">
-                  <FileText className="size-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">AI-gegenereerde opdracht</p>
-                  <h2 className="text-[1.15rem] font-semibold text-slate-950">Klaar voor beoordeling</h2>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                  {selectedBloom}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                  <Clock className="size-3" />
-                  {estimatedTime}
-                </span>
-              </div>
+      {generatedAssignment ? (
+        <SectionCard className="border-slate-200/80">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Sparkles className="size-6 text-violet-600" />
+              <h2 className="text-[1.2rem] font-semibold text-slate-950">Gegenereerde opdracht</h2>
             </div>
-
-            {/* Title */}
-            <div className="rounded-3xl bg-gradient-to-r from-violet-600 to-blue-600 px-7 py-6 text-white shadow-[0_12px_30px_rgba(98,101,255,0.22)]">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-widest opacity-75">Opdrachttitel</p>
-              <h3 className="text-[1.6rem] font-bold leading-snug">{generatedAssignment.title}</h3>
-            </div>
-
-            {/* Assignment body */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-slate-700">
-                <BookOpen className="size-4 shrink-0" />
-                <p className="text-sm font-semibold uppercase tracking-wide">Opdrachtbeschrijving</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-[1.06rem] leading-8 text-slate-800 shadow-[0_4px_12px_rgba(15,23,42,0.04)] whitespace-pre-wrap">
+              <h3 className="text-2xl font-semibold text-slate-950">{generatedAssignment.title}</h3>
+              <div className="rounded-2xl bg-slate-50 px-5 py-4 text-[1.04rem] leading-8 text-slate-700 whitespace-pre-wrap">
                 {generatedAssignment.assignment}
               </div>
             </div>
-
-            {/* Rationale */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-violet-700">
-                <Brain className="size-4 shrink-0" />
-                <p className="text-sm font-semibold uppercase tracking-wide">Onderbouwing</p>
-              </div>
-              <div className="rounded-2xl border border-violet-100 bg-violet-50 px-6 py-5">
-                <p className="text-[1.04rem] leading-8 text-slate-700">{generatedAssignment.rationale}</p>
-              </div>
+            <div className="rounded-2xl bg-violet-50 px-5 py-4">
+              <p className="mb-1 text-sm font-semibold text-slate-900">Waarom deze opdracht?</p>
+              <p className="text-sm leading-7 text-slate-700">{generatedAssignment.rationale}</p>
             </div>
 
             {(judging || judgeSteps.length > 0 || judgeResult) ? (
@@ -862,15 +673,23 @@ export function PrototypeAiAssignmentClient({
                       </div>
                     </div>
                   ))}
+                  {judging && judgeSteps.length < judgeTotal && (
+                    <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-100">
+                      <Loader2 className="size-3 shrink-0 animate-spin text-violet-500" />
+                      <p className="text-xs text-slate-500">
+                        Criterium {judgeSteps.length + 1} wordt beoordeeld...
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : null}
 
-            <hr className="border-slate-200" />
-
-            {/* Revise with instruction */}
             <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
-              <label className="block text-sm font-semibold text-slate-900" htmlFor="teacher-prompt">
+              <label
+                className="block text-sm font-semibold text-slate-900"
+                htmlFor="teacher-prompt"
+              >
                 Aanpassen met instructie
               </label>
               <textarea
@@ -885,7 +704,6 @@ export function PrototypeAiAssignmentClient({
               </p>
             </div>
 
-            {/* Reject form */}
             {rejectMode ? (
               <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-5">
                 <label className="block text-sm font-semibold text-rose-900" htmlFor="reject-reason">
@@ -924,16 +742,16 @@ export function PrototypeAiAssignmentClient({
             ) : (
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving || !teacherPrompt.trim()}
                   onClick={reviseAssignment}
                   type="button"
                 >
-                  <span>{revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}</span>
+                  {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
                   Aanpassen
                 </button>
                 <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving}
                   onClick={() => setRejectMode(true)}
                   type="button"
@@ -942,26 +760,25 @@ export function PrototypeAiAssignmentClient({
                   Afkeuren
                 </button>
                 <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving}
                   onClick={approveAssignment}
                   type="button"
                 >
-                  <span>{approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}</span>
-                  Goedkeuren &amp; opslaan
+                  {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                  Goedkeuren
                 </button>
               </div>
             )}
 
             {approvalMessage ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
-                <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {approvalMessage}
               </div>
             ) : null}
           </div>
         </SectionCard>
-      )}
+      ) : null}
 
       <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(252,250,255,0.96),rgba(247,243,255,0.92))]">
         <div className="space-y-6">
