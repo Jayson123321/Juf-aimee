@@ -178,6 +178,7 @@ export default async function TeacherAssignmentDetailPage({
         {assignment.status === "COMPLETED" && (
           <TeacherFeedbackForm
             assignmentId={assignment.id}
+            studentId={assignment.student.id}
             existingFeedback={assignment.teacherFeedback?.content ?? null}
             studentName={assignment.student.fullName}
           />
