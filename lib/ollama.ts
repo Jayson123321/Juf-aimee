@@ -1,10 +1,13 @@
 import { Ollama } from "ollama"
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434"
 
+console.log(`🔌 Ollama host: ${OLLAMA_HOST}`)  // ← tijdelijk toevoegen
+
 export const ollama = new Ollama({ host: OLLAMA_HOST })
-export const EMBED_MODEL = "jeffh/intfloat-multilingual-e5-large:f16"
+export const EMBED_MODEL = process.env.EMBED_MODEL || "jeffh/intfloat-multilingual-e5-large:f16"
 export const GEN_MODEL = "qwen2.5"
 export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
+
 function sanitizeEmbeddingInput(text: string) {
   return text
     .normalize("NFKC")
@@ -22,10 +25,14 @@ function isValidEmbedding(embedding: number[]) {
   )
 }
 
+const MAX_EMBED_CHARS = 1000
+
 export async function getEmbedding(text: string): Promise<number[]> {
+  const base = sanitizeEmbeddingInput(text).slice(0, MAX_EMBED_CHARS)
   const variants = [
-    sanitizeEmbeddingInput(text),
-    sanitizeEmbeddingInput(text).replace(/[^\p{L}\p{N}\p{P}\p{Zs}]/gu, " "),
+    base,
+    base.replace(/[^\p{L}\p{N}\p{P}\p{Zs}]/gu, " "),
+    base.slice(0, 400),
   ].filter(Boolean)
 
   let lastError: unknown
