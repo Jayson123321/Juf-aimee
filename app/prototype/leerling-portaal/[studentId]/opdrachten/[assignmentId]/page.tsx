@@ -39,6 +39,10 @@ export default async function PrototypeStudentAssignmentDetailPage({
         bloomLevel: true,
         status: true,
         studentWork: true,
+        submissions: {
+          select: { id: true, fileName: true, filePath: true, mimeType: true, uploadedAt: true },
+          orderBy: { uploadedAt: "desc" },
+        },
       },
     }),
   ]);
@@ -124,6 +128,7 @@ export default async function PrototypeStudentAssignmentDetailPage({
         <AssignmentWorkspaceClient
           assignmentId={assignment.id}
           firstName={firstName}
+          initialSubmissions={assignment.submissions}
           initialWork={assignment.studentWork ?? ""}
           isCompleted={assignment.status === "COMPLETED"}
           studentId={student.id}

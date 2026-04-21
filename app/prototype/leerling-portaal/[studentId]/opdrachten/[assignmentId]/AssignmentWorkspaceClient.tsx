@@ -3,23 +3,36 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2,
+  FileText,
   Lightbulb,
   Loader2,
+  Paperclip,
   Save,
   Send,
   Sparkles,
+  X,
 } from "lucide-react";
+
+type Submission = {
+  id: string;
+  fileName: string;
+  filePath: string;
+  mimeType: string;
+  uploadedAt: Date;
+};
 
 export function AssignmentWorkspaceClient({
   assignmentId,
   firstName,
   initialWork,
+  initialSubmissions,
   isCompleted,
   studentId,
 }: {
   assignmentId: string;
   firstName: string;
   initialWork: string;
+  initialSubmissions: Submission[];
   isCompleted: boolean;
   studentId: string;
 }) {
@@ -32,6 +45,10 @@ export function AssignmentWorkspaceClient({
   const [error, setError] = useState("");
   const [completed, setCompleted] = useState(isCompleted);
   const [savedOnce, setSavedOnce] = useState(false);
+  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const wordCount = work.trim() === "" ? 0 : work.trim().split(/\s+/).length;
@@ -98,6 +115,30 @@ export function AssignmentWorkspaceClient({
       setError(err instanceof Error ? err.message : "Inleveren mislukt.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function uploadFile(file: File) {
+    setUploading(true);
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("studentId", studentId);
+      formData.append("assignmentId", assignmentId);
+      formData.append("file", file);
+
+      const response = await fetch("/api/prototype/student-assignment", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Uploaden mislukt.");
+      setSubmissions((prev) => [data.submission, ...prev]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Uploaden mislukt.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -195,6 +236,82 @@ export function AssignmentWorkspaceClient({
           <p className="mt-3 text-center text-xs text-slate-400">
             Tip: sla je werk op terwijl je bezig bent, zodat je niets kwijtraakt.
           </p>
+        </div>
+      </div>
+
+      {/* File upload */}
+      <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
+        <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+          <div className="flex size-8 items-center justify-center rounded-xl bg-blue-100">
+            <Paperclip className="size-4 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-slate-950">Bestand toevoegen</h2>
+            <p className="text-xs text-slate-500">Upload een PDF, Word-document of afbeelding</p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          <label
+            className={`flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center transition hover:border-blue-300 hover:bg-blue-50 ${completed ? "pointer-events-none opacity-50" : ""}`}
+          >
+            <Paperclip className="size-8 text-slate-400" />
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Klik om een bestand te kiezen</p>
+              <p className="mt-1 text-xs text-slate-400">PDF, Word, PNG, JPG — max. 10 MB</p>
+            </div>
+            <input
+              ref={fileInputRef}
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp"
+              className="hidden"
+              disabled={uploading || completed}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadFile(file);
+              }}
+              type="file"
+            />
+          </label>
+
+          {uploading && (
+            <div className="flex items-center gap-2 text-sm text-blue-600">
+              <Loader2 className="size-4 animate-spin" />
+              Bestand uploaden…
+            </div>
+          )}
+
+          {uploadError && (
+            <div className="flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <X className="size-4 shrink-0" />
+              {uploadError}
+            </div>
+          )}
+
+          {submissions.length > 0 && (
+            <ul className="space-y-2">
+              {submissions.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                >
+                  <FileText className="size-5 shrink-0 text-blue-500" />
+                  <div className="min-w-0 flex-1">
+                    <a
+                      className="truncate text-sm font-medium text-blue-700 hover:underline"
+                      href={s.filePath}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {s.fileName}
+                    </a>
+                    <p className="text-xs text-slate-400">
+                      {new Date(s.uploadedAt).toLocaleDateString("nl-NL")}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

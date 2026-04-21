@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { executeSearchOpp } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, ollama } from "@/lib/ollama";
 import { deriveStudentPresentation } from "@/lib/student-profile";
+import { writeFile, mkdir } from "node:fs/promises";
+import path from "node:path";
 
 function parseTipLines(content: string) {
   return content
@@ -12,7 +14,69 @@ function parseTipLines(content: string) {
     .slice(0, 4);
 }
 
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 export async function POST(req: NextRequest) {
+  const contentType = req.headers.get("content-type") ?? "";
+
+  // --- File upload ---
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await req.formData();
+    const studentId = formData.get("studentId") as string | null;
+    const assignmentId = formData.get("assignmentId") as string | null;
+    const file = formData.get("file") as File | null;
+
+    if (!studentId || !assignmentId || !file) {
+      return NextResponse.json({ error: "studentId, assignmentId en file zijn verplicht." }, { status: 400 });
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Bestandstype niet toegestaan. Gebruik PDF, Word of een afbeelding." }, { status: 400 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "Bestand is te groot. Maximum is 10 MB." }, { status: 400 });
+    }
+
+    const assignment = await prisma.assignment.findFirst({
+      where: { id: assignmentId, studentId },
+    });
+    if (!assignment) {
+      return NextResponse.json({ error: "Opdracht niet gevonden." }, { status: 404 });
+    }
+
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "assignments", assignmentId);
+    await mkdir(uploadDir, { recursive: true });
+
+    const safeFileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
+    const filePath = path.join(uploadDir, safeFileName);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(filePath, buffer);
+
+    const fileUrl = `/uploads/assignments/${assignmentId}/${safeFileName}`;
+
+    const submission = await prisma.assignmentSubmission.create({
+      data: {
+        assignmentId,
+        fileName: file.name,
+        filePath: fileUrl,
+        mimeType: file.type,
+        fileSize: file.size,
+      },
+    });
+
+    return NextResponse.json({ ok: true, submission });
+  }
+
   const body = await req.json();
   const { action, studentId, assignmentId, work = "" } = body ?? {};
 
@@ -66,7 +130,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "submit") {
-    if (!work.trim()) {
+    // Gebruik meegegeven werk, of val terug op al opgeslagen werk
+    const workToSubmit = work.trim() || assignment.studentWork?.trim() || "";
+
+    if (!workToSubmit) {
       return NextResponse.json(
         { error: "Je moet eerst een antwoord schrijven voordat je kunt inleveren." },
         { status: 400 },
@@ -76,7 +143,7 @@ export async function POST(req: NextRequest) {
     const updated = await prisma.assignment.update({
       where: { id: assignment.id },
       data: {
-        studentWork: work,
+        studentWork: workToSubmit,
         savedAt: new Date(),
         submittedAt: new Date(),
         status: "COMPLETED",
