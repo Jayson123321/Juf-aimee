@@ -8,6 +8,7 @@ import {
   BookOpen,
   Brain,
   ChartSpline,
+  ClipboardList,
   Lightbulb,
   Sparkles,
   Users,
@@ -242,6 +243,13 @@ function StudentCard({
             >
               <Sparkles className="size-4" />
               AI Opdracht
+            </Link>
+            <Link
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-center text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+              href={`/dashboard/leerling/${student.id}/opdrachten`}
+            >
+              <ClipboardList className="size-4" />
+              Opdrachten
             </Link>
           </div>
         </div>

@@ -40,7 +40,7 @@ Analyseer het onderstaande leerlingprofiel (OPP) en geef de leerkracht één con
 ## Leerlingprofiel
 Naam: ${student.fullName}
 Groep: ${student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend"}
-Huidig Bloom-niveau: ${student.bloomNiveau}
+Huidig Bloom-niveau: ${student.bloomNiveau ?? "onbekend"}
 Opdrachtstatus: ${total} opdrachten (${pending} wachtend, ${inProgress} bezig, ${completed} afgerond)
 
 ## OPP

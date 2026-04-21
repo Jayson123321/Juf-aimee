@@ -1,0 +1,115 @@
+============================================================
+  JUDGE TESTRAPPORT — NOAH SMIT
+============================================================
+Leerling:   Noah Smit | Groep 6
+Leeftijd:   11 jaar | Bloom: Creëren
+Interesses: Hij heeft bijzondere interesse in wetenschap en experimenten.; Noah is analytisch sterk, nieuwsgierig en volhardend bij moeilijke problemen.
+OPP-bronnen: 9 chunks geladen
+
+============================================================
+  SLECHTE OPDRACHT — Landen kleuren
+============================================================
+
+Titel: Landen kleuren
+
+Kleur de landen van Europa in op de kaart. Gebruik verschillende kleuren.
+Schrijf bij elk land de hoofdstad op. Maak het mooi en netjes. Zorg dat je
+binnen de lijnen kleurt.
+
+C1: 1/5  Does the assignment contain elements that connect to the interests listed in the student profile?
+   → The given assignment does not align with the student's interests at all. The student, Noah Smit, has a clear interest in science and experiments, which is no...
+
+C2: 1/5  Does the difficulty of the assignment match the student's specified Bloom level?
+   → This task does not effectively match the student's specified Bloom level. While it does require the student to create something new, it lacks depth and compl...
+
+C3: 1/5  Can a student of this age and level complete the assignment independently?
+   → Based on the scoring rubric, the assignment provided does not seem to match the expected level of challenge for the student. The task is too simple and does ...
+
+C4: 1/5  Does the assignment connect to the student's starting situation as described in the OPP profile?
+   → Based on the student's profile, there is no discernible connection between the assignment and the student's interests, strengths, or the documented learning ...
+
+C5: 1/5  Is the assignment age-appropriate in language, tone, and content for this child?
+   → The response provided is a simple task of coloring countries on a map. While it is easy to understand and complete, it lacks the depth and complexity require...
+
+C6: 4/5  Can a teacher easily read, assess, and if necessary adapt the assignment?
+   → The given task, titled "Landen kleuren", is clear and easy to understand for the teacher. It follows a straightforward approach that is simple and direct. Th...
+
+C7: 1/5  Can all elements in the assignment be traced back to the student profile, without invented information?
+   → The task provided is a simple drawing assignment, where the student has to color in countries and write their capitals. The instructions do not seem to be co...
+
+C8: 1/5  Does the assignment use only relevant student information and leave out irrelevant details?
+   → The response, "Landen kleuren," does not appear to use any of the specific student information provided in the instruction. It neither considers the student'...
+
+UITSLAG: 11/40 (27.5%) → OPNIEUW_GENEREREN
+
+============================================================
+  GOEDE OPDRACHT — Ontwerp je eigen weersysteem-experiment
+============================================================
+
+Titel: Ontwerp je eigen weersysteem-experiment
+
+Noah, jij wordt klimaatwetenschapper. Kies één klimaatzone op aarde (bijv.
+woestijn, tropisch regenwoud of toendra) en doe onderzoek naar waarom het
+daar zo regent — of juist niet.
+
+Stap 1 — Formuleer een hypothese
+Bedenk een verklaring: waarom valt er in jouw gekozen klimaatzone zo veel of
+zo weinig neerslag? Schrijf dit op als een echte wetenschappelijke hypothese
+("Ik denk dat... omdat...").
+
+Stap 2 — Test je hypothese met data
+Zoek klimaatdata op (temperatuur, neerslag, wind) van jouw zone. Vergelijk
+minstens twee maanden met elkaar. Klopt jouw hypothese? Pas hem aan als dat
+nodig is.
+
+Stap 3 — Ontwerp een experiment
+Beschrijf een experiment dat je in de klas zou kunnen uitvoeren om één aspect
+van jouw klimaatzone na te bootsen (bijv. verdamping, condensatie,
+regenschaduw). Wat heb je nodig? Wat meet je? Wat verwacht je te zien?
+
+Eindproduct: een onderzoeksverslag met hypothese, data-analyse en
+experimentontwerp.
+
+C1: 5/5  Does the assignment contain elements that connect to the interests listed in the student profile?
+   → The provided assignment directly aligns with Noah Smit's documented interests in wetenschap and experimenten. The task of designing a weersysteem experiment ...
+
+C2: 5/5  Does the difficulty of the assignment match the student's specified Bloom level?
+   → In evaluating the enrichment assignment for Noah Smit, it is apparent that the task aligns closely with the student's specified Bloom level of "Creëren". The...
+
+C3: 4/5  Can a student of this age and level complete the assignment independently?
+   → The response provides a structured assignment that encourages independent thinking, problem-solving, and experimentation. This assignment is particularly sui...
+
+C4: 4/5  Does the assignment connect to the student's starting situation as described in the OPP profile?
+   → The task aligns with the student's analytical strength and curiosity as indicated in the OPP profile. The assignment is structured and fosters a sense of ind...
+
+C5: 4/5  Is the assignment age-appropriate in language, tone, and content for this child?
+   → The assignment provided is tailored to the interests and abilities of an 11-year-old student with a keen interest in science and experimentation. It uses app...
+
+C6: 5/5  Can a teacher easily read, assess, and if necessary adapt the assignment?
+   → The assignment presented is a science project that encourages curiosity and creativity, aligning well with the interests and strengths of the student, Noah S...
+
+C7: 5/5  Can all elements in the assignment be traced back to the student profile, without invented information?
+   → When examining the assignment, it is evident that the task given to the student is directly related to their interests and educational goals, as outlined in ...
+
+C8: 5/5  Does the assignment use only relevant student information and leave out irrelevant details?
+   → The task requires an assignment that only uses relevant student information and leaves out irrelevant details. The response adheres closely to the instructio...
+
+UITSLAG: 37/40 (92.5%) → GOEDKEUREN
+
+============================================================
+  VERGELIJKING
+============================================================
+Criterium  Slecht   Goed     Verschil
+----------------------------------------
+C1         1/5      5/5      +4
+C2         1/5      5/5      +4
+C3         1/5      4/5      +3
+C4         1/5      4/5      +3
+C5         1/5      4/5      +3
+C6         4/5      5/5      +1
+C7         1/5      5/5      +4
+C8         1/5      5/5      +4
+----------------------------------------
+Totaal     11/40    37/40   
+Score      27.5   % 92.5%
+Beslissing opnieuw_genereren goedkeuren

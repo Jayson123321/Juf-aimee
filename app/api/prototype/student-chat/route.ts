@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         fullName: student.fullName,
         schoolHistory: student.profile?.schoolHistory,
         assignments: student.assignments,
-        oppTexts: [...student.oppChunks.map((chunk) => chunk.tekst), oppContext],
+        oppTexts: [...student.oppChunks.map((chunk) => chunk.tekst), ...oppContext],
       });
 
       const response = await ollama.chat({
@@ -138,7 +138,7 @@ ${student.assignments
                 .join("\n") || "- Geen opdrachten gevonden"}
 
 OPP CONTEXT
-${oppContext}
+${oppContext.join("\n")}
 
 Geef een eerste korte begroeting aan ${firstName}.
 Sluit af met een open vraag waar je mee kunt helpen.`,
@@ -204,7 +204,7 @@ Sluit af met een open vraag waar je mee kunt helpen.`,
       fullName: student.fullName,
       schoolHistory: student.profile?.schoolHistory,
       assignments: student.assignments,
-      oppTexts: [...student.oppChunks.map((chunk) => chunk.tekst), oppContext],
+      oppTexts: [...student.oppChunks.map((chunk) => chunk.tekst), ...oppContext],
     });
 
     const conversation = [...(latestSession?.messages ?? [])].reverse();
@@ -240,7 +240,7 @@ ${student.assignments
               .join("\n") || "- Geen opdrachten gevonden"}
 
 OPP CONTEXT
-${oppContext}
+${oppContext.join("\n")}
 
 GESPREK TOT NU TOE
 ${conversation
