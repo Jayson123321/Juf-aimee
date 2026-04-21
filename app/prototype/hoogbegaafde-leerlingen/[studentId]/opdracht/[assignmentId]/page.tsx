@@ -6,7 +6,9 @@ import {
   Brain,
   Calendar,
   CheckCircle2,
+  FileText,
   MessageSquare,
+  Pencil,
   Sparkles,
 } from "lucide-react";
 import { getPrototypeAssignment, getPrototypeStudent } from "@/lib/prototype-runtime";
@@ -95,6 +97,61 @@ export default async function AssignmentDetailPage({
           </div>
           <p className="text-[1.04rem] leading-8 text-slate-700">{assignment.rationale}</p>
         </section>
+
+        {/* Werk van de leerling */}
+        {assignment.studentWork ? (
+          <section className="rounded-[28px] border border-blue-200 bg-white/90 p-7 shadow-[0_18px_50px_rgba(92,114,180,0.06)]">
+            <div className="mb-3 flex items-center gap-2 text-blue-700">
+              <Pencil className="size-4 shrink-0" />
+              <p className="text-sm font-semibold uppercase tracking-wide">Werk van {student.name.split(" ")[0]}</p>
+            </div>
+            <p className="text-[1.04rem] leading-8 text-slate-800 whitespace-pre-wrap">
+              {assignment.studentWork}
+            </p>
+          </section>
+        ) : (
+          <section className="rounded-[28px] border border-slate-200 bg-white/90 p-7 text-center shadow-[0_18px_50px_rgba(92,114,180,0.06)]">
+            <p className="text-sm italic text-slate-400">
+              {assignment.status === "not_started"
+                ? `${student.name.split(" ")[0]} is nog niet begonnen met deze opdracht.`
+                : `${student.name.split(" ")[0]} heeft nog geen tekst ingeleverd.`}
+            </p>
+          </section>
+        )}
+
+        {/* Ingediende bestanden */}
+        {assignment.submissions && assignment.submissions.length > 0 && (
+          <section className="rounded-[28px] border border-blue-100 bg-white/90 p-7 shadow-[0_18px_50px_rgba(92,114,180,0.06)]">
+            <div className="mb-4 flex items-center gap-2 text-blue-700">
+              <FileText className="size-4 shrink-0" />
+              <p className="text-sm font-semibold uppercase tracking-wide">
+                Ingediende bestanden ({assignment.submissions.length})
+              </p>
+            </div>
+            <ul className="space-y-3">
+              {assignment.submissions.map((sub) => (
+                <li key={sub.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <FileText className="size-5 shrink-0 text-blue-500" />
+                  <div className="min-w-0 flex-1">
+                    <a
+                      className="truncate text-sm font-medium text-blue-700 hover:underline"
+                      href={sub.filePath}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {sub.fileName}
+                    </a>
+                    <p className="text-xs text-slate-400">
+                      {new Date(sub.uploadedAt).toLocaleDateString("nl-NL", {
+                        day: "numeric", month: "long", year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Teacher feedback */}
         <section className="rounded-[28px] border border-emerald-200 bg-white/90 p-7 shadow-[0_18px_50px_rgba(92,114,180,0.06)]">

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, Clock, Target } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock, FileText, Target } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { TeacherFeedbackForm } from "./TeacherFeedbackForm";
+import { SubmissionDownload } from "./SubmissionDownload";
 
 async function getAssignment(assignmentId: string, studentId: string) {
   return prisma.assignment.findFirst({
@@ -17,11 +18,28 @@ async function getAssignment(assignmentId: string, studentId: string) {
       submittedAt: true,
       createdAt: true,
       teacherFeedback: { select: { content: true } },
+      submissions: {
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          fileSize: true,
+          filePath: true,
+          uploadedAt: true,
+        },
+        orderBy: { uploadedAt: "desc" },
+      },
       student: {
         select: { id: true, fullName: true, groep: true },
       },
     },
   });
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function statusBadge(status: string) {
@@ -113,6 +131,46 @@ export default async function TeacherAssignmentDetailPage({
                 ? "De leerling is nog niet begonnen."
                 : "De leerling heeft nog geen werk ingeleverd."}
             </p>
+          </div>
+        )}
+
+        {/* Ingediende bestanden */}
+        {assignment.submissions.length > 0 && (
+          <div className="rounded-xl border border-blue-100 bg-white p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <FileText className="size-4 text-blue-600" />
+              <h2 className="font-semibold text-gray-900">
+                Ingediende bestanden ({assignment.submissions.length})
+              </h2>
+            </div>
+            <ul className="space-y-3">
+              {assignment.submissions.map((sub) => (
+                <li
+                  key={sub.id}
+                  className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
+                >
+                  <FileText className="size-5 shrink-0 text-blue-500" />
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-800">{sub.fileName}</p>
+                    <p className="text-xs text-gray-400">
+                      {formatBytes(sub.fileSize)} · Ingestuurd op{" "}
+                      {new Date(sub.uploadedAt).toLocaleDateString("nl-NL", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <SubmissionDownload
+                    fileName={sub.fileName}
+                    mimeType={sub.mimeType}
+                    base64={sub.filePath}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
