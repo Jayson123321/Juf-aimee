@@ -4,10 +4,12 @@ import { useState } from "react";
 import { CheckCircle2, Loader2, MessageSquare, Save } from "lucide-react";
 
 export function TeacherFeedbackForm({
+  studentId,
   assignmentId,
   existingFeedback,
   studentName,
 }: {
+  studentId: string;
   assignmentId: string;
   existingFeedback: string | null;
   studentName: string;
@@ -29,7 +31,7 @@ export function TeacherFeedbackForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "feedback",
-          studentId: "",         // niet nodig voor feedback action
+          studentId,
           assignmentId,
           feedback: feedback.trim(),
         }),

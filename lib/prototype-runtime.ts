@@ -23,6 +23,14 @@ export type PrototypeSubjectScore = {
   lastAssessment: string;
 };
 
+export type PrototypeSubmission = {
+  id: string;
+  fileName: string;
+  filePath: string;
+  mimeType: string;
+  uploadedAt: Date;
+};
+
 export type PrototypeAssignment = {
   id: string;
   studentId: string;
@@ -36,6 +44,7 @@ export type PrototypeAssignment = {
   studentWork?: string | null;
   teacherFeedback?: { content: string } | null;
   reflection?: { content: string } | null;
+  submissions?: PrototypeSubmission[];
 };
 
 export type PrototypeStudent = {
@@ -373,11 +382,25 @@ export async function getPrototypeAssignment(assignmentId: string) {
       status: true,
       createdAt: true,
       studentId: true,
+      studentWork: true,
       teacherFeedback: { select: { content: true } },
+      submissions: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
+          mimeType: true,
+          uploadedAt: true,
+        },
+        orderBy: { uploadedAt: "desc" },
+      },
     },
   });
 
   if (!assignment) return null;
 
-  return mapAssignments(assignment.studentId, [assignment])[0];
+  return {
+    ...mapAssignments(assignment.studentId, [assignment])[0],
+    submissions: assignment.submissions,
+  };
 }

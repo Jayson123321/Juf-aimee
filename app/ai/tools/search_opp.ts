@@ -24,18 +24,35 @@ export async function executeSearchOpp(
   query: string,
   limit = 3
 ): Promise<string[]> {
-  const vector = await getEmbedding(query)
-  const vectorStr = `[${vector.join(",")}]`
+  try {
+    const vector = await getEmbedding(query)
+    const vectorStr = `[${vector.join(",")}]`
 
-  const results = await prisma.$queryRaw<{ tekst: string; score: number }[]>`
-    SELECT tekst, 1 - (embedding <=> ${vectorStr}::vector) as score
-    FROM "OppChunk"
-    WHERE "studentId" = ${studentId}
-    ORDER BY embedding <=> ${vectorStr}::vector
-    LIMIT ${limit}
-  `
+    const results = await prisma.$queryRaw<{ tekst: string; score: number }[]>`
+      SELECT tekst, 1 - (embedding <=> ${vectorStr}::vector) as score
+      FROM "OppChunk"
+      WHERE "studentId" = ${studentId}
+      ORDER BY embedding <=> ${vectorStr}::vector
+      LIMIT ${limit}
+    `
 
-  return results.map((r) => r.tekst.trim()).filter(Boolean)
+    return results.map((r) => r.tekst.trim()).filter(Boolean)
+  } catch {
+    // Fallback: keyword search when embedding fails
+    const keywords = query.split(/\s+/).filter((w) => w.length > 3).slice(0, 5)
+    if (keywords.length === 0) return []
+
+    const results = await prisma.oppChunk.findMany({
+      where: {
+        studentId,
+        OR: keywords.map((kw) => ({ tekst: { contains: kw, mode: "insensitive" as const } })),
+      },
+      select: { tekst: true },
+      take: limit,
+    })
+
+    return results.map((r) => r.tekst.trim()).filter(Boolean)
+  }
 }
 
 // Aparte functie per onderwerp

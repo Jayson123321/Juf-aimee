@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import { getPrototypeAssignments, getPrototypeStudent } from "@/lib/prototype-runtime";
 import { TabBar } from "./TabBar";
+import { AssignmentCardActions } from "./AssignmentCardActions";
 
 function statusLabel(status: "completed" | "in_progress" | "not_started") {
   if (status === "completed") return "Afgerond";
@@ -144,6 +145,14 @@ export default async function StudentAssignmentsPage({
                           ? "Ga verder"
                           : "Start Opdracht"}
                     </Link>
+
+                    {assignment.status === "in_progress" && (
+                      <AssignmentCardActions
+                        assignmentId={assignment.id}
+                        studentId={student.id}
+                        hasWork={!!assignment.studentWork}
+                      />
+                    )}
 
                     <p className="mt-3 text-xs text-slate-400">
                       Aangemaakt op {new Date(assignment.createdAt).toLocaleDateString("nl-NL")}

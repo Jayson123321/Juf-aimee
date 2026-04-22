@@ -3,13 +3,30 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2,
+  FileText,
   Lightbulb,
   Loader2,
   MessageSquare,
+  Paperclip,
   Save,
   Send,
   Sparkles,
+  Trash2,
+  Upload,
 } from "lucide-react";
+
+type UploadedFile = {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  uploadedAt: string;
+};
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export function AssignmentWorkspaceClient({
   assignmentId,
@@ -35,6 +52,12 @@ export function AssignmentWorkspaceClient({
   const [error, setError] = useState("");
   const [completed, setCompleted] = useState(isCompleted);
   const [savedOnce, setSavedOnce] = useState(false);
+
+  // Upload state
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const wordCount = work.trim() === "" ? 0 : work.trim().split(/\s+/).length;
@@ -60,6 +83,12 @@ export function AssignmentWorkspaceClient({
         ]);
         setLoadingTips(false);
       });
+
+    // Laad bestaande uploads
+    fetch(`/api/prototype/submission?assignmentId=${assignmentId}`)
+      .then((r) => r.json())
+      .then((data) => setUploadedFiles(data.submissions ?? []))
+      .catch(() => {});
   }, [assignmentId, studentId]);
 
   async function saveWork() {
@@ -104,6 +133,42 @@ export function AssignmentWorkspaceClient({
     }
   }
 
+  async function uploadFile(file: File) {
+    setUploading(true);
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("assignmentId", assignmentId);
+      formData.append("studentId", studentId);
+
+      const response = await fetch("/api/prototype/submission", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Uploaden mislukt.");
+      setUploadedFiles((prev) => [data.submission, ...prev]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Uploaden mislukt.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function deleteFile(submissionId: string) {
+    try {
+      await fetch(
+        `/api/prototype/submission?submissionId=${submissionId}&studentId=${studentId}`,
+        { method: "DELETE" }
+      );
+      setUploadedFiles((prev) => prev.filter((f) => f.id !== submissionId));
+    } catch {
+      // stil falen
+    }
+  }
+
   if (completed) {
     return (
       <div className="space-y-4">
@@ -122,6 +187,22 @@ export function AssignmentWorkspaceClient({
               <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Jouw antwoord</p>
                 <p className="text-sm leading-7 text-slate-700 whitespace-pre-wrap">{work}</p>
+              </div>
+            )}
+            {uploadedFiles.length > 0 && (
+              <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Ingediende bestanden
+                </p>
+                <ul className="space-y-2">
+                  {uploadedFiles.map((f) => (
+                    <li key={f.id} className="flex items-center gap-2 text-sm text-slate-700">
+                      <FileText className="size-4 shrink-0 text-blue-500" />
+                      <span className="flex-1 truncate">{f.fileName}</span>
+                      <span className="text-xs text-slate-400">{formatBytes(f.fileSize)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
@@ -168,7 +249,6 @@ export function AssignmentWorkspaceClient({
             value={work}
           />
 
-          {/* Stats row */}
           <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
             <span>{wordCount} woorden · {charCount} tekens</span>
             {savedOnce && !saving && (
@@ -179,7 +259,6 @@ export function AssignmentWorkspaceClient({
             )}
           </div>
 
-          {/* Feedback messages */}
           {message && (
             <div className="mt-3 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
               <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
@@ -192,7 +271,6 @@ export function AssignmentWorkspaceClient({
             </div>
           )}
 
-          {/* Action buttons */}
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
               className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -200,7 +278,7 @@ export function AssignmentWorkspaceClient({
               onClick={saveWork}
               type="button"
             >
-              <span>{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}</span>
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               Opslaan
             </button>
             <button
@@ -209,7 +287,7 @@ export function AssignmentWorkspaceClient({
               onClick={submitWork}
               type="button"
             >
-              <span>{submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}</span>
+              {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               Inleveren
             </button>
           </div>
@@ -217,6 +295,85 @@ export function AssignmentWorkspaceClient({
           <p className="mt-3 text-center text-xs text-slate-400">
             Tip: sla je werk op terwijl je bezig bent, zodat je niets kwijtraakt.
           </p>
+        </div>
+      </div>
+
+      {/* Upload sectie */}
+      <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.06)]">
+        <div className="flex items-center gap-3 border-b border-blue-100 px-6 py-4">
+          <div className="flex size-8 items-center justify-center rounded-xl bg-blue-100">
+            <Paperclip className="size-4 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-slate-950">Bestand toevoegen</h2>
+            <p className="text-xs text-slate-500">
+              Upload een Word bestand, PDF of afbeelding van je werk
+            </p>
+          </div>
+        </div>
+
+        <div className="px-6 py-5">
+          {/* Upload knop */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".doc,.docx,.pdf,.png,.jpg,.jpeg"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadFile(file);
+            }}
+          />
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 px-4 py-4 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {uploading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Upload className="size-4" />
+            )}
+            {uploading ? "Bezig met uploaden…" : "Klik om een bestand te uploaden"}
+          </button>
+          <p className="mt-2 text-center text-xs text-slate-400">
+            .docx, .doc, .pdf, .png, .jpg — max 10 MB
+          </p>
+
+          {uploadError && (
+            <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {uploadError}
+            </div>
+          )}
+
+          {/* Geüploade bestanden */}
+          {uploadedFiles.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {uploadedFiles.map((f) => (
+                <li
+                  key={f.id}
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                >
+                  <FileText className="size-5 shrink-0 text-blue-500" />
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800">{f.fileName}</p>
+                    <p className="text-xs text-slate-400">
+                      {formatBytes(f.fileSize)} · {new Date(f.uploadedAt).toLocaleDateString("nl-NL")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => deleteFile(f.id)}
+                    className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                    title="Bestand verwijderen"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

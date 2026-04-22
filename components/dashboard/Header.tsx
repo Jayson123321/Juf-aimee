@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useDashboard, UserRole } from "./role-context"
 
 const roleLabels: Record<UserRole, string> = {
-  STUDENT: "Student",
+  STUDENT: "Leerling",
   TEACHER: "Leraar",
   ADMIN: "Beheerder",
 }
