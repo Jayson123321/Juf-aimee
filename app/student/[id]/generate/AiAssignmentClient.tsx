@@ -23,12 +23,23 @@ import {
 } from "lucide-react";
 import type { PrototypeBloomLevel, PrototypeStudent } from "@/lib/prototype-runtime";
 
+type InteractiveMcContent = {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  hints: string[];
+  explanation: string;
+};
+
 type GeneratedAssignment = {
   title: string;
   assignment: string;
   rationale: string;
   sources: string[];
+  interactiveContent?: InteractiveMcContent;
 };
+
+type AssignmentMode = "text" | "mc";
 
 type CriteriumScore = {
   criterium: number;
@@ -161,6 +172,8 @@ export function AiAssignmentClient({
     ? customFocusArea.trim()
     : focusArea || selectedVak;
 
+  const [mode, setMode] = useState<AssignmentMode>("text");
+  const [mcStage, setMcStage] = useState<"idle" | "planner" | "coder" | "done">("idle");
   const [searching, setSearching] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [revising, setRevising] = useState(false);
@@ -282,6 +295,78 @@ export function AiAssignmentClient({
       setJudging(false);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runGenerateMcStream() {
+    setGenerating(true);
+    setAnalysisError("");
+    setApprovalMessage("");
+    setGeneratedAssignment(null);
+    setJudgeResult(null);
+    setJudgeSteps([]);
+    setJudgeTotal(0);
+    setJudging(false);
+    setMcStage("planner");
+
+    try {
+      const response = await fetch("/api/prototype/assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate_mc",
+          studentId: student.id,
+          focusArea: resolvedFocusArea,
+          bloomLevel: selectedBloom,
+          estimatedTime,
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? "Meerkeuzevraag genereren mislukt.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const event = JSON.parse(trimmed) as { type: string; data: unknown };
+
+            if (event.type === "sources") {
+              setSources(event.data as string[]);
+            } else if (event.type === "stage") {
+              const { stage, status } = event.data as { stage: "planner" | "coder"; status: "running" | "done" };
+              if (status === "running") setMcStage(stage);
+            } else if (event.type === "mc_question") {
+              const mc = event.data as GeneratedAssignment;
+              setGeneratedAssignment(mc);
+              setMcStage("done");
+            } else if (event.type === "error") {
+              throw new Error((event.data as { message: string }).message);
+            }
+          } catch (parseError) {
+            if (parseError instanceof SyntaxError) continue;
+            throw parseError;
+          }
+        }
+      }
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "Meerkeuzevraag genereren mislukt.");
+      setMcStage("idle");
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -506,6 +591,43 @@ export function AiAssignmentClient({
               </p>
             </div>
 
+            <div className="space-y-3">
+              <label className="block text-[1.05rem] font-semibold text-slate-950">
+                Type opdracht
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  className={`flex h-14 items-center justify-center gap-2 rounded-2xl border-2 text-[1rem] font-semibold transition ${
+                    mode === "text"
+                      ? "border-violet-500 bg-violet-50 text-violet-900 shadow-[0_8px_20px_rgba(109,77,200,0.15)]"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                  onClick={() => setMode("text")}
+                  type="button"
+                >
+                  <FileText className="size-4" />
+                  Tekstopdracht
+                </button>
+                <button
+                  className={`flex h-14 items-center justify-center gap-2 rounded-2xl border-2 text-[1rem] font-semibold transition ${
+                    mode === "mc"
+                      ? "border-violet-500 bg-violet-50 text-violet-900 shadow-[0_8px_20px_rgba(109,77,200,0.15)]"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                  onClick={() => setMode("mc")}
+                  type="button"
+                >
+                  <Check className="size-4" />
+                  Interactieve meerkeuze
+                </button>
+              </div>
+              <p className="text-[0.95rem] text-slate-500">
+                {mode === "text"
+                  ? "Klassieke open-tekstopdracht waarbij de leerling zelf antwoordt."
+                  : "Twee AI-modellen werken samen: de Planner verzint de vraag, de Coder maakt er een gevalideerde meerkeuzevraag van."}
+              </p>
+            </div>
+
             <div className="space-y-4">
               <button
                 className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-slate-600 to-slate-700 text-[1.15rem] font-semibold text-white shadow-md transition hover:from-slate-700 hover:to-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
@@ -516,15 +638,37 @@ export function AiAssignmentClient({
                 {searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}
                 Zoek Bronnen met AI
               </button>
-              <button
-                className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={searching || generating}
-                onClick={() => runGenerateStream("generate")}
-                type="button"
-              >
-                {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                Genereer Opdracht met AI
-              </button>
+              {mode === "text" ? (
+                <button
+                  className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={searching || generating}
+                  onClick={() => runGenerateStream("generate")}
+                  type="button"
+                >
+                  {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
+                  Genereer Opdracht met AI
+                </button>
+              ) : (
+                <button
+                  className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={searching || generating}
+                  onClick={runGenerateMcStream}
+                  type="button"
+                >
+                  {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
+                  Genereer Meerkeuzevraag met AI
+                </button>
+              )}
+              {mode === "mc" && mcStage !== "idle" && mcStage !== "done" && (
+                <div className="flex items-center gap-3 rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-800">
+                  <Loader2 className="size-4 animate-spin" />
+                  <span>
+                    {mcStage === "planner"
+                      ? "De Planner bedenkt de vraag op basis van het leerlingprofiel..."
+                      : "De Coder valideert en normaliseert de meerkeuzevraag..."}
+                  </span>
+                </div>
+              )}
             </div>
 
             {analysisError ? (
@@ -692,12 +836,73 @@ export function AiAssignmentClient({
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-slate-700">
                 <BookOpen className="size-4 shrink-0" />
-                <p className="text-sm font-semibold uppercase tracking-wide">Opdrachtbeschrijving</p>
+                <p className="text-sm font-semibold uppercase tracking-wide">
+                  {generatedAssignment.interactiveContent ? "De vraag" : "Opdrachtbeschrijving"}
+                </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-[1.06rem] leading-8 text-slate-800 shadow-[0_4px_12px_rgba(15,23,42,0.04)] whitespace-pre-wrap">
                 {generatedAssignment.assignment}
               </div>
             </div>
+
+            {generatedAssignment.interactiveContent && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-violet-700">
+                  <Check className="size-4 shrink-0" />
+                  <p className="text-sm font-semibold uppercase tracking-wide">Antwoordopties</p>
+                </div>
+                <div className="space-y-2">
+                  {generatedAssignment.interactiveContent.options.map((option, idx) => {
+                    const isCorrect = idx === generatedAssignment.interactiveContent!.correctIndex;
+                    return (
+                      <div
+                        className={`flex items-start gap-3 rounded-2xl border px-5 py-3 text-[1.02rem] leading-7 ${
+                          isCorrect
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                            : "border-slate-200 bg-white text-slate-700"
+                        }`}
+                        key={idx}
+                      >
+                        <span
+                          className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            isCorrect ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
+                          }`}
+                        >
+                          {String.fromCharCode(65 + idx)}
+                        </span>
+                        <span className="flex-1">{option}</span>
+                        {isCorrect && (
+                          <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                            Juist
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50/60 px-5 py-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                      Hints
+                    </p>
+                    <ol className="list-decimal space-y-1 pl-5 text-[0.98rem] leading-7 text-slate-700">
+                      {generatedAssignment.interactiveContent.hints.map((hint, i) => (
+                        <li key={i}>{hint}</li>
+                      ))}
+                    </ol>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-5 py-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                      Uitleg
+                    </p>
+                    <p className="text-[0.98rem] leading-7 text-slate-700">
+                      {generatedAssignment.interactiveContent.explanation}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-violet-700">
@@ -870,21 +1075,23 @@ export function AiAssignmentClient({
 
             <hr className="border-slate-200" />
 
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
-              <label className="block text-sm font-semibold text-slate-900" htmlFor="teacher-prompt">
-                Aanpassen met instructie
-              </label>
-              <textarea
-                className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
-                id="teacher-prompt"
-                onChange={(event) => setTeacherPrompt(event.target.value)}
-                placeholder="Bijvoorbeeld: maak de opdracht korter, voeg een creatief onderdeel toe of laat haar werken met actuele bronnen."
-                value={teacherPrompt}
-              />
-              <p className="text-xs leading-6 text-slate-500">
-                Deze instructie wordt gebruikt om de huidige opdracht gericht aan te passen.
-              </p>
-            </div>
+            {!generatedAssignment.interactiveContent && (
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
+                <label className="block text-sm font-semibold text-slate-900" htmlFor="teacher-prompt">
+                  Aanpassen met instructie
+                </label>
+                <textarea
+                  className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
+                  id="teacher-prompt"
+                  onChange={(event) => setTeacherPrompt(event.target.value)}
+                  placeholder="Bijvoorbeeld: maak de opdracht korter, voeg een creatief onderdeel toe of laat haar werken met actuele bronnen."
+                  value={teacherPrompt}
+                />
+                <p className="text-xs leading-6 text-slate-500">
+                  Deze instructie wordt gebruikt om de huidige opdracht gericht aan te passen.
+                </p>
+              </div>
+            )}
 
             {rejectMode ? (
               <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-5">
@@ -920,15 +1127,27 @@ export function AiAssignmentClient({
               </div>
             ) : (
               <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={revising || approving || !teacherPrompt.trim()}
-                  onClick={() => runGenerateStream("revise")}
-                  type="button"
-                >
-                  {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
-                  Aanpassen
-                </button>
+                {generatedAssignment.interactiveContent ? (
+                  <button
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={generating || approving}
+                    onClick={runGenerateMcStream}
+                    type="button"
+                  >
+                    {generating ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+                    Opnieuw genereren
+                  </button>
+                ) : (
+                  <button
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={revising || approving || !teacherPrompt.trim()}
+                    onClick={() => runGenerateStream("revise")}
+                    type="button"
+                  >
+                    {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
+                    Aanpassen
+                  </button>
+                )}
                 <button
                   className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={revising || approving}

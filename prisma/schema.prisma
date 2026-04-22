@@ -94,18 +94,20 @@ model Subject {
 }
 
 model Assignment {
-  id          String           @id @default(uuid())
-  title       String
-  description String?
-  status      AssignmentStatus @default(PENDING)
-  dueDate     DateTime?
-  bloomLevel  String?
-  bloomNiveau Int?
-  uitleg      String?
-  studentTip  String?
-  studentWork String?
-  savedAt     DateTime?
-  submittedAt DateTime?
+  id                 String           @id @default(uuid())
+  title              String
+  description        String?
+  status             AssignmentStatus @default(PENDING)
+  dueDate            DateTime?
+  bloomLevel         String?
+  bloomNiveau        Int?
+  uitleg             String?
+  studentTip         String?
+  studentWork        String?
+  savedAt            DateTime?
+  submittedAt        DateTime?
+  assignmentType     AssignmentType   @default(TEXT)
+  interactiveContent Json?
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -185,6 +187,11 @@ enum AssignmentStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
+}
+
+enum AssignmentType {
+  TEXT
+  MULTIPLE_CHOICE
 }
 
 enum StudentChatRole {

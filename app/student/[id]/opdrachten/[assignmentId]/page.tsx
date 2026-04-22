@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, Sparkles, Target } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getPrototypeStudent } from "@/lib/prototype-runtime";
 import { AssignmentWorkspaceClient } from "./AssignmentWorkspaceClient";
+import { MultipleChoiceClient, type McContent } from "./MultipleChoiceClient";
 
 function statusConfig(status: "PENDING" | "IN_PROGRESS" | "COMPLETED") {
   if (status === "COMPLETED") return { label: "Afgerond ✓", className: "bg-emerald-500/20 text-emerald-100 border-emerald-400/30" };
@@ -39,6 +40,8 @@ export default async function StudentAssignmentDetailPage({
         bloomLevel: true,
         status: true,
         studentWork: true,
+        assignmentType: true,
+        interactiveContent: true,
         teacherFeedback: { select: { content: true } },
       },
     }),
@@ -50,6 +53,9 @@ export default async function StudentAssignmentDetailPage({
   const bloomLevel = assignment.bloomLevel ?? student.status;
   const bloomHint = bloomDescriptions[bloomLevel] ?? "";
   const firstName = student.name.split(" ")[0];
+
+  const isMc = assignment.assignmentType === "MULTIPLE_CHOICE" && assignment.interactiveContent;
+  const mcContent = isMc ? (assignment.interactiveContent as unknown as McContent) : null;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,rgba(171,194,255,0.22),transparent_40%),linear-gradient(180deg,#f5f7ff_0%,#edf2ff_100%)] px-4 py-8 sm:px-6">
@@ -95,41 +101,53 @@ export default async function StudentAssignmentDetailPage({
           </div>
         </div>
 
-        {/* Assignment description */}
-        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
-          <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-violet-100">
-              <BookOpen className="size-4 text-violet-600" />
-            </div>
-            <h2 className="font-semibold text-slate-950">De Opdracht</h2>
-          </div>
-          <div className="px-6 py-5">
-            <p className="text-[1.05rem] leading-8 text-slate-800 whitespace-pre-wrap">
-              {(assignment.description ?? "Nog geen opdrachttekst beschikbaar.").replace(/\*\*/g, "")}
-            </p>
-          </div>
-
-          {/* Juf Aimee tip */}
-          {assignment.studentTip && (
-            <div className="mx-6 mb-6 rounded-2xl bg-gradient-to-r from-violet-50 to-blue-50 px-5 py-4">
-              <div className="mb-2 flex items-center gap-2">
-                <Sparkles className="size-4 text-violet-500" />
-                <p className="text-sm font-semibold text-violet-800">Tip van Juf Aimee</p>
+        {/* Assignment description — alleen voor tekst-opdrachten; MC toont de vraag in zijn eigen component */}
+        {!isMc && (
+          <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
+            <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-violet-100">
+                <BookOpen className="size-4 text-violet-600" />
               </div>
-              <p className="text-sm leading-7 text-slate-700">{assignment.studentTip.replace(/\*\*/g, "")}</p>
+              <h2 className="font-semibold text-slate-950">De Opdracht</h2>
             </div>
-          )}
-        </div>
+            <div className="px-6 py-5">
+              <p className="text-[1.05rem] leading-8 text-slate-800 whitespace-pre-wrap">
+                {(assignment.description ?? "Nog geen opdrachttekst beschikbaar.").replace(/\*\*/g, "")}
+              </p>
+            </div>
+
+            {assignment.studentTip && (
+              <div className="mx-6 mb-6 rounded-2xl bg-gradient-to-r from-violet-50 to-blue-50 px-5 py-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Sparkles className="size-4 text-violet-500" />
+                  <p className="text-sm font-semibold text-violet-800">Tip van Juf Aimee</p>
+                </div>
+                <p className="text-sm leading-7 text-slate-700">{assignment.studentTip.replace(/\*\*/g, "")}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Workspace */}
-        <AssignmentWorkspaceClient
-          assignmentId={assignment.id}
-          firstName={firstName}
-          initialWork={assignment.studentWork ?? ""}
-          isCompleted={assignment.status === "COMPLETED"}
-          studentId={student.id}
-          teacherFeedback={assignment.teacherFeedback?.content ?? null}
-        />
+        {isMc && mcContent ? (
+          <MultipleChoiceClient
+            assignmentId={assignment.id}
+            firstName={firstName}
+            initialWork={assignment.studentWork ?? ""}
+            isCompleted={assignment.status === "COMPLETED"}
+            mc={mcContent}
+            studentId={student.id}
+          />
+        ) : (
+          <AssignmentWorkspaceClient
+            assignmentId={assignment.id}
+            firstName={firstName}
+            initialWork={assignment.studentWork ?? ""}
+            isCompleted={assignment.status === "COMPLETED"}
+            studentId={student.id}
+            teacherFeedback={assignment.teacherFeedback?.content ?? null}
+          />
+        )}
 
       </div>
     </div>

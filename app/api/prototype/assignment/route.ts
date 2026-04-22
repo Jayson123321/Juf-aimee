@@ -4,6 +4,7 @@ import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
+import { callModel } from "@/lib/llm-models";
 
 type PrototypeAssignmentApiStudent = {
   id: string;
@@ -234,6 +235,123 @@ SOURCES:
 <bronnen die je hebt gebruikt>`;
 }
 
+function extractJson(raw: string): unknown {
+  if (!raw) return null
+  const direct = tryParseJson(raw)
+  if (direct !== null) return direct
+
+  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fenceMatch) {
+    const parsed = tryParseJson(fenceMatch[1])
+    if (parsed !== null) return parsed
+  }
+
+  const firstBrace = raw.indexOf("{")
+  const lastBrace = raw.lastIndexOf("}")
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const parsed = tryParseJson(raw.slice(firstBrace, lastBrace + 1))
+    if (parsed !== null) return parsed
+  }
+
+  return null
+}
+
+function tryParseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw.trim())
+  } catch {
+    return null
+  }
+}
+
+function buildPlannerPrompt(args: {
+  studentName: string
+  groep: string
+  bloomLevel: string
+  focusArea: string
+  sources: string[]
+}) {
+  const { studentName, groep, bloomLevel, focusArea, sources } = args
+  const rag = sources.length > 0 ? sources.join("\n\n---\n\n") : "Geen OPP-bronnen gevonden."
+
+  return `SCHOOLVAK (= onderwerp van de vraag)
+${focusArea}
+
+BLOOM-NIVEAU (= denkniveau van de vraag)
+${bloomLevel}
+
+LEERLING (= voor wie is de vraag, alleen ter personalisatie)
+Naam: ${studentName}
+Groep: ${groep}
+
+OPP-BRONNEN OVER DEZE LEERLING (= ALLEEN om de vraag te personaliseren — NIET het onderwerp!)
+Deze tekst beschrijft WIE de leerling is, niet WAT ze moet leren. Gebruik deze
+informatie om te kiezen welk onderwerp binnen "${focusArea}" haar aanspreekt,
+welke context (voorbeelden, interesses) haar motiveert, en welk taalniveau past.
+De vraag die je maakt gaat OVER ${focusArea}, niet over de leerling zelf.
+
+${rag}
+
+Maak nu het JSON-plan voor een meerkeuzevraag over ${focusArea}, volgens het schema in je instructie.`
+}
+
+type McPayload = {
+  question: string
+  options: string[]
+  correctIndex: number
+  hints: string[]
+  explanation: string
+}
+
+function validateMcOutput(raw: unknown): McPayload | { error: string } {
+  if (!raw || typeof raw !== "object") return { error: "output is geen object" }
+  const obj = raw as Record<string, unknown>
+
+  if (typeof obj.error === "string") return { error: obj.error }
+
+  const question = typeof obj.question === "string" ? obj.question.trim() : ""
+  const options = Array.isArray(obj.options) ? obj.options.map((o) => String(o).trim()) : []
+  const correctIndex = typeof obj.correctIndex === "number" ? obj.correctIndex : -1
+  const hintsRaw = Array.isArray(obj.hints) ? obj.hints.map((h) => String(h).trim()).filter(Boolean) : []
+  const explanation = typeof obj.explanation === "string" ? obj.explanation.trim() : ""
+
+  if (!question) return { error: "question ontbreekt" }
+  if (options.length !== 4) return { error: "options moet 4 items hebben" }
+  if (new Set(options).size !== 4) return { error: "options bevatten duplicaten" }
+  if (correctIndex < 0 || correctIndex > 3) return { error: "correctIndex buiten bereik" }
+  if (hintsRaw.length < 1) return { error: "minstens 1 hint nodig" }
+  if (!explanation) return { error: "explanation ontbreekt" }
+
+  const correctAnswer = options[correctIndex].toLowerCase()
+  if (question.toLowerCase().includes(correctAnswer) && correctAnswer.length > 2) {
+    return { error: "juiste antwoord staat letterlijk in de vraag" }
+  }
+
+  return {
+    question,
+    options,
+    correctIndex,
+    hints: hintsRaw.slice(0, 3),
+    explanation,
+  }
+}
+
+function derivePlanTitle(
+  plan: Record<string, unknown>,
+  focusArea: string,
+  bloomLevel: string,
+): string {
+  const explicit =
+    typeof plan.title === "string"
+      ? plan.title
+      : typeof plan.titel === "string"
+        ? (plan.titel as string)
+        : ""
+  if (explicit.trim()) return explicit.trim()
+  const vak = focusArea || "Algemeen"
+  return `Meerkeuzevraag ${vak} (${bloomLevel})`
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const {
@@ -293,6 +411,11 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const mcContent = currentAssignment.interactiveContent as
+        | { question: string; options: string[]; correctIndex: number; hints: string[]; explanation: string }
+        | undefined;
+      const isMc = Boolean(mcContent && Array.isArray(mcContent.options));
+
       const savedAssignment = await prisma.assignment.create({
         data: {
           studentId: student.id,
@@ -302,6 +425,8 @@ export async function POST(req: NextRequest) {
           bloomLevel: resolvedBloom,
           bloomNiveau: bloomLevelToNumber(resolvedBloom),
           status: "PENDING",
+          assignmentType: isMc ? "MULTIPLE_CHOICE" : "TEXT",
+          interactiveContent: isMc ? mcContent : undefined,
         },
       });
 
@@ -362,6 +487,97 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json({ ok: true });
+    }
+
+    if (action === "generate_mc") {
+      const encoder = new TextEncoder()
+      const stream = new ReadableStream({
+        async start(controller) {
+          function send(event: Record<string, unknown>) {
+            controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"))
+          }
+
+          try {
+            send({ type: "sources", data: sources })
+
+            const plannerUserPrompt = buildPlannerPrompt({
+              studentName: student.fullName,
+              groep: student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend",
+              bloomLevel: resolvedBloom,
+              focusArea: focusArea || "een schoolvak naar keuze",
+              sources,
+            })
+
+            send({ type: "stage", data: { stage: "planner", status: "running" } })
+
+            const plannerResponse = await callModel("planner", plannerUserPrompt, {
+              temperature: 0.4,
+              format: "json",
+            })
+            const plannerRaw = plannerResponse.message.content?.trim() ?? ""
+            const plan = extractJson(plannerRaw)
+
+            if (!plan || typeof plan !== "object") {
+              throw new Error("Planner gaf geen geldig JSON-plan terug.")
+            }
+
+            send({ type: "plan", data: plan })
+            send({ type: "stage", data: { stage: "coder", status: "running" } })
+
+            const coderUserPrompt = `Hier is het ruwe plan van de Planner. Normaliseer en valideer het naar het MC-component JSON-schema.\n\nPLAN:\n${JSON.stringify(plan, null, 2)}`
+
+            const coderResponse = await callModel("coder", coderUserPrompt, {
+              temperature: 0.2,
+              format: "json",
+            })
+            const coderRaw = coderResponse.message.content?.trim() ?? ""
+            const mc = extractJson(coderRaw)
+
+            const validated = validateMcOutput(mc)
+            if ("error" in validated) {
+              throw new Error(`Coder output ongeldig: ${validated.error}`)
+            }
+
+            const rationale =
+              typeof (plan as Record<string, unknown>).rationale === "string"
+                ? ((plan as Record<string, unknown>).rationale as string)
+                : ""
+
+            send({
+              type: "mc_question",
+              data: {
+                title: derivePlanTitle(plan as Record<string, unknown>, focusArea, resolvedBloom),
+                assignment: validated.question,
+                rationale,
+                sources,
+                interactiveContent: validated,
+              },
+            })
+
+            send({ type: "stage", data: { stage: "coder", status: "done" } })
+            controller.close()
+          } catch (error) {
+            send({
+              type: "error",
+              data: {
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "Meerkeuzevraag genereren mislukt.",
+              },
+            })
+            controller.close()
+          }
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Transfer-Encoding": "chunked",
+          "Cache-Control": "no-cache",
+        },
+      })
     }
 
     if (action !== "generate" && action !== "revise") {
