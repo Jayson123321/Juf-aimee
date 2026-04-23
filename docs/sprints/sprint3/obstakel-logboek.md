@@ -18,11 +18,6 @@ Het is de bedoeling dat elk teamlid aan bod komt en dat de stand-up maximaal 15 
 | maandag 20 april 2026 |Iedereen|Alle Issues| We gaan in de projectcoaching een aantal zaken bespreken qua taakverdeling op basis van eerdere feedback en huidige stand van zaken | We gaan bijvoorbeeld bespreken dat het issue board leidend is voor de taakverdeling binnen ons project| opgelost|
 | woensdag 22 april 2026 |Iedereen|Alle Issues| De cloud werkte nog niet bij iedereen, daarom zijn we vandaag op campus gebleven om verder te werken aan de configuratie.| Wij hebben het uiteindelijk werkend gekregen en afgesproken dat iedereen de claud pauzeert als er niet aan werkt om efficiënt te werken.| opgelost|
 
-
-
-
-
-
 ---
 
 ## Toelichting
