@@ -1,5 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";import { prisma } from "@/lib/db";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";

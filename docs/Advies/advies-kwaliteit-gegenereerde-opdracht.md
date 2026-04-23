@@ -1,5 +1,4 @@
 # Advies: Kwaliteitsborging van gegenereerde opdrachten voor hoogbegaafde leerlingen
-
 **Leeruitkomst**: Advies
 
 ---
@@ -101,7 +100,7 @@ De inzet van een LLM-judge heeft impact die verder gaat dan technische kwaliteit
 
 Het huidige systeem genereert opdrachten op basis van een enkele prompt en levert de output direct aan de leerkracht, zonder enige tussenliggende kwaliteitscheck. Dit brengt risico's met zich mee op het gebied van hallucinatie, onjuiste personalisatie en inconsistentie.
 
-De aanbeveling is om een LLM-as-a-judge te integreren in het generatieproces, op basis van een expliciete rubric met acht criteria. Het open-source model Prometheus 2 is hiervoor geschikt omdat het specifiek getraind is op deze taak, lokaal draait via Ollama en geen extra kosten met zich meebrengt. Dit systeem is reeds geïmplementeerd in de huidige codebase (`lib/judge.ts`) en draait als derde stap in het generatieproces.
+De aanbeveling is om een LLM-as-a-judge te integreren in het generatieproces, op basis van een expliciete rubric met acht criteria. Het open-source model Prometheus 2 is hiervoor geschikt omdat het specifiek getraind is op deze taak, lokaal draait via Ollama en geen extra kosten met zich meebrengt.
 
 De maatschappelijke meerwaarde is duidelijk: betere opdrachten voor kwetsbare leerlingen, minder werkdruk voor leerkrachten en een verantwoorde inzet van AI die ook op lange termijn vertrouwen verdient.
 
