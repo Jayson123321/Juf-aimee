@@ -262,6 +262,7 @@ export function AiAssignmentClient({
               setTeacherPrompt("");
             } else if (event.type === "judge_start") {
               setJudging(true);
+              setJudgeSteps([]);
               setJudgeTotal((event.data as { total: number }).total);
             } else if (event.type === "judge_step") {
               setJudgeSteps((prev) => [...prev, event.data as CriteriumScore]);
@@ -513,8 +514,8 @@ export function AiAssignmentClient({
                 onClick={searchSources}
                 type="button"
               >
-                {searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}
-                Zoek Bronnen met AI
+                <span className="flex shrink-0">{searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}</span>
+                <span>Zoek Bronnen met AI</span>
               </button>
               <button
                 className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
@@ -522,8 +523,8 @@ export function AiAssignmentClient({
                 onClick={() => runGenerateStream("generate")}
                 type="button"
               >
-                {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                Genereer Opdracht met AI
+                <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                <span>Genereer Opdracht met AI</span>
               </button>
             </div>
 

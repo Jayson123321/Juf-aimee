@@ -227,7 +227,7 @@ ${rejectedAssignments?.length
 Geef exact dit formaat terug:
 TITLE: <korte titel>
 ASSIGNMENT:
-<concrete opdracht in verzorgd Nederlands, 5-8 zinnen>
+<de opdracht zelf, met concrete instructies en eventueel voorbeeldvragen of formats en de opdracht moet 50 zinnen zijn>
 RATIONALE:
 <2-4 zinnen waarom deze opdracht past bij de leerling, met verwijzing naar specifieke interesses uit het OPP>
 SOURCES:
