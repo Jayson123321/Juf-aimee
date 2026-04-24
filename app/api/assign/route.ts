@@ -34,6 +34,12 @@ type McPayload = {
   explanation: string;
 };
 
+type AssignmentForJudge = {
+  title?: string;
+  assignment?: string;
+  rationale?: string;
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function normalizeBloomLabel(label: string) {
@@ -154,6 +160,41 @@ function derivePlanTitle(plan: Record<string, unknown>, focusArea: string, bloom
     typeof plan.titel === "string" ? (plan.titel as string) : "";
   if (explicit.trim()) return explicit.trim();
   return `Meerkeuzevraag ${focusArea || "Algemeen"} (${bloomLevel})`;
+}
+
+async function buildJudgeInput(args: {
+  student: AssignmentApiStudent;
+  resolvedBloom: string;
+  focusArea: string;
+  sources: string[];
+  assignment: AssignmentForJudge;
+}) {
+  const { student, resolvedBloom, focusArea, sources, assignment } = args;
+
+  const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(sources);
+  if (!student.dateOfBirth && inferredDateOfBirth) {
+    await prisma.student.update({ where: { id: student.id }, data: { dateOfBirth: inferredDateOfBirth } });
+  }
+
+  const leeftijd = getStudentAge(inferredDateOfBirth);
+  const leeftijdLabel = leeftijd ? `${leeftijd} jaar` : "onbekend";
+  const interestSnippets = extractProfileInterestsFromSources(sources);
+  const interessesLabel = interestSnippets.length > 0
+    ? interestSnippets.map((s) => `"${s}"`).join("; ")
+    : "Niet expliciet benoemd in OPP-bronnen";
+  const beginsituatieBronnen = await zoekBeginsituatie(student.id);
+  const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) || "Geen OPP-informatie beschikbaar.";
+
+  return {
+    naam: student.fullName,
+    leeftijd: leeftijdLabel,
+    interesses: interessesLabel,
+    bloomNiveau: resolvedBloom,
+    vak: focusArea || "Algemeen",
+    beginsituatie,
+    gegenereerdeOpdracht: assignment.assignment ?? "",
+    volledigOpp: sources.join("\n\n---\n\n"),
+  };
 }
 
 // ─── Prompts ─────────────────────────────────────────────────────────────────
@@ -330,6 +371,56 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(generatedImage);
     }
 
+    if (action === "judge") {
+      if (!currentAssignment?.assignment) {
+        return NextResponse.json({ error: "Geen opdracht beschikbaar om te beoordelen." }, { status: 400 });
+      }
+
+      const judgeInput = await buildJudgeInput({
+        student,
+        resolvedBloom,
+        focusArea,
+        sources,
+        assignment: currentAssignment,
+      });
+
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const send = (event: Record<string, unknown>) => {
+            controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+          };
+
+          try {
+            send({ type: "judge_start", data: { total: 8 } });
+
+            const judgeResult = await evalueerOpdrachtStreaming(
+              judgeInput,
+              (step) => send({ type: "judge_step", data: step }),
+              1,
+            );
+
+            send({ type: "judge_done", data: judgeResult });
+            controller.close();
+          } catch (error) {
+            send({
+              type: "error",
+              data: { message: error instanceof Error ? error.message : "Beoordeling mislukt." },
+            });
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Transfer-Encoding": "chunked",
+          "Cache-Control": "no-cache",
+        },
+      });
+    }
+
     if (action === "approve") {
       if (!currentAssignment?.assignment || !currentAssignment?.title) {
         return NextResponse.json({ error: "Geen opdracht beschikbaar om goed te keuren." }, { status: 400 });
@@ -430,6 +521,7 @@ export async function POST(req: NextRequest) {
             const plannerResponse = await callModel("planner", plannerUserPrompt, {
               temperature: 0.4,
               format: "json",
+              keepAlive: 0,
             });
             const plan = extractJson(plannerResponse.message.content?.trim() ?? "");
             if (!plan || typeof plan !== "object") {
@@ -443,6 +535,7 @@ export async function POST(req: NextRequest) {
             const coderResponse = await callModel("coder", coderUserPrompt, {
               temperature: 0.2,
               format: "json",
+              keepAlive: 0,
             });
             const mc = extractJson(coderResponse.message.content?.trim() ?? "");
             const validated = validateMcOutput(mc);
@@ -493,20 +586,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Geef eerst een instructie mee voor de aanpassing." }, { status: 400 });
     }
 
-    const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(sources);
-    if (!student.dateOfBirth && inferredDateOfBirth) {
-      await prisma.student.update({ where: { id: student.id }, data: { dateOfBirth: inferredDateOfBirth } });
-    }
-
-    const leeftijd = getStudentAge(inferredDateOfBirth);
-    const leeftijdLabel = leeftijd ? `${leeftijd} jaar` : "onbekend";
-    const interestSnippets = extractProfileInterestsFromSources(sources);
-    const interessesLabel = interestSnippets.length > 0
-      ? interestSnippets.map((s) => `"${s}"`).join("; ")
-      : "Niet expliciet benoemd in OPP-bronnen";
-    const beginsituatieBronnen = await zoekBeginsituatie(student.id);
-    const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) || "Geen OPP-informatie beschikbaar.";
-
     const rejectedChunks = await prisma.oppChunk.findMany({
       where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK - afgekeurde opdracht]" } },
       select: { tekst: true },
@@ -526,74 +605,38 @@ export async function POST(req: NextRequest) {
         try {
           send({ type: "sources", data: sources });
 
-          const MAX_POGINGEN = 2;
-          let poging = 0;
-          let parsed: ReturnType<typeof parseGeneratedResponse> | null = null;
-          let judgeResult: Awaited<ReturnType<typeof evalueerOpdrachtStreaming>> | null = null;
+          const prompt = buildGenerationPrompt({
+            student, resolvedBloom, focusArea, teacherPrompt, currentAssignment, rejectedAssignments,
+          });
 
-          while (poging < MAX_POGINGEN) {
-            poging++;
+          const firstResponse = await ollama.chat({
+            model: GEN_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            tools: [searchOppTool],
+            keep_alive: 0,
+            options: { temperature: 0.3, think: false } as never,
+          });
 
-            const prompt = buildGenerationPrompt({
-              student, resolvedBloom, focusArea, teacherPrompt, currentAssignment, rejectedAssignments,
-            });
+          const messages: { role: string; content: string }[] = [
+            { role: "user", content: prompt },
+            { role: "assistant", content: firstResponse.message.content ?? "" },
+          ];
 
-            // Stap 1: AI krijgt de search_opp tool aangeboden
-            const firstResponse = await ollama.chat({
-              model: GEN_MODEL,
-              messages: [{ role: "user", content: prompt }],
-              tools: [searchOppTool],
-              options: { temperature: 0.3, think: false } as never,
-            });
-
-            const messages: { role: string; content: string }[] = [
-              { role: "user", content: prompt },
-              { role: "assistant", content: firstResponse.message.content ?? "" },
-            ];
-
-            for (const toolCall of firstResponse.message.tool_calls ?? []) {
-              const { student_id, query } = toolCall.function.arguments;
-              const result = await executeSearchOpp(student_id, query, 3);
-              messages.push({ role: "tool", content: typeof result === "string" ? result : JSON.stringify(result) });
-            }
-
-            // Stap 2: AI genereert de opdracht
-            const genResponse = await ollama.chat({
-              model: GEN_MODEL,
-              messages,
-              options: { temperature: 0.3, num_predict: 1500 },
-            });
-
-            parsed = parseGeneratedResponse(genResponse.message.content?.trim() ?? "");
-
-            send({ type: "assignment", data: { ...parsed, sources } });
-
-            // Stap 3: Judge streamt criterium-voor-criterium
-            send({ type: "judge_start", data: { total: 8 } });
-
-            try {
-              judgeResult = await evalueerOpdrachtStreaming(
-                {
-                  naam: student.fullName,
-                  leeftijd: leeftijdLabel,
-                  interesses: interessesLabel,
-                  bloomNiveau: resolvedBloom,
-                  vak: focusArea || "Algemeen",
-                  beginsituatie,
-                  gegenereerdeOpdracht: parsed.assignment,
-                  volledigOpp: sources.join("\n\n---\n\n"),
-                },
-                (step) => send({ type: "judge_step", data: step }),
-                poging,
-              );
-
-              send({ type: "judge_done", data: judgeResult });
-            } catch {
-              break;
-            }
-
-            if (judgeResult.beslissing !== "opnieuw_genereren") break;
+          for (const toolCall of firstResponse.message.tool_calls ?? []) {
+            const { student_id, query } = toolCall.function.arguments;
+            const result = await executeSearchOpp(student_id, query, 3);
+            messages.push({ role: "tool", content: typeof result === "string" ? result : JSON.stringify(result) });
           }
+
+          const genResponse = await ollama.chat({
+            model: GEN_MODEL,
+            messages,
+            keep_alive: 0,
+            options: { temperature: 0.3, num_predict: 1500 },
+          });
+
+          const parsed = parseGeneratedResponse(genResponse.message.content?.trim() ?? "");
+          send({ type: "assignment", data: { ...parsed, sources } });
 
           controller.close();
         } catch (error) {

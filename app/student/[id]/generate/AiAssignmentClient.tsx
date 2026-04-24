@@ -287,6 +287,41 @@ export function AiAssignmentClient({
     }
   }
 
+  async function runJudge(targetAssignment: GeneratedAssignment) {
+    setJudgeResult(null);
+    setJudgeSteps([]);
+    setJudgeTotal(0);
+    setJudging(false);
+
+    try {
+      await streamApi(
+        {
+          action: "judge",
+          studentId: student.id,
+          focusArea: resolvedFocusArea,
+          bloomLevel: selectedBloom,
+          currentAssignment: targetAssignment,
+        },
+        (event) => {
+          if (event.type === "judge_start") {
+            setJudging(true);
+            setJudgeTotal((event.data as { total: number }).total);
+          } else if (event.type === "judge_step") {
+            setJudgeSteps((prev) => [...prev, event.data as CriteriumScore]);
+          } else if (event.type === "judge_done") {
+            setJudgeResult(event.data as JudgeResult);
+            setJudging(false);
+          } else if (event.type === "error") {
+            throw new Error((event.data as { message: string }).message);
+          }
+        },
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Beoordeling mislukt.");
+      setJudging(false);
+    }
+  }
+
   async function searchSources() {
     setSearching(true);
     setError("");
@@ -345,24 +380,20 @@ export function AiAssignmentClient({
             latestAssignment = event.data as GeneratedAssignment;
             setAssignment(latestAssignment);
             setTeacherPrompt("");
-          } else if (event.type === "judge_start") {
-            setJudging(true);
-            setJudgeTotal((event.data as { total: number }).total);
-          } else if (event.type === "judge_step") {
-            setJudgeSteps((prev) => [...prev, event.data as CriteriumScore]);
-          } else if (event.type === "judge_done") {
-            setJudgeResult(event.data as JudgeResult);
-            setJudging(false);
           } else if (event.type === "error") {
             throw new Error((event.data as { message: string }).message);
           }
         },
       );
 
-      if (includeIllustration && latestAssignment) {
-        await generateIllustration(latestAssignment, {
-          previousImageUrl: previousImageUrlForRevision,
-        });
+      if (latestAssignment) {
+        if (includeIllustration) {
+          await generateIllustration(latestAssignment, {
+            previousImageUrl: previousImageUrlForRevision,
+          });
+        }
+
+        await runJudge(latestAssignment);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Opdracht genereren mislukt.");
@@ -416,8 +447,12 @@ export function AiAssignmentClient({
         },
       );
 
-      if (includeIllustration && latestAssignment) {
-        await generateIllustration(latestAssignment);
+      if (latestAssignment) {
+        if (includeIllustration) {
+          await generateIllustration(latestAssignment);
+        }
+
+        await runJudge(latestAssignment);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Meerkeuzevraag genereren mislukt.");
@@ -505,7 +540,7 @@ export function AiAssignmentClient({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   const mc = assignment?.interactiveContent ?? null;
-  const busy = searching || generating || revising || approving || imageGenerating;
+  const busy = searching || generating || revising || approving || imageGenerating || judging;
   const imageEstimateSeconds = assignmentImage?.estimatedSeconds ?? DEFAULT_IMAGE_WAIT_SECONDS;
   const imageProgress = Math.min(96, Math.round((imageElapsedMs / (imageEstimateSeconds * 1000)) * 100));
 

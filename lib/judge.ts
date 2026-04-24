@@ -216,6 +216,7 @@ async function scoreCriterium(input: JudgeInput, index: number, runs = 1) {
       model: JUDGE_MODEL,
       prompt: buildJudgePrompt(input, index),
       raw: true,
+      keep_alive: 0,
       options: { temperature: 1.0, top_p: 0.9, repeat_penalty: 1.03, num_ctx: 4096, num_predict: 512 },
     })
     results.push(result)
