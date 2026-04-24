@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import torch
-from diffusers import FluxKontextPipeline
+from diffusers import FluxKontextPipeline, StableDiffusion3Pipeline
 from diffusers.utils import load_image
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 
 MODEL_PATH = os.getenv("ASSIGNMENT_IMAGE_MODEL_PATH", "/mnt/scratch/models/FLUX.1-Kontext-dev")
+MODEL_FAMILY = os.getenv("ASSIGNMENT_IMAGE_MODEL_FAMILY", "flux").lower()
 OUTPUT_DIR = Path(os.getenv("ASSIGNMENT_IMAGE_OUTPUT_DIR", "/mnt/scratch/generated/assignment-images"))
 STATIC_ROUTE = os.getenv("ASSIGNMENT_IMAGE_STATIC_ROUTE", "/generated/assignment-images")
 ESTIMATED_SECONDS = int(os.getenv("ASSIGNMENT_IMAGE_ESTIMATED_SECONDS", "70"))
@@ -43,16 +44,23 @@ class ImageRequest(BaseModel):
     previous_image_url: Optional[str] = None
 
 
-def get_pipe() -> FluxKontextPipeline:
+def get_pipe():
     global _PIPE
 
     if _PIPE is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.bfloat16 if device == "cuda" else torch.float32
+        dtype = torch.float16 if device == "cuda" else torch.float32
 
-        pipe = FluxKontextPipeline.from_pretrained(MODEL_PATH, torch_dtype=dtype)
+        if MODEL_FAMILY == "sd3":
+            pipe = StableDiffusion3Pipeline.from_pretrained(MODEL_PATH, torch_dtype=dtype)
+        else:
+            pipe = FluxKontextPipeline.from_pretrained(MODEL_PATH, torch_dtype=dtype)
+
         if device == "cuda" and os.getenv("ASSIGNMENT_IMAGE_CPU_OFFLOAD", "0") == "1":
-            pipe.enable_model_cpu_offload()
+            if hasattr(pipe, "enable_model_cpu_offload"):
+                pipe.enable_model_cpu_offload()
+            else:
+                pipe.to(device)
         else:
             pipe.to(device)
 
@@ -99,14 +107,24 @@ def generate(request: Request, body: ImageRequest):
         file_name = f"{int(time.time())}-{uuid4().hex[:8]}.png"
         output_path = student_dir / file_name
 
-        result = pipe(
-            prompt=body.prompt,
-            image=source_image,
-            width=None if source_image is not None else WIDTH,
-            height=None if source_image is not None else HEIGHT,
-            guidance_scale=GUIDANCE_SCALE,
-            num_inference_steps=STEPS,
-        ).images[0]
+        if MODEL_FAMILY == "sd3":
+            result = pipe(
+                prompt=body.prompt,
+                negative_prompt="blurry, low quality, distorted, text, watermark",
+                width=WIDTH,
+                height=HEIGHT,
+                guidance_scale=GUIDANCE_SCALE,
+                num_inference_steps=STEPS,
+            ).images[0]
+        else:
+            result = pipe(
+                prompt=body.prompt,
+                image=source_image,
+                width=None if source_image is not None else WIDTH,
+                height=None if source_image is not None else HEIGHT,
+                guidance_scale=GUIDANCE_SCALE,
+                num_inference_steps=STEPS,
+            ).images[0]
         result.save(output_path)
 
         relative = output_path.relative_to(OUTPUT_DIR).as_posix()

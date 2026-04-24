@@ -4,7 +4,7 @@ import os
 import time
 
 import torch
-from diffusers import FluxKontextPipeline
+from diffusers import FluxKontextPipeline, StableDiffusion3Pipeline
 from diffusers.utils import load_image
 
 
@@ -27,14 +27,21 @@ def main() -> None:
   torch.set_grad_enabled(False)
 
   device = "cuda" if torch.cuda.is_available() else "cpu"
-  dtype = torch.bfloat16 if device == "cuda" else torch.float32
+  dtype = torch.float16 if device == "cuda" else torch.float32
+  model_family = os.getenv("ASSIGNMENT_IMAGE_MODEL_FAMILY", "flux").lower()
 
   started_at = time.time()
 
-  pipe = FluxKontextPipeline.from_pretrained(args.model_path, torch_dtype=dtype)
+  if model_family == "sd3":
+    pipe = StableDiffusion3Pipeline.from_pretrained(args.model_path, torch_dtype=dtype)
+  else:
+    pipe = FluxKontextPipeline.from_pretrained(args.model_path, torch_dtype=dtype)
 
   if device == "cuda" and os.getenv("ASSIGNMENT_IMAGE_CPU_OFFLOAD", "0") == "1":
-    pipe.enable_model_cpu_offload()
+    if hasattr(pipe, "enable_model_cpu_offload"):
+      pipe.enable_model_cpu_offload()
+    else:
+      pipe.to(device)
   else:
     pipe.to(device)
 
@@ -43,15 +50,26 @@ def main() -> None:
   if args.seed is not None:
     generator = torch.Generator(device="cpu").manual_seed(args.seed)
 
-  output = pipe(
-      prompt=args.prompt,
-      image=image,
-      width=None if image is not None else args.width,
-      height=None if image is not None else args.height,
-      guidance_scale=args.guidance_scale,
-      num_inference_steps=args.steps,
-      generator=generator,
-  ).images[0]
+  if model_family == "sd3":
+    output = pipe(
+        prompt=args.prompt,
+        negative_prompt="blurry, low quality, distorted, text, watermark",
+        width=args.width,
+        height=args.height,
+        guidance_scale=args.guidance_scale,
+        num_inference_steps=args.steps,
+        generator=generator,
+    ).images[0]
+  else:
+    output = pipe(
+        prompt=args.prompt,
+        image=image,
+        width=None if image is not None else args.width,
+        height=None if image is not None else args.height,
+        guidance_scale=args.guidance_scale,
+        num_inference_steps=args.steps,
+        generator=generator,
+    ).images[0]
 
   os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
   output.save(args.output_path)
