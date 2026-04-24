@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { generateAssignmentImage } from "@/lib/assignment-image";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
 import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
@@ -259,6 +260,8 @@ export async function POST(req: NextRequest) {
     bloomLevel = "",
     teacherPrompt = "",
     currentAssignment = null,
+    imagePrompt = "",
+    previousImageUrl = null,
   } = body ?? {};
 
   if (!studentId || !action) {
@@ -302,6 +305,31 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Actie: goedkeuren ─────────────────────────────────────────────────────
+    if (action === "generate_image") {
+      if (!currentAssignment?.assignment || !currentAssignment?.title) {
+        return NextResponse.json(
+          { error: "Geen opdracht beschikbaar om een afbeelding voor te maken." },
+          { status: 400 },
+        );
+      }
+
+      const generatedImage = await generateAssignmentImage({
+        studentId: student.id,
+        studentName: student.fullName,
+        focusArea: focusArea || "algemene verdieping",
+        bloomLevel: resolvedBloom,
+        assignmentTitle: currentAssignment.title,
+        assignmentText: currentAssignment.assignment,
+        rationale:
+          typeof currentAssignment.rationale === "string" ? currentAssignment.rationale : undefined,
+        interests: extractProfileInterestsFromSources(sources),
+        promptOverride: typeof imagePrompt === "string" ? imagePrompt : undefined,
+        previousImageUrl: typeof previousImageUrl === "string" ? previousImageUrl : undefined,
+      });
+
+      return NextResponse.json(generatedImage);
+    }
+
     if (action === "approve") {
       if (!currentAssignment?.assignment || !currentAssignment?.title) {
         return NextResponse.json({ error: "Geen opdracht beschikbaar om goed te keuren." }, { status: 400 });
@@ -316,6 +344,16 @@ export async function POST(req: NextRequest) {
           title: currentAssignment.title,
           description: currentAssignment.assignment,
           uitleg: currentAssignment.rationale ?? "Goedgekeurde opdracht",
+          illustrationUrl:
+            typeof currentAssignment.illustrationUrl === "string" &&
+            currentAssignment.illustrationUrl.trim()
+              ? currentAssignment.illustrationUrl.trim()
+              : null,
+          illustrationPrompt:
+            typeof currentAssignment.illustrationPrompt === "string" &&
+            currentAssignment.illustrationPrompt.trim()
+              ? currentAssignment.illustrationPrompt.trim()
+              : null,
           bloomLevel: resolvedBloom,
           bloomNiveau: bloomLevelToNumber(resolvedBloom),
           status: "PENDING",

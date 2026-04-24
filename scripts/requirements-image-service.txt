@@ -1,0 +1,9 @@
+accelerate
+fastapi
+git+https://github.com/huggingface/diffusers.git
+pillow
+safetensors
+sentencepiece
+torch
+transformers
+uvicorn
