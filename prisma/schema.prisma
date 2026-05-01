@@ -149,6 +149,7 @@ model AssignmentSubmission {
   filePath     String
   mimeType     String
   fileSize     Int
+  analysis     String?
   uploadedAt   DateTime   @default(now())
 }
 

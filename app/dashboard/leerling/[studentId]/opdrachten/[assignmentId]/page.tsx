@@ -26,6 +26,7 @@ async function getAssignment(assignmentId: string, studentId: string) {
           fileSize: true,
           filePath: true,
           uploadedAt: true,
+          analysis: true,
         },
         orderBy: { uploadedAt: "desc" },
       },
