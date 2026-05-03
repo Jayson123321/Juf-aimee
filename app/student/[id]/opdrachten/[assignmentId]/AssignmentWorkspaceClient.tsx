@@ -22,6 +22,103 @@ type UploadedFile = {
   uploadedAt: string;
 };
 
+function ReflectionSection({
+  reflection,
+  saving,
+  saved,
+  onChange,
+  onSave,
+  firstName,
+}: {
+  reflection: string;
+  saving: boolean;
+  saved: boolean;
+  onChange: (v: string) => void;
+  onSave: () => void;
+  firstName: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-blue-100 bg-[linear-gradient(180deg,#dce4ff_0%,#cdd8ff_100%)] shadow-[0_12px_36px_rgba(92,114,180,0.06)]">
+      <div className="flex items-center gap-3 border-b border-blue-100 px-6 py-4">
+        <div className="flex size-8 items-center justify-center rounded-xl bg-blue-100">
+          <Lightbulb className="size-4 text-blue-700" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-slate-950">Reflectie</h2>
+          <p className="text-xs text-slate-500">Wat heb je geleerd? Wat vond je makkelijk of moeilijk?</p>
+        </div>
+      </div>
+
+      <div className="px-6 py-5 space-y-4">
+        {/* Keuze-opties */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-blue-800">Klik op wat voor jou klopt — je kunt er meerdere kiezen:</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              "Ik heb vandaag iets nieuws geleerd.",
+              "Ik vond het moeilijk, maar ik heb het toch geprobeerd.",
+              "Ik vond de opdracht leuk om te doen.",
+              "Ik ben trots op wat ik heb gemaakt.",
+              "Ik wil dit onderwerp beter leren begrijpen.",
+              "Het was makkelijker dan ik dacht.",
+              "Ik had hulp nodig.",
+            ].map((answer) => {
+              const selected = reflection.includes(answer);
+              return (
+                <button
+                  key={answer}
+                  type="button"
+                  onClick={() => {
+                    if (selected) {
+                      onChange(reflection.replace(answer, "").replace(/\n{3,}/g, "\n\n").trim());
+                    } else {
+                      onChange(reflection ? `${reflection.trim()}\n${answer}` : answer);
+                    }
+                  }}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    selected
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "border-blue-300 bg-white/70 text-blue-800 hover:bg-white hover:border-blue-500"
+                  }`}
+                >
+                  {answer}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <textarea
+          className="min-h-[140px] w-full resize-y rounded-2xl border border-blue-200 bg-white px-5 py-4 text-[1.02rem] leading-8 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`Hé ${firstName}, schrijf hier wat je hebt geleerd of wat je de volgende keer anders zou doen…`}
+          value={reflection}
+        />
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-slate-400">Je reflectie wordt opgeslagen en helpt je leraar je beter te begeleiden.</p>
+          <button
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={saving || !reflection.trim()}
+            onClick={onSave}
+            type="button"
+          >
+            <span>{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}</span>
+            Opslaan
+          </button>
+        </div>
+
+        {saved && (
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
+            Reflectie opgeslagen!
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -32,6 +129,7 @@ export function AssignmentWorkspaceClient({
   assignmentId,
   firstName,
   initialWork,
+  initialReflection = "",
   isCompleted,
   studentId,
   teacherFeedback,
@@ -39,11 +137,15 @@ export function AssignmentWorkspaceClient({
   assignmentId: string;
   firstName: string;
   initialWork: string;
+  initialReflection?: string;
   isCompleted: boolean;
   studentId: string;
   teacherFeedback?: string | null;
 }) {
   const [work, setWork] = useState(initialWork);
+  const [reflection, setReflection] = useState(initialReflection);
+  const [savingReflection, setSavingReflection] = useState(false);
+  const [reflectionSaved, setReflectionSaved] = useState(false);
   const [tips, setTips] = useState<string[]>([]);
   const [loadingTips, setLoadingTips] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -157,6 +259,26 @@ export function AssignmentWorkspaceClient({
     }
   }
 
+  async function saveReflection() {
+    if (!reflection.trim()) return;
+    setSavingReflection(true);
+    setReflectionSaved(false);
+    try {
+      const response = await fetch("/api/prototype/student-assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reflect", studentId, assignmentId, reflection }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Opslaan mislukt.");
+      setReflectionSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reflectie opslaan mislukt.");
+    } finally {
+      setSavingReflection(false);
+    }
+  }
+
   async function deleteFile(submissionId: string) {
     try {
       await fetch(
@@ -224,6 +346,16 @@ export function AssignmentWorkspaceClient({
             </div>
           </div>
         )}
+
+        {/* Reflectie */}
+        <ReflectionSection
+          reflection={reflection}
+          saving={savingReflection}
+          saved={reflectionSaved}
+          onChange={setReflection}
+          onSave={saveReflection}
+          firstName={firstName}
+        />
       </div>
     );
   }
@@ -376,6 +508,16 @@ export function AssignmentWorkspaceClient({
           )}
         </div>
       </div>
+
+      {/* Reflectie */}
+      <ReflectionSection
+        reflection={reflection}
+        saving={savingReflection}
+        saved={reflectionSaved}
+        onChange={setReflection}
+        onSave={saveReflection}
+        firstName={firstName}
+      />
 
       {/* Think tips */}
       <div className="overflow-hidden rounded-3xl border border-violet-100 bg-[linear-gradient(180deg,#faf8ff_0%,#f3f0ff_100%)] shadow-[0_12px_36px_rgba(92,114,180,0.06)]">

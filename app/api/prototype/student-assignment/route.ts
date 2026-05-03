@@ -233,5 +233,18 @@ ${oppResults.join("\n")}`;
     }
   }
 
+  if (action === "reflect") {
+    const { reflection = "" } = body ?? {};
+    if (!reflection.trim()) {
+      return NextResponse.json({ error: "Reflectie mag niet leeg zijn." }, { status: 400 });
+    }
+    await prisma.reflection.upsert({
+      where: { assignmentId: assignment.id },
+      create: { assignmentId: assignment.id, content: reflection.trim() },
+      update: { content: reflection.trim() },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   return NextResponse.json({ error: "Onbekende actie." }, { status: 400 });
 }

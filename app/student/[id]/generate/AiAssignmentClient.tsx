@@ -563,8 +563,8 @@ export function AiAssignmentClient({
                 onClick={searchSources}
                 type="button"
               >
-                {searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}
-                Zoek Bronnen met AI
+                <span className="flex shrink-0">{searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}</span>
+                <span>Zoek Bronnen met AI</span>
               </button>
               {mode === "text" ? (
                 <button
@@ -573,8 +573,8 @@ export function AiAssignmentClient({
                   onClick={() => runGenerateStream("generate")}
                   type="button"
                 >
-                  {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                  Genereer Opdracht met AI
+                  <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                  <span>Genereer Opdracht met AI</span>
                 </button>
               ) : (
                 <button
@@ -583,8 +583,8 @@ export function AiAssignmentClient({
                   onClick={runGenerateMcStream}
                   type="button"
                 >
-                  {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                  Genereer Meerkeuzevraag met AI
+                  <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                  <span>Genereer Meerkeuzevraag met AI</span>
                 </button>
               )}
               {mode === "mc" && mcStage !== "idle" && mcStage !== "done" && (
@@ -887,8 +887,8 @@ export function AiAssignmentClient({
                       onClick={saveFeedback}
                       type="button"
                     >
-                      {savingFeedback ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                      Feedback opslaan
+                      <span className="flex shrink-0">{savingFeedback ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}</span>
+                      <span>Feedback opslaan</span>
                     </button>
                   </div>
                 )
@@ -962,8 +962,8 @@ export function AiAssignmentClient({
                     onClick={runGenerateMcStream}
                     type="button"
                   >
-                    {generating ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
-                    Opnieuw genereren
+                    <span className="flex shrink-0">{generating ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}</span>
+                    <span>Opnieuw genereren</span>
                   </button>
                 ) : (
                   <button
@@ -972,8 +972,8 @@ export function AiAssignmentClient({
                     onClick={() => runGenerateStream("revise")}
                     type="button"
                   >
-                    {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
-                    Aanpassen
+                    <span className="flex shrink-0">{revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}</span>
+                    <span>Aanpassen</span>
                   </button>
                 )}
                 <button
@@ -991,8 +991,8 @@ export function AiAssignmentClient({
                   onClick={approveAssignment}
                   type="button"
                 >
-                  {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                  Goedkeuren &amp; opslaan
+                  <span className="flex shrink-0">{approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}</span>
+                  <span>Goedkeuren &amp; opslaan</span>
                 </button>
               </div>
             )}
