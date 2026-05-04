@@ -154,6 +154,10 @@ Regels:
   },
 }
 
+export function getModelForRole(role: LLMRole) {
+  return MODELS[role].model
+}
+
 /**
  * Eenvoudige helper om een model aan te roepen met zijn system-prompt.
  * Voor de Planner gebruiken we ollama.chat met tool-support; voor de Coder volstaat een gewone chat.

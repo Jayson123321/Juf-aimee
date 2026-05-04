@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateAssignmentImage } from "@/lib/assignment-image";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
-import { GEN_MODEL, getEmbedding, ollama } from "@/lib/ollama";
+import { GEN_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaModel } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
-import { callModel } from "@/lib/llm-models";
+import { callModel, getModelForRole } from "@/lib/llm-models";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -354,6 +354,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      await releaseAllOllamaModels();
+
       const generatedImage = await generateAssignmentImage({
         studentId: student.id,
         studentName: student.fullName,
@@ -375,6 +377,8 @@ export async function POST(req: NextRequest) {
       if (!currentAssignment?.assignment) {
         return NextResponse.json({ error: "Geen opdracht beschikbaar om te beoordelen." }, { status: 400 });
       }
+
+      await releaseAllOllamaModels();
 
       const judgeInput = await buildJudgeInput({
         student,
@@ -501,14 +505,15 @@ export async function POST(req: NextRequest) {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
-          const send = (event: Record<string, unknown>) => {
-            controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
-          };
+        const send = (event: Record<string, unknown>) => {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        };
 
-          try {
-            send({ type: "sources", data: sources });
+        try {
+          send({ type: "sources", data: sources });
+          await releaseAllOllamaModels();
 
-            const plannerUserPrompt = buildPlannerPrompt({
+          const plannerUserPrompt = buildPlannerPrompt({
               studentName: student.fullName,
               groep: student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend",
               bloomLevel: resolvedBloom,
@@ -518,11 +523,18 @@ export async function POST(req: NextRequest) {
 
             send({ type: "stage", data: { stage: "planner", status: "running" } });
 
-            const plannerResponse = await callModel("planner", plannerUserPrompt, {
-              temperature: 0.4,
-              format: "json",
-              keepAlive: 0,
-            });
+            const plannerModel = getModelForRole("planner");
+            const plannerResponse = await (async () => {
+              try {
+                return await callModel("planner", plannerUserPrompt, {
+                  temperature: 0.4,
+                  format: "json",
+                  keepAlive: 0,
+                });
+              } finally {
+                await releaseOllamaModel(plannerModel);
+              }
+            })();
             const plan = extractJson(plannerResponse.message.content?.trim() ?? "");
             if (!plan || typeof plan !== "object") {
               throw new Error("Planner gaf geen geldig JSON-plan terug.");
@@ -532,11 +544,18 @@ export async function POST(req: NextRequest) {
             send({ type: "stage", data: { stage: "coder", status: "running" } });
 
             const coderUserPrompt = `Hier is het ruwe plan van de Planner. Normaliseer en valideer het naar het MC-component JSON-schema.\n\nPLAN:\n${JSON.stringify(plan, null, 2)}`;
-            const coderResponse = await callModel("coder", coderUserPrompt, {
-              temperature: 0.2,
-              format: "json",
-              keepAlive: 0,
-            });
+            const coderModel = getModelForRole("coder");
+            const coderResponse = await (async () => {
+              try {
+                return await callModel("coder", coderUserPrompt, {
+                  temperature: 0.2,
+                  format: "json",
+                  keepAlive: 0,
+                });
+              } finally {
+                await releaseOllamaModel(coderModel);
+              }
+            })();
             const mc = extractJson(coderResponse.message.content?.trim() ?? "");
             const validated = validateMcOutput(mc);
             if ("error" in validated) {
@@ -609,33 +628,41 @@ export async function POST(req: NextRequest) {
             student, resolvedBloom, focusArea, teacherPrompt, currentAssignment, rejectedAssignments,
           });
 
-          const firstResponse = await ollama.chat({
-            model: GEN_MODEL,
-            messages: [{ role: "user", content: prompt }],
-            tools: [searchOppTool],
-            keep_alive: 0,
-            options: { temperature: 0.3, think: false } as never,
-          });
+          await releaseAllOllamaModels();
 
-          const messages: { role: string; content: string }[] = [
-            { role: "user", content: prompt },
-            { role: "assistant", content: firstResponse.message.content ?? "" },
-          ];
+          const parsed = await (async () => {
+            try {
+              const firstResponse = await ollama.chat({
+                model: GEN_MODEL,
+                messages: [{ role: "user", content: prompt }],
+                tools: [searchOppTool],
+                keep_alive: 0,
+                options: { temperature: 0.3, think: false } as never,
+              });
 
-          for (const toolCall of firstResponse.message.tool_calls ?? []) {
-            const { student_id, query } = toolCall.function.arguments;
-            const result = await executeSearchOpp(student_id, query, 3);
-            messages.push({ role: "tool", content: typeof result === "string" ? result : JSON.stringify(result) });
-          }
+              const messages: { role: string; content: string }[] = [
+                { role: "user", content: prompt },
+                { role: "assistant", content: firstResponse.message.content ?? "" },
+              ];
 
-          const genResponse = await ollama.chat({
-            model: GEN_MODEL,
-            messages,
-            keep_alive: 0,
-            options: { temperature: 0.3, num_predict: 1500 },
-          });
+              for (const toolCall of firstResponse.message.tool_calls ?? []) {
+                const { student_id, query } = toolCall.function.arguments;
+                const result = await executeSearchOpp(student_id, query, 3);
+                messages.push({ role: "tool", content: typeof result === "string" ? result : JSON.stringify(result) });
+              }
 
-          const parsed = parseGeneratedResponse(genResponse.message.content?.trim() ?? "");
+              const genResponse = await ollama.chat({
+                model: GEN_MODEL,
+                messages,
+                keep_alive: 0,
+                options: { temperature: 0.3, num_predict: 1500 },
+              });
+
+              return parseGeneratedResponse(genResponse.message.content?.trim() ?? "");
+            } finally {
+              await releaseOllamaModel(GEN_MODEL);
+            }
+          })();
           send({ type: "assignment", data: { ...parsed, sources } });
 
           controller.close();

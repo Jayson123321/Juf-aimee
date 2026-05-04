@@ -1,5 +1,6 @@
 import os
 import time
+import gc
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -22,6 +23,7 @@ WIDTH = int(os.getenv("ASSIGNMENT_IMAGE_WIDTH", "1024"))
 HEIGHT = int(os.getenv("ASSIGNMENT_IMAGE_HEIGHT", "768"))
 STEPS = int(os.getenv("ASSIGNMENT_IMAGE_STEPS", "28"))
 GUIDANCE_SCALE = float(os.getenv("ASSIGNMENT_IMAGE_GUIDANCE_SCALE", "2.5"))
+UNLOAD_AFTER_REQUEST = os.getenv("ASSIGNMENT_IMAGE_UNLOAD_AFTER_REQUEST", "1") == "1"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -51,6 +53,9 @@ def get_pipe():
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dtype = torch.float16 if device == "cuda" else torch.float32
 
+        if device == "cuda":
+            torch.cuda.empty_cache()
+
         if MODEL_FAMILY == "sd3":
             pipe = StableDiffusion3Pipeline.from_pretrained(MODEL_PATH, torch_dtype=dtype)
         else:
@@ -67,6 +72,23 @@ def get_pipe():
         _PIPE = pipe
 
     return _PIPE
+
+
+def release_pipe():
+    global _PIPE
+
+    if _PIPE is None:
+        return
+
+    pipe = _PIPE
+    _PIPE = None
+    del pipe
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        if hasattr(torch.cuda, "ipc_collect"):
+            torch.cuda.ipc_collect()
 
 
 def resolve_previous_image(previous_image_url: Optional[str]) -> Optional[Path]:
@@ -138,3 +160,6 @@ def generate(request: Request, body: ImageRequest):
         }
     except Exception as exc:  # pragma: no cover - runtime service
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    finally:
+        if UNLOAD_AFTER_REQUEST:
+            release_pipe()
