@@ -40,7 +40,11 @@ export async function getEmbedding(text: string): Promise<number[]> {
 
   for (const variant of variants) {
     try {
-      const response = await ollama.embed({ model: EMBED_MODEL, input: `query: ${variant}` })
+      const response = await ollama.embed({
+        model: EMBED_MODEL,
+        input: `query: ${variant}`,
+        keep_alive: 0,
+      })
       const embedding = response.embeddings[0]
 
       if (!isValidEmbedding(embedding)) {

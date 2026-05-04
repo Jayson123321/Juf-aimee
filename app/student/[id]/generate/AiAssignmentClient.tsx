@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import {
   Check,
   Brain,
@@ -20,6 +21,7 @@ import {
   Search,
   Sparkles,
   Target,
+  ImageIcon,
 } from "lucide-react";
 import type { PrototypeBloomLevel, PrototypeStudent } from "@/lib/prototype-runtime";
 
@@ -39,6 +41,13 @@ type GeneratedAssignment = {
   rationale: string;
   sources: string[];
   interactiveContent?: InteractiveMcContent;
+};
+
+type GeneratedAssignmentImage = {
+  imageUrl: string;
+  prompt: string;
+  durationMs: number;
+  estimatedSeconds: number;
 };
 
 type AssignmentMode = "text" | "mc";
@@ -82,6 +91,8 @@ const TIME_OPTIONS = [
 ] as const;
 
 // ─── UI-hulpcomponenten ───────────────────────────────────────────────────────
+
+const DEFAULT_IMAGE_WAIT_SECONDS = 70;
 
 function SectionCard({ className = "", children }: { className?: string; children: React.ReactNode }) {
   return (
@@ -134,6 +145,7 @@ export function AiAssignmentClient({
   const [customFocusArea, setCustomFocusArea] = useState("");
   const [estimatedTime, setEstimatedTime] = useState("45 minuten");
   const [mode, setMode] = useState<AssignmentMode>("text");
+  const [includeIllustration, setIncludeIllustration] = useState(false);
 
   const isOpenFocus = (OPEN_FOCUS_OPTIONS as readonly string[]).includes(focusArea);
   const resolvedFocusArea = isOpenFocus && customFocusArea.trim()
@@ -146,13 +158,18 @@ export function AiAssignmentClient({
   const [revising, setRevising] = useState(false);
   const [approving, setApproving] = useState(false);
   const [savingFeedback, setSavingFeedback] = useState(false);
+  const [imageGenerating, setImageGenerating] = useState(false);
   const [mcStage, setMcStage] = useState<"idle" | "planner" | "coder" | "done">("idle");
   const [error, setError] = useState("");
   const [approvalMessage, setApprovalMessage] = useState("");
+  const [imageError, setImageError] = useState("");
 
   // Resultaten
   const [sources, setSources] = useState<string[]>([]);
   const [assignment, setAssignment] = useState<GeneratedAssignment | null>(null);
+  const [assignmentImage, setAssignmentImage] = useState<GeneratedAssignmentImage | null>(null);
+  const [imagePromptDraft, setImagePromptDraft] = useState("");
+  const [imageElapsedMs, setImageElapsedMs] = useState(0);
 
   // Judge (streaming per criterium)
   const [judging, setJudging] = useState(false);
@@ -170,6 +187,27 @@ export function AiAssignmentClient({
   const [teacherPrompt, setTeacherPrompt] = useState("");
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+
+  useEffect(() => {
+    if (!imageGenerating) {
+      setImageElapsedMs(0);
+      return;
+    }
+
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      setImageElapsedMs(Date.now() - startedAt);
+    }, 500);
+
+    return () => window.clearInterval(timer);
+  }, [imageGenerating]);
+
+  function resetImageState() {
+    setAssignmentImage(null);
+    setImagePromptDraft("");
+    setImageError("");
+    setImageElapsedMs(0);
+  }
 
   // ── API-hulpfuncties ─────────────────────────────────────────────────────────
 
@@ -222,6 +260,69 @@ export function AiAssignmentClient({
 
   // ── Bronnen zoeken ───────────────────────────────────────────────────────────
 
+  async function generateIllustration(
+    targetAssignment: GeneratedAssignment,
+    options: { promptOverride?: string; previousImageUrl?: string | null } = {},
+  ) {
+    setImageGenerating(true);
+    setImageError("");
+
+    try {
+      const data = await callApi({
+        action: "generate_image",
+        studentId: student.id,
+        focusArea: resolvedFocusArea,
+        bloomLevel: selectedBloom,
+        currentAssignment: targetAssignment,
+        imagePrompt: options.promptOverride,
+        previousImageUrl: options.previousImageUrl,
+      });
+
+      const generated = data as GeneratedAssignmentImage;
+      setAssignmentImage(generated);
+      setImagePromptDraft(generated.prompt);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "Afbeelding genereren mislukt.");
+    } finally {
+      setImageGenerating(false);
+    }
+  }
+
+  async function runJudge(targetAssignment: GeneratedAssignment) {
+    setJudgeResult(null);
+    setJudgeSteps([]);
+    setJudgeTotal(0);
+    setJudging(false);
+
+    try {
+      await streamApi(
+        {
+          action: "judge",
+          studentId: student.id,
+          focusArea: resolvedFocusArea,
+          bloomLevel: selectedBloom,
+          currentAssignment: targetAssignment,
+        },
+        (event) => {
+          if (event.type === "judge_start") {
+            setJudging(true);
+            setJudgeTotal((event.data as { total: number }).total);
+          } else if (event.type === "judge_step") {
+            setJudgeSteps((prev) => [...prev, event.data as CriteriumScore]);
+          } else if (event.type === "judge_done") {
+            setJudgeResult(event.data as JudgeResult);
+            setJudging(false);
+          } else if (event.type === "error") {
+            throw new Error((event.data as { message: string }).message);
+          }
+        },
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Beoordeling mislukt.");
+      setJudging(false);
+    }
+  }
+
   async function searchSources() {
     setSearching(true);
     setError("");
@@ -245,14 +346,23 @@ export function AiAssignmentClient({
 
   async function runGenerateStream(action: "generate" | "revise") {
     const setLoading = action === "generate" ? setGenerating : setRevising;
+    const previousImageUrlForRevision = action === "revise" ? assignmentImage?.imageUrl ?? null : null;
+    let latestAssignment: GeneratedAssignment | null = null;
+
     setLoading(true);
     setError("");
     setApprovalMessage("");
+    setImageError("");
     setJudgeResult(null);
     setJudgeSteps([]);
     setJudgeTotal(0);
     setJudging(false);
     setPoging(0);
+    setSavedAssignmentId(null);
+    setFeedbackSaved(false);
+    if (action === "generate" || !includeIllustration) {
+      resetImageState();
+    }
 
     try {
       await streamApi(
@@ -269,7 +379,8 @@ export function AiAssignmentClient({
           if (event.type === "sources") {
             setSources(event.data as string[]);
           } else if (event.type === "assignment") {
-            setAssignment(event.data as GeneratedAssignment);
+            latestAssignment = event.data as GeneratedAssignment;
+            setAssignment(latestAssignment);
             setTeacherPrompt("");
             setJudgeResult(null);
             setJudgeSteps([]);
@@ -287,6 +398,16 @@ export function AiAssignmentClient({
           }
         },
       );
+
+      if (latestAssignment) {
+        if (includeIllustration) {
+          await generateIllustration(latestAssignment, {
+            previousImageUrl: previousImageUrlForRevision,
+          });
+        }
+
+        await runJudge(latestAssignment);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Opdracht genereren mislukt.");
     } finally {
@@ -298,15 +419,21 @@ export function AiAssignmentClient({
   // ── Meerkeuzevraag genereren (streaming Planner → Coder) ─────────────────────
 
   async function runGenerateMcStream() {
+    let latestAssignment: GeneratedAssignment | null = null;
+
     setGenerating(true);
     setError("");
     setApprovalMessage("");
+    setImageError("");
     setAssignment(null);
     setJudgeResult(null);
     setJudgeSteps([]);
     setJudgeTotal(0);
     setJudging(false);
     setMcStage("planner");
+    setSavedAssignmentId(null);
+    setFeedbackSaved(false);
+    resetImageState();
 
     try {
       await streamApi(
@@ -324,13 +451,22 @@ export function AiAssignmentClient({
             const { stage, status } = event.data as { stage: "planner" | "coder"; status: "running" | "done" };
             if (status === "running") setMcStage(stage);
           } else if (event.type === "mc_question") {
-            setAssignment(event.data as GeneratedAssignment);
+            latestAssignment = event.data as GeneratedAssignment;
+            setAssignment(latestAssignment);
             setMcStage("done");
           } else if (event.type === "error") {
             throw new Error((event.data as { message: string }).message);
           }
         },
       );
+
+      if (latestAssignment) {
+        if (includeIllustration) {
+          await generateIllustration(latestAssignment);
+        }
+
+        await runJudge(latestAssignment);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Meerkeuzevraag genereren mislukt.");
       setMcStage("idle");
@@ -351,7 +487,11 @@ export function AiAssignmentClient({
         studentId: student.id,
         focusArea: resolvedFocusArea,
         bloomLevel: selectedBloom,
-        currentAssignment: assignment,
+        currentAssignment: {
+          ...assignment,
+          illustrationUrl: assignmentImage?.imageUrl,
+          illustrationPrompt: assignmentImage?.prompt,
+        },
       });
       setSavedAssignmentId((data as { savedAssignmentId?: string }).savedAssignmentId ?? null);
       setFeedbackSaved(false);
@@ -405,6 +545,7 @@ export function AiAssignmentClient({
     setTeacherPrompt(rejectReason);
     setApprovalMessage("");
     setError("");
+    resetImageState();
     setRejectMode(false);
     setRejectReason("");
   }
@@ -412,7 +553,9 @@ export function AiAssignmentClient({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   const mc = assignment?.interactiveContent ?? null;
-  const busy = searching || generating || revising || approving;
+  const busy = searching || generating || revising || approving || imageGenerating || judging;
+  const imageEstimateSeconds = assignmentImage?.estimatedSeconds ?? DEFAULT_IMAGE_WAIT_SECONDS;
+  const imageProgress = Math.min(96, Math.round((imageElapsedMs / (imageEstimateSeconds * 1000)) * 100));
 
   return (
     <div className="space-y-8">
@@ -559,6 +702,33 @@ export function AiAssignmentClient({
                   ? "Klassieke open-tekstopdracht waarbij de leerling zelf antwoordt."
                   : "Twee AI-modellen werken samen: de Planner verzint de vraag, de Coder maakt er een gevalideerde meerkeuzevraag van."}
               </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-[1.05rem] font-semibold text-slate-950">Visuele ondersteuning</label>
+              <label className="flex items-start gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4">
+                <input
+                  checked={includeIllustration}
+                  className="mt-1 size-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIncludeIllustration(checked);
+                    if (!checked) {
+                      resetImageState();
+                    }
+                  }}
+                  type="checkbox"
+                />
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-slate-950">
+                    <ImageIcon className="size-4 text-violet-500" />
+                    <span className="font-semibold">Bouw er automatisch een afbeelding bij</span>
+                  </div>
+                  <p className="text-[0.98rem] leading-7 text-slate-600">
+                    Nadat de vraag of opdracht klaar is, maakt Juf Aimee een ondersteunende illustratie die later ook op het leerlingscherm wordt getoond.
+                  </p>
+                </div>
+              </label>
             </div>
 
             <div className="space-y-4">
@@ -734,6 +904,97 @@ export function AiAssignmentClient({
                 {assignment.assignment}
               </div>
             </div>
+
+            {includeIllustration && (
+              <div className="space-y-4 rounded-3xl border border-blue-100 bg-[linear-gradient(180deg,rgba(247,251,255,0.96),rgba(240,247,255,0.92))] px-6 py-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <ImageIcon className="size-4 shrink-0" />
+                    <p className="text-sm font-semibold uppercase tracking-wide">Ondersteunende afbeelding</p>
+                  </div>
+                  {assignmentImage && !imageGenerating && (
+                    <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
+                      Klaar in {Math.max(1, Math.round(assignmentImage.durationMs / 1000))} sec
+                    </span>
+                  )}
+                </div>
+
+                {assignmentImage ? (
+                  <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_10px_30px_rgba(59,130,246,0.08)]">
+                    <Image
+                      alt={`Illustratie bij ${assignment.title}`}
+                      className="h-auto w-full object-cover"
+                      src={assignmentImage.imageUrl}
+                      height={900}
+                      unoptimized
+                      width={1400}
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border-2 border-dashed border-blue-200 bg-white/80 px-5 py-8 text-center text-sm text-slate-500">
+                    Er is nog geen afbeelding gemaakt voor deze opdracht.
+                  </div>
+                )}
+
+                {imageGenerating && (
+                  <div className="space-y-3 rounded-2xl border border-blue-200 bg-white px-5 py-4">
+                    <div className="flex items-center gap-3 text-sm font-medium text-blue-900">
+                      <Loader2 className="size-4 animate-spin" />
+                      Afbeelding wordt gemaakt. Reken op ongeveer {imageEstimateSeconds} seconden.
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-blue-100">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-violet-500 to-blue-500 transition-all duration-500"
+                        style={{ width: `${imageProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Bezig sinds {Math.max(1, Math.round(imageElapsedMs / 1000))} sec. Je kunt de opdracht zo meteen opnieuw prompten als je iets wilt aanpassen.
+                    </p>
+                  </div>
+                )}
+
+                {imageError && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {imageError}
+                  </div>
+                )}
+
+                <div className="space-y-3 rounded-2xl border border-blue-100 bg-white px-5 py-5">
+                  <label className="block text-sm font-semibold text-slate-900" htmlFor="image-prompt">
+                    Afbeelding aanpassen met een nieuwe prompt
+                  </label>
+                  <textarea
+                    className="min-h-[110px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
+                    id="image-prompt"
+                    onChange={(e) => setImagePromptDraft(e.target.value)}
+                    placeholder="Bijvoorbeeld: maak het beeld speelser, voeg een laboratorium toe of laat minder details zien."
+                    value={imagePromptDraft}
+                  />
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={imageGenerating}
+                      onClick={() =>
+                        generateIllustration(assignment, {
+                          promptOverride: imagePromptDraft.trim() || undefined,
+                          previousImageUrl: assignmentImage?.imageUrl ?? null,
+                        })
+                      }
+                      type="button"
+                    >
+                      {imageGenerating ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
+                      {assignmentImage ? "Afbeelding opnieuw maken" : "Afbeelding maken"}
+                    </button>
+                    {!assignmentImage && !imageGenerating && (
+                      <p className="text-sm text-slate-500">
+                        De afbeelding wordt automatisch gemaakt als dit vakje aan stond tijdens genereren. Je kunt hem hier ook handmatig starten.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {mc && (
               <div className="space-y-3">

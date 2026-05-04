@@ -36,6 +36,8 @@ export type PrototypeAssignment = {
   studentId: string;
   title: string;
   description: string;
+  illustrationUrl?: string | null;
+  illustrationPrompt?: string | null;
   rationale: string;
   feedback?: string;
   bloomLevel: string;
@@ -122,6 +124,8 @@ function mapStudent(student: {
     id: string;
     title: string;
     description: string | null;
+    illustrationUrl: string | null;
+    illustrationPrompt: string | null;
     uitleg: string | null;
     bloomLevel: string | null;
     status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
@@ -189,6 +193,8 @@ function mapAssignments(
     id: string;
     title: string;
     description: string | null;
+    illustrationUrl: string | null;
+    illustrationPrompt: string | null;
     uitleg: string | null;
     bloomLevel: string | null;
     status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
@@ -203,6 +209,8 @@ function mapAssignments(
     studentId,
     title: assignment.title,
     description: assignment.description ?? "Nog geen beschrijving beschikbaar.",
+    illustrationUrl: assignment.illustrationUrl ?? null,
+    illustrationPrompt: assignment.illustrationPrompt ?? null,
     rationale: assignment.uitleg ?? "Gegenereerde opdracht op basis van leerlingcontext en OPP.",
     feedback: assignment.teacherFeedback?.content,
     bloomLevel: assignment.bloomLevel ?? "Toepassen",
@@ -235,6 +243,8 @@ export async function getPrototypeDashboardStudents() {
           id: true,
           title: true,
           description: true,
+          illustrationUrl: true,
+          illustrationPrompt: true,
           uitleg: true,
           bloomLevel: true,
           status: true,
@@ -332,6 +342,8 @@ export async function getPrototypeStudent(studentId: string) {
           id: true,
           title: true,
           description: true,
+          illustrationUrl: true,
+          illustrationPrompt: true,
           uitleg: true,
           bloomLevel: true,
           status: true,
@@ -352,6 +364,8 @@ export async function getPrototypeAssignments(studentId: string) {
       id: true,
       title: true,
       description: true,
+      illustrationUrl: true,
+      illustrationPrompt: true,
       uitleg: true,
       bloomLevel: true,
       status: true,
@@ -377,6 +391,8 @@ export async function getPrototypeAssignment(assignmentId: string) {
       id: true,
       title: true,
       description: true,
+      illustrationUrl: true,
+      illustrationPrompt: true,
       uitleg: true,
       bloomLevel: true,
       status: true,

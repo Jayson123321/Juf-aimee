@@ -167,6 +167,7 @@ export async function callModel(
     numPredict?: number
     format?: "json"
     extraMessages?: Message[]
+    keepAlive?: string | number
   } = {},
 ) {
   const config = MODELS[role]
@@ -181,6 +182,7 @@ export async function callModel(
     messages,
     tools: opts.tools,
     format: opts.format,
+    keep_alive: opts.keepAlive,
     options: {
       temperature: opts.temperature ?? 0.3,
       ...(opts.numPredict ? { num_predict: opts.numPredict } : {}),
