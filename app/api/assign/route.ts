@@ -503,7 +503,6 @@ export async function POST(req: NextRequest) {
             const judgeResult = await evalueerOpdrachtStreaming(
               judgeInput,
               (step) => send({ type: "judge_step", data: step }),
-              1,
             );
 
             send({ type: "judge_done", data: judgeResult });
