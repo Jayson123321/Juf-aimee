@@ -64,11 +64,37 @@ Er is echter geen garantie dat de juiste informatie wordt opgehaald, noch dat he
 
 ---
 
-## Aanbeveling: inzet van een LLM-as-a-judge
+## Afweging van oplossingen
 
 *Deelvraag 2: Hoe kan gecontroleerd worden of een gegenereerde opdracht voldoet aan de verwachte kwaliteitseisen?*
 
-In plaats van menselijke beoordeling van elke gegenereerde opdracht, adviseer ik de inzet van een **LLM-as-a-judge**: een taalmodel dat uitsluitend getraind is op het evalueren van de uitvoer van andere taalmodellen aan de hand van een gestructureerde rubric.
+Voordat tot een aanbeveling wordt gekomen, is het belangrijk om kort te kijken naar welke vormen van kwaliteitsborging in deze context realistisch zijn. In de literatuur over evaluatie van taalmodellen worden grofweg drie benaderingen onderscheiden: menselijke beoordeling, self-evaluation door het generatiemodel zelf, en de inzet van een afzonderlijke LLM-as-a-judge (Li et al., 2024; Zheng et al., 2023).
+
+**Optie 1: Menselijke beoordeling**
+
+De meest voor de hand liggende oplossing is dat de leerkracht of een hoogbegaafdheidsspecialist elke gegenereerde opdracht beoordeelt voordat deze aan de leerling wordt gegeven. Dit is qua kwaliteit het sterkste vangnet: een deskundige professional weegt context, toon en pedagogische passendheid op een manier die geen enkel model evenaart. Menselijke annotatie wordt dan ook vaak beschouwd als de "ground truth" bij het evalueren van AI-output (Li et al., 2024).
+
+In de praktijk loopt deze oplossing echter vast op tijd en schaalbaarheid: het verzamelen van menselijke beoordelingen is tijdrovend en kostenintensief, waardoor het lastig opschaalt (Li et al., 2024). Juist het tijdwinst-argument is de reden dat Juf Aimee bestaat. Wanneer elke gegenereerde opdracht alsnog handmatig moet worden gecontroleerd, vervalt het voordeel van automatisering grotendeels. Daarbij komt dat leerkrachten die met hoogbegaafde leerlingen werken zich, zoals eerder genoemd, soms handelingsverlegen tonen rond uitdaging op maat (Van Gerven et al., 2025) — de inhoudelijke beoordeling vraagt dus juist expertise die niet altijd beschikbaar is.
+
+**Optie 2: Self-evaluation door het generatiemodel**
+
+Een tweede optie is om hetzelfde generatiemodel zijn eigen output te laten beoordelen via een tweede prompt. Dit is technisch eenvoudig en kost geen extra modelinfrastructuur.
+
+Het probleem is dat een model dat zijn eigen output beoordeelt structureel mild is over zichzelf. Dit fenomeen staat in de literatuur bekend als **self-preference bias** of **self-enhancement bias**: een taalmodel kent systematisch hogere scores toe aan zijn eigen output dan aan output van andere modellen of mensen, terwijl menselijke beoordelaars die output als gelijkwaardig beoordelen (Panickssery et al., 2024; Zheng et al., 2023). Xu et al. (2024) tonen daarbij aan dat self-refinement deze bias zelfs versterkt: dezelfde aannames die tot een fout leidden in de generatiestap, worden in de evaluatiestap niet opnieuw bevraagd. Een gehallucineerde "passie voor muziek" wordt door het model dus niet als hallucinatie herkend, omdat het in beide stappen vanuit dezelfde interne representatie redeneert. Self-evaluation vergroot daarmee schijnzekerheid zonder echte controle toe te voegen.
+
+**Optie 3: LLM-as-a-judge (afzonderlijk model)**
+
+De derde optie is om de beoordeling uit te besteden aan een ander model dat specifiek voor evaluatietaken is ontworpen. Dit combineert de schaalbaarheid en consistentie van een geautomatiseerde aanpak met een onafhankelijke blik op de output van het generatiemodel. Omdat de judge vanuit een andere training en architectuur naar de opdracht kijkt, worden fouten en aannames van het generatiemodel eerder zichtbaar dan bij self-evaluation (Wolfe, 2024). Onderzoek laat zien dat een goed ingezette LLM-judge sterk kan correleren met menselijke oordelen, tegen aanzienlijk lagere kosten en hogere snelheid dan handmatige evaluatie (Li et al., 2024; Zheng et al., 2023).
+
+**Conclusie van de afweging**
+
+Menselijke beoordeling levert de hoogste kwaliteit, maar is niet schaalbaar. Self-evaluation is schaalbaar, maar levert door self-preference bias geen onafhankelijke controle op. Een afzonderlijke LLM-as-a-judge combineert het beste van beide: continue, geautomatiseerde controle door een ander model dan het generatiemodel, met menselijke beoordeling als escalatiepad bij twijfelgevallen. Op basis hiervan wordt de inzet van een LLM-as-a-judge aanbevolen, hieronder verder uitgewerkt.
+
+---
+
+## Aanbeveling: inzet van een LLM-as-a-judge
+
+De aanbeveling is om een **LLM-as-a-judge** te integreren in het generatieproces: een taalmodel dat uitsluitend getraind is op het evalueren van de uitvoer van andere taalmodellen aan de hand van een gestructureerde rubric.
 
 ### Hoe werkt een LLM-judge?
 
@@ -100,13 +126,11 @@ De judge evalueert elke gegenereerde opdracht op zeven criteria:
 
 Deze criteria vormen samen een operationele definitie van een kwalitatief goede opdracht voor hoogbegaafde leerlingen, iets wat nu volledig ontbreekt in het systeem.
 
-### Waarom een LLM-judge en geen menselijke beoordeling?
+### Kostenvergelijking
 
-De keuze voor een LLM-judge is niet alleen pragmatisch, maar ook onderbouwd door recent onderzoek. Saha et al. (2026) beschrijven een praktisch scenario waarin een team 10.000 prompt-response paren moet beoordelen. Menselijke beoordeling kost in dit scenario $5 per beoordeling, wat neerkomt op $50.000 in totaal. Een LLM-judge doet hetzelfde voor $0.01 of minder per beoordeling, een kostenbesparing van meer dan 99%.
+De keuze voor een LLM-judge is ook financieel onderbouwd. Saha et al. (2026) beschrijven een scenario waarin een team 10.000 prompt-response paren beoordeelt. Menselijke beoordeling kost in dat scenario $5 per beoordeling — $50.000 in totaal. Een LLM-judge doet hetzelfde voor $0.01 of minder per beoordeling, een kostenbesparing van meer dan 99%.
 
-Hoewel dit een grootschalig scenario betreft, geldt dezelfde logica voor Juf Aimee: elke gegenereerde opdracht beoordelen via een menselijke expert is duur, traag en onschaalbaar. Een geautomatiseerde judge maakt continue kwaliteitscontrole mogelijk zonder extra personeel of vertraging.
-
-Bovendien is een LLM-judge **consistent**: waar menselijke beoordelaars variëren in interpretatie en aandacht, past de judge dezelfde rubric altijd op dezelfde manier toe. Dit maakt de beoordelingen vergelijkbaar over tijd en over leerlingen heen.
+Voor Juf Aimee geldt dezelfde logica op kleinere schaal: continue kwaliteitscontrole via een menselijke expert is duur en onschaalbaar. De LLM-judge maakt automatische beoordeling mogelijk zonder extra personeel of vertraging, en past de rubric altijd op dezelfde manier toe — ongeacht hoe vaak het systeem gebruikt wordt.
 
 ---
 
@@ -147,3 +171,13 @@ De maatschappelijke meerwaarde is duidelijk: betere opdrachten voor kwetsbare le
 - Saha, S., et al. (2026). *LLM-as-a-Judge: Automated Evaluation of Language Model Outputs*. Geciteerd in de context van kostenberekening voor grootschalige beoordeling.
 
 - Van Gerven, E., Zonneveld, R., Oosterveen, N., Dekkers, A., & Den Boer, Y. (Red.). (2025). Basisboek (Hoog)begaafdheid voor po en vo: Kansrijk onderwijs vanuit een inclusieve gedachte voor leerlingen met kenmerken van (hoog)begaafdheid (1e ed.). Kenniscentrum Hoogbegaafdheid.
+
+- Li, H., Dong, Q., Chen, J., Su, H., Zhou, Y., Ai, Q., Ye, Z., & Liu, Y. (2024). *LLMs-as-Judges: A Comprehensive Survey on LLM-based Evaluation Methods*. arXiv:2412.05579. https://arxiv.org/abs/2412.05579
+
+- Panickssery, A., Bowman, S. R., & Feng, S. (2024). *LLM Evaluators Recognize and Favor Their Own Generations*. arXiv:2404.13076. https://arxiv.org/abs/2404.13076
+
+- Wolfe, C. R. (2024, juli 22). *Using LLMs for Evaluation*. Deep (Learning) Focus. https://cameronrwolfe.substack.com/p/llm-as-a-judge
+
+- Xu, W., Zhu, G., Zhao, X., Pan, L., Li, L., & Wang, W. Y. (2024). *Pride and Prejudice: LLM Amplifies Self-Bias in Self-Refinement*. arXiv:2402.11436. https://arxiv.org/abs/2402.11436
+
+- Zheng, L., Chiang, W.-L., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., Lin, Z., Li, Z., Li, D., Xing, E. P., Zhang, H., Gonzalez, J. E., & Stoica, I. (2023). *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*. arXiv:2306.05685. https://arxiv.org/abs/2306.05685
