@@ -76,18 +76,58 @@ export async function zoekSchoolvak(studentId: string, focusArea: string) {
   return executeSearchOpp(studentId, focusArea || "schoolvak leerstof", 3)
 }
 
+export async function zoekCognitiefProfiel(studentId: string) {
+  return executeSearchOpp(studentId, "WISC TIQ IQ uitstroomperspectief VMBO HAVO VWO DLE cognitieve scores", 3)
+}
+
+export async function zoekMotivatieEnWerkstijl(studentId: string) {
+  return executeSearchOpp(studentId, "motivatietriggers motivatie-afbrekers concentratieboog werkstijl frustratie enthousiasme", 3)
+}
+
+export async function zoekPraktischeFactoren(studentId: string) {
+  return executeSearchOpp(studentId, "motoriek schrijven zelfredzaamheid planning vaardigheden communicatie sociaal", 3)
+}
+
+export async function zoekOndersteuning(studentId: string) {
+  return executeSearchOpp(studentId, "hulpverlening HB-coaching RT didactische tips onderwijsbehoefte groeigebieden compacten verrijken", 3)
+}
+
+export async function zoekSociaalEmotioneel(studentId: string) {
+  return executeSearchOpp(studentId, "SCOL samenwerken welbevinden frustratie presenteren competenties sociaal-emotioneel", 3)
+}
+
+export async function zoekHandelingsplanResultaten(studentId: string) {
+  return executeSearchOpp(studentId, "handelingsplan doel evaluatie behaald aanpak resultaat leergebied", 5)
+}
+
+export async function zoekBevorderendeBelemmerende(studentId: string) {
+  return executeSearchOpp(studentId, "bevorderende belemmerende factoren domein motivatie cognitief didactisch sociaal", 3)
+}
+
+export async function zoekPraktischeTips(studentId: string) {
+  return executeSearchOpp(studentId, "ouders opmerkingen diversen heldere doelen korte evaluaties tips aandachtspunten leerkracht", 3)
+}
+
 // Alles in één keer ophalen voor de generator
 export async function zoekVolledigProfiel(
   studentId: string,
   focusArea: string
 ): Promise<string[]> {
-  const [interesses, beginsituatie, behoeften, intelligentie, schoolvak] =
+  const [interesses, beginsituatie, behoeften, intelligentie, schoolvak, cognitief, motivatie, praktisch, ondersteuning, sociaalEmotioneel, handelingsplan, bevorderend, praktischeTips] =
     await Promise.all([
       zoekInteresses(studentId),
       zoekBeginsituatie(studentId),
       zoekOnderwijsbehoeften(studentId),
       zoekIntelligentieprofiel(studentId),
       zoekSchoolvak(studentId, focusArea),
+      zoekCognitiefProfiel(studentId),
+      zoekMotivatieEnWerkstijl(studentId),
+      zoekPraktischeFactoren(studentId),
+      zoekOndersteuning(studentId),
+      zoekSociaalEmotioneel(studentId),
+      zoekHandelingsplanResultaten(studentId),
+      zoekBevorderendeBelemmerende(studentId),
+      zoekPraktischeTips(studentId),
     ])
 
   // Combineer en verwijder duplicaten
@@ -97,5 +137,13 @@ export async function zoekVolledigProfiel(
     ...behoeften,
     ...intelligentie,
     ...schoolvak,
+    ...cognitief,
+    ...motivatie,
+    ...praktisch,
+    ...ondersteuning,
+    ...sociaalEmotioneel,
+    ...handelingsplan,
+    ...bevorderend,
+    ...praktischeTips,
   ])]
 }
