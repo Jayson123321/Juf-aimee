@@ -29,13 +29,29 @@ def main() -> None:
   device = "cuda" if torch.cuda.is_available() else "cpu"
   dtype = torch.float16 if device == "cuda" else torch.float32
   model_family = os.getenv("ASSIGNMENT_IMAGE_MODEL_FAMILY", "flux").lower()
+  fallback_model_path = os.getenv("ASSIGNMENT_IMAGE_FALLBACK_MODEL_PATH", "").strip()
+  fallback_model_family = os.getenv("ASSIGNMENT_IMAGE_FALLBACK_MODEL_FAMILY", "sd3").lower()
 
   started_at = time.time()
+  image = load_image(args.input_image).convert("RGB") if args.input_image else None
+  selected_family = model_family
+  selected_model_path = args.model_path
 
-  if model_family == "sd3":
-    pipe = StableDiffusion3Pipeline.from_pretrained(args.model_path, torch_dtype=dtype)
+  if model_family == "flux" and image is None:
+    if fallback_model_path:
+      selected_family = fallback_model_family
+      selected_model_path = fallback_model_path
+    else:
+      raise RuntimeError(
+        "FLUX Kontext heeft een bestaande afbeelding nodig voor bewerking. "
+        "Configureer ASSIGNMENT_IMAGE_FALLBACK_MODEL_PATH voor een eerste render "
+        "(bijvoorbeeld Stable Diffusion 3.5 Medium)."
+      )
+
+  if selected_family == "sd3":
+    pipe = StableDiffusion3Pipeline.from_pretrained(selected_model_path, torch_dtype=dtype)
   else:
-    pipe = FluxKontextPipeline.from_pretrained(args.model_path, torch_dtype=dtype)
+    pipe = FluxKontextPipeline.from_pretrained(selected_model_path, torch_dtype=dtype)
 
   if device == "cuda" and os.getenv("ASSIGNMENT_IMAGE_CPU_OFFLOAD", "0") == "1":
     if hasattr(pipe, "enable_model_cpu_offload"):
@@ -45,12 +61,11 @@ def main() -> None:
   else:
     pipe.to(device)
 
-  image = load_image(args.input_image).convert("RGB") if args.input_image else None
   generator = None
   if args.seed is not None:
     generator = torch.Generator(device="cpu").manual_seed(args.seed)
 
-  if model_family == "sd3":
+  if selected_family == "sd3":
     output = pipe(
         prompt=args.prompt,
         negative_prompt="blurry, low quality, distorted, text, watermark",

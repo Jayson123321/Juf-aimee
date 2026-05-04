@@ -16,6 +16,8 @@ from pydantic import BaseModel
 
 MODEL_PATH = os.getenv("ASSIGNMENT_IMAGE_MODEL_PATH", "/mnt/scratch/models/FLUX.1-Kontext-dev")
 MODEL_FAMILY = os.getenv("ASSIGNMENT_IMAGE_MODEL_FAMILY", "flux").lower()
+FALLBACK_MODEL_PATH = os.getenv("ASSIGNMENT_IMAGE_FALLBACK_MODEL_PATH", "").strip()
+FALLBACK_MODEL_FAMILY = os.getenv("ASSIGNMENT_IMAGE_FALLBACK_MODEL_FAMILY", "sd3").lower()
 OUTPUT_DIR = Path(os.getenv("ASSIGNMENT_IMAGE_OUTPUT_DIR", "/mnt/scratch/generated/assignment-images"))
 STATIC_ROUTE = os.getenv("ASSIGNMENT_IMAGE_STATIC_ROUTE", "/generated/assignment-images")
 ESTIMATED_SECONDS = int(os.getenv("ASSIGNMENT_IMAGE_ESTIMATED_SECONDS", "70"))
@@ -31,6 +33,7 @@ app = FastAPI(title="Assignment Image Service")
 app.mount(STATIC_ROUTE, StaticFiles(directory=str(OUTPUT_DIR)), name="assignment-images")
 
 _PIPE = None
+_PIPE_KEY = None
 
 
 class ImageRequest(BaseModel):
@@ -46,20 +49,25 @@ class ImageRequest(BaseModel):
     previous_image_url: Optional[str] = None
 
 
-def get_pipe():
-    global _PIPE
+def get_pipe(model_family: str, model_path: str):
+    global _PIPE, _PIPE_KEY
 
-    if _PIPE is None:
+    current_key = (model_family, model_path)
+
+    if _PIPE is None or _PIPE_KEY != current_key:
+        if _PIPE is not None:
+            release_pipe()
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dtype = torch.float16 if device == "cuda" else torch.float32
 
         if device == "cuda":
             torch.cuda.empty_cache()
 
-        if MODEL_FAMILY == "sd3":
-            pipe = StableDiffusion3Pipeline.from_pretrained(MODEL_PATH, torch_dtype=dtype)
+        if model_family == "sd3":
+            pipe = StableDiffusion3Pipeline.from_pretrained(model_path, torch_dtype=dtype)
         else:
-            pipe = FluxKontextPipeline.from_pretrained(MODEL_PATH, torch_dtype=dtype)
+            pipe = FluxKontextPipeline.from_pretrained(model_path, torch_dtype=dtype)
 
         if device == "cuda" and os.getenv("ASSIGNMENT_IMAGE_CPU_OFFLOAD", "0") == "1":
             if hasattr(pipe, "enable_model_cpu_offload"):
@@ -70,18 +78,20 @@ def get_pipe():
             pipe.to(device)
 
         _PIPE = pipe
+        _PIPE_KEY = current_key
 
     return _PIPE
 
 
 def release_pipe():
-    global _PIPE
+    global _PIPE, _PIPE_KEY
 
     if _PIPE is None:
         return
 
     pipe = _PIPE
     _PIPE = None
+    _PIPE_KEY = None
     del pipe
 
     gc.collect()
@@ -120,16 +130,34 @@ def generate(request: Request, body: ImageRequest):
     started_at = time.time()
 
     try:
-        pipe = get_pipe()
         previous_image_path = resolve_previous_image(body.previous_image_url)
         source_image = load_image(str(previous_image_path)).convert("RGB") if previous_image_path else None
+
+        selected_family = MODEL_FAMILY
+        selected_model_path = MODEL_PATH
+
+        if MODEL_FAMILY == "flux" and source_image is None:
+            if FALLBACK_MODEL_PATH:
+                selected_family = FALLBACK_MODEL_FAMILY
+                selected_model_path = FALLBACK_MODEL_PATH
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "FLUX Kontext heeft een bestaande afbeelding nodig voor bewerking. "
+                        "Configureer ASSIGNMENT_IMAGE_FALLBACK_MODEL_PATH voor een eerste render "
+                        "(bijvoorbeeld Stable Diffusion 3.5 Medium) of genereer eerst een basisafbeelding."
+                    ),
+                )
+
+        pipe = get_pipe(selected_family, selected_model_path)
 
         student_dir = OUTPUT_DIR / body.student_id
         student_dir.mkdir(parents=True, exist_ok=True)
         file_name = f"{int(time.time())}-{uuid4().hex[:8]}.png"
         output_path = student_dir / file_name
 
-        if MODEL_FAMILY == "sd3":
+        if selected_family == "sd3":
             result = pipe(
                 prompt=body.prompt,
                 negative_prompt="blurry, low quality, distorted, text, watermark",
