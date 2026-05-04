@@ -648,24 +648,38 @@ export async function POST(req: NextRequest) {
             send({ type: "plan", data: plan });
             send({ type: "stage", data: { stage: "coder", status: "running" } });
 
-            const coderUserPrompt = `Hier is het ruwe plan van de Planner. Normaliseer en valideer het naar het MC-component JSON-schema.\n\nPLAN:\n${JSON.stringify(plan, null, 2)}`;
             const coderModel = getModelForRole("coder");
-            const coderResponse = await (async () => {
+            const validated = await (async () => {
               try {
-                return await callModel("coder", coderUserPrompt, {
-                  temperature: 0.2,
-                  format: "json",
-                  keepAlive: 0,
-                });
+                let repairFeedback = "";
+
+                for (let attempt = 0; attempt < 3; attempt += 1) {
+                  const coderUserPrompt = `Hier is het ruwe plan van de Planner. Normaliseer en valideer het naar het MC-component JSON-schema.
+
+PLAN:
+${JSON.stringify(plan, null, 2)}
+${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
+
+                  const coderResponse = await callModel("coder", coderUserPrompt, {
+                    temperature: 0.2,
+                    format: "json",
+                    keepAlive: 0,
+                  });
+
+                  const mc = extractJson(coderResponse.message.content?.trim() ?? "");
+                  const candidate = validateMcOutput(mc);
+                  if (!("error" in candidate)) {
+                    return candidate;
+                  }
+
+                  repairFeedback = `De vorige output was ongeldig: ${candidate.error}. Lever een nieuwe versie die WEL geldig is. Vooral belangrijk: het juiste antwoord mag niet letterlijk in de vraagtekst staan, er moeten exact 4 unieke antwoordopties zijn en de explanation moet ingevuld zijn.`;
+                }
+
+                throw new Error("Coder output bleef ongeldig na 3 herstelpogingen.");
               } finally {
                 await releaseOllamaModel(coderModel);
               }
             })();
-            const mc = extractJson(coderResponse.message.content?.trim() ?? "");
-            const validated = validateMcOutput(mc);
-            if ("error" in validated) {
-              throw new Error(`Coder output ongeldig: ${validated.error}`);
-            }
 
             const rationale = typeof (plan as Record<string, unknown>).rationale === "string"
               ? ((plan as Record<string, unknown>).rationale as string) : "";
