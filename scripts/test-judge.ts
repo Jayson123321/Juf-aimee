@@ -1,9 +1,9 @@
+import "dotenv/config"
 import { evalueerOpdrachtStreaming, JudgeResult } from "../lib/judge"
 import { zoekVolledigProfiel, zoekBeginsituatie } from "../app/ai/tools/search_opp"
 import { getStudentAge } from "../lib/student-profile"
 import { prisma } from "../lib/db"
 import { writeFileSync } from "fs"
-import "dotenv/config"
 
 // Gebruik: npx tsx scripts/test-judge.ts <studentId>
 // Voorbeeld: npx tsx scripts/test-judge.ts clxyz123
@@ -76,6 +76,23 @@ function out(line = "") {
   lines.push(line)
 }
 
+function wrap(text: string, breedte = 100, inspringing = "   "): string {
+  const woorden = text.split(" ")
+  const regels: string[] = []
+  let huidigRegel = inspringing
+
+  for (const woord of woorden) {
+    if (huidigRegel.length + woord.length + 1 > breedte && huidigRegel.trim().length > 0) {
+      regels.push(huidigRegel)
+      huidigRegel = inspringing + woord
+    } else {
+      huidigRegel += (huidigRegel.trim().length === 0 ? "" : " ") + woord
+    }
+  }
+  if (huidigRegel.trim().length > 0) regels.push(huidigRegel)
+  return regels.join("\n")
+}
+
 async function testOpdracht(
   label: string,
   opdracht: string,
@@ -92,14 +109,11 @@ async function testOpdracht(
   const result = await evalueerOpdrachtStreaming(
     { ...judgeInput, gegenereerdeOpdracht: opdracht },
     (stap) => {
-      const korteFeedback = stap.feedback.length > 160
-        ? stap.feedback.slice(0, 157) + "..."
-        : stap.feedback
-      out(`C${stap.criterium}: ${stap.score}/5  ${stap.naam}`)
-      out(`   → ${korteFeedback}`)
+      const runs = stap.runScores ? `  (runs: ${stap.runScores.join(", ")})` : ""
+      out(`C${stap.criterium}: ${stap.score}/5${runs}  ${stap.naam}`)
+      out(wrap(`→ ${stap.feedback}`))
       out()
     },
-    1,
   )
 
   out(`UITSLAG: ${result.totaalScore}/${result.maxScore} (${(result.genormaliseerdeScore * 100).toFixed(1)}%) → ${result.beslissing.toUpperCase()}`)
@@ -160,13 +174,13 @@ async function testJudge() {
     out(`C${String(i + 1).padEnd(9)} ${String(s.score + "/5").padEnd(8)} ${String(g.score + "/5").padEnd(8)} ${pijl}`)
   }
   out("-".repeat(40))
-  out(`${"Totaal".padEnd(10)} ${String(slecht.totaalScore + "/40").padEnd(8)} ${String(goed.totaalScore + "/40").padEnd(8)}`)
+  out(`${"Totaal".padEnd(10)} ${String(slecht.totaalScore + "/35").padEnd(8)} ${String(goed.totaalScore + "/35").padEnd(8)}`)
   out(`${"Score".padEnd(10)} ${(slecht.genormaliseerdeScore * 100).toFixed(1).padEnd(7)}% ${(goed.genormaliseerdeScore * 100).toFixed(1)}%`)
   out(`${"Beslissing".padEnd(10)} ${slecht.beslissing.padEnd(8)} ${goed.beslissing}`)
 
   // Rapport opslaan
   const rapport = lines.join("\n")
-  const pad = `docs/judge-testrapport-${new Date().toISOString().slice(0, 10)}.txt`
+  const pad = `docs/judge-testrapport-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.txt`
   writeFileSync(pad, rapport, "utf-8")
   console.log(`\nRapport opgeslagen: ${pad}`)
 
