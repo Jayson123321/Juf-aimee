@@ -1,4 +1,4 @@
-# Advies: Kwaliteitsborging van gegenereerde opdrachten voor hoogbegaafde leerlingen
+# Kwaliteitsborging van gegenereerde opdrachten voor hoogbegaafde leerlingen
 **Leeruitkomst**: Advies
 
 ---
