@@ -90,13 +90,13 @@ De judge evalueert elke gegenereerde opdracht op zeven criteria:
 
 | # | Criterium |
 |---|-----------|
-| 1 | Sluit de opdracht aan bij de gedocumenteerde interesses van de leerling? |
-| 2 | Komt het moeilijkheidsniveau overeen met het opgegeven Bloom-niveau? |
-| 3 | Kan de leerling de opdracht zelfstandig uitvoeren? |
-| 4 | Sluit de opdracht aan bij de beginsituatie uit het OPP? |
-| 5 | Is de opdracht leeftijdspassend in taal, toon en inhoud? |
-| 6 | Kan de leerkracht de opdracht gemakkelijk lezen, beoordelen en aanpassen? |
-| 7 | Zijn alle persoonlijke elementen herleidbaar tot het OPP (geen hallucinaties)? |
+| 1 | Zijn alle elementen in de opdracht aantoonbaar gebaseerd op het leerlingprofiel, zonder verzonnen informatie? (RAGAS, Faithfulness) |
+| 2 | Gebruikt de opdracht alleen relevante leerlinginformatie en laat het irrelevante details weg? (RAGAS, Context Precision) |
+| 3 | Weerspiegelt de opdracht alle relevante leerlingkenmerken uit het profiel, inclusief zowel sterke punten als gedocumenteerde uitdagingen? (RAGAS, Context Recall) |
+| 4 | Sluit de opdracht aan bij de gedocumenteerde interesses van de leerling? (Hoogbegaafdheidsonderwijs) |
+| 5 | Komt het cognitieve niveau van de opdracht overeen met het opgegeven Bloom-niveau? (Hoogbegaafdheidsonderwijs) |
+| 6 | Kan de leerling de opdracht zelfstandig uitvoeren, gegeven zijn leeftijd en niveau? (Hoogbegaafdheidsonderwijs) |
+| 7 | Is de opdracht leeftijdspassend in taal, toon en inhoud? (Hoogbegaafdheidsonderwijs) |
 
 Deze criteria vormen samen een operationele definitie van een kwalitatief goede opdracht voor hoogbegaafde leerlingen, iets wat nu volledig ontbreekt in het systeem.
 
