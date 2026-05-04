@@ -1,59 +1,59 @@
 # Onderzoeksrapport: Modelselectie Juf Aimee (AI-mee)
-**Datum:** 22 april 2026  
+**Datum:** 4 mei 2026  
 **Project:** Hybride AI-onderwijsassistent voor hoogbegaafde leerlingen (6-12 jaar)  
-**Hardware Target:** Apple Mac Mini M4 Pro (64GB Unified Memory)
+**Hardware Target:** Self-hosted stack van laptopontwikkeling tot 24GB GPU-cloud
 
 ---
 
 ## 1. De Planner (Opdracht Generatie & RAG)
-De Planner fungeert als de didactische architect. De kernvereiste is 'Reasoning': het vermogen om complexe bronteksten te ontleden naar de taxonomie van Bloom.
+De Planner fungeert als de didactische architect. De kernvereiste is reasoning: het vermogen om OPP-bronnen, leerkrachtfeedback en Bloom-doelen te vertalen naar een concrete, didactisch passende opdracht.
 
 ### Kandidaten & Onderbouwing
-1. **DeepSeek-V3.2 (Reasoning Mode)**
-   * **Onderbouwing:** DeepSeek-V3 maakt gebruik van *Multi-head Latent Attention (MLA)* en een verfijnd *Mixture-of-Experts (MoE)* framework met 671 miljard parameters (waarvan 37B actief). Dit zorgt voor superieure logische consistentie en "Chain-of-Thought" redeneren, wat cruciaal is om te voorkomen dat didactische niveaus in de war raken.
-2. **Llama 4 Scout (17B MoE)**
-   * **Onderbouwing:** Specifiek geoptimaliseerd voor Apple's MLX-framework. Door de MoE-architectuur (vergelijkbaar met de Maverick-variant maar lichter) biedt dit model een 'near-perfect' nauwkeurigheid in informatie-extractie, ideaal voor RAG-taken op edge-devices.
+1. **Qwen 3 14B**
+   * **Onderbouwing:** Deze variant is groot genoeg om sterk te zijn in structuur, redeneren en instructievolging, maar blijft veel realistischer dan extreme modellen zoals `Qwen 3 Next` in een single-GPU pipeline. In Ollama staat `qwen3:14b` rond `9.3GB`, waardoor het op een 24GB kaart nog werkbaar blijft in sequentiële workflows.
+2. **Qwen 2.5 7B / 14B**
+   * **Onderbouwing:** Qwen2.5 is sterk in meertaligheid, JSON-output en instructievolging. De `7b` en `14b` varianten zijn zeer bruikbaar voor Nederlandse onderwijscontexten en veel beter schaalbaar voor lokale of self-hosted inzet dan zwaardere MoE-modellen.
 3. **Qwen 3 Next**
-   * **Onderbouwing:** Alibaba's Qwen-modellen blinken uit in meertaligheid en genuanceerd taalbegrip. Voor de Nederlandse context biedt Qwen een betere verwerking van grammatica en lokale onderwijsdoelen dan puur Engelsgeoriënteerde modellen.
+   * **Onderbouwing:** Inhoudelijk is dit een sterke kandidaat, maar praktisch alleen voor high-end of multi-GPU omgevingen. De officiële Ollama library zet `qwen3-next` op ongeveer `50GB`, dus dit is geen middenklasse keuze maar een high-end optie.
 
 ---
 
 ## 2. De Codeur (Interactieve Opdrachten)
-Het genereren van foutloze, veilige en visueel aantrekkelijke HTML5/JS content.
+Het genereren van foutloze, veilige en visueel aantrekkelijke HTML5/JS-content.
 
 ### Kandidaten & Onderbouwing
-1. **Qwen 2.5 Coder (32B)**
-   * **Onderbouwing:** Getraind op meer dan 5.5 biljoen tokens. De 32B-variant biedt een state-of-the-art balans tussen redeneervermogen en code-efficiëntie. Dankzij code-specifieke SFT (Supervised Fine-Tuning) is dit model leidend in het genereren van direct werkende frontend-applicaties.
-2. **DeepSeek-Coder-V2.5**
-   * **Onderbouwing:** Bekend om zijn vermogen om complexe logica (zoals interactieve sleep-oefeningen) te structureren zonder syntax-fouten, ondersteund door een enorme database aan opensource repositories.
-3. **Claude 3.5 Sonnet (Benchmark)**
-   * **Onderbouwing:** Dient als de 'Gold Standard' referentie. Hoewel cloud-gebaseerd, is het de industriestandaard voor iteratieve codegeneratie en UI-ontwerp.
+1. **Qwen 2.5 Coder (14B)**
+   * **Onderbouwing:** Dit is de beste balans tussen codekwaliteit en lokale haalbaarheid. De `14b` variant is duidelijk sterker dan 7B, maar nog steeds realistischer dan 32B+ coder-modellen in een pipeline waar ook vision en image generation meespelen.
+2. **Qwen 2.5 Coder (7B)**
+   * **Onderbouwing:** De meest praktische keuze voor setups met 8-24GB VRAM. In Ollama staat `qwen2.5-coder:7b` rond `4.7GB`, waardoor het een logische standaardkeuze is als stabiliteit belangrijker is dan maximale codekracht.
+3. **Qwen 3 Coder Next**
+   * **Onderbouwing:** Een high-end coder-optie voor grotere machines. De officiële Ollama library zet `qwen3-coder-next` op ongeveer `52GB`, dus deze keuze is alleen realistisch in een top-tier of multi-GPU omgeving.
 
 ---
 
 ## 3. De Visionair (Beeldanalyse & OCR)
-Het vertalen van fysieke leerling-input (werkbladen) naar bruikbare data.
+Het vertalen van fysieke leerlinginput (werkbladen, schema's, handgeschreven notities) naar bruikbare data.
 
 ### Kandidaten & Onderbouwing
 1. **Qwen2.5-VL**
-   * **Onderbouwing:** Gebruikt *Naive Dynamic Resolution*, waardoor afbeeldingen van wisselende groottes (zoals foto's van schriften) nauwkeurig geanalyseerd worden zonder informatieverlies. Het ondersteunt gestructureerde JSON-output voor visuele objectlokalisatie.
-2. **Llama 4 Maverick (Vision)**
-   * **Onderbouwing:** Een zwaarder MoE-model met 128 experts dat significant beter presteert bij complexe visuele logica en extractie uit documenten met een onregelmatige lay-out.
-3. **Gemma 4 Vision (26B)**
-   * **Onderbouwing:** Google's nieuwste multimodale model dat uitblinkt in het begrijpen van handgeschreven wiskundige formules en tekstuele context op een zeer efficiënte voetafdruk.
+   * **Onderbouwing:** Qwen2.5-VL is sterk in documentbegrip, diagrammen, OCR, gestructureerde JSON-output en layout-analyse. Dat maakt dit model het meest logisch voor werkbladen, foto's van schriften en onderwijsgerelateerde visuele taken.
+2. **Gemma 3 (12B of 27B)**
+   * **Onderbouwing:** Gemma 3 is multimodaal, relatief compact en daardoor aantrekkelijk als vision fallback wanneer één model meerdere rollen moet kunnen vervullen. Voor lichte setups is `gemma3:4b` of `gemma3:12b` bruikbaar; voor sterkere setups kan `gemma3:27b` als rijkere assistent/vision-combinatie dienen.
+3. **Llama 4 Maverick (Vision)**
+   * **Onderbouwing:** In theorie een sterke vision/redenering-kandidaat, maar minder praktisch voor de huidige self-hosted stack. Daarom is dit eerder een high-end referentie dan een eerste implementatiekeuze.
 
 ---
 
 ## 4. De Kunstenaar (Beeldgeneratie)
-Visuele ondersteuning die de tekstuele opdrachten versterkt.
+Visuele ondersteuning die tekstuele opdrachten versterkt.
 
 ### Kandidaten & Onderbouwing
-1. **FLUX.1.1 Pro / Kontext [dev]**
-   * **Onderbouwing:** De 'Kontext' variant staat in-context editing toe, wat betekent dat personages (bijv. een mascotte van de school) consistent blijven over meerdere opdrachten. Het biedt de hoogste 'prompt adherence' in de industrie.
-2. **Stable Diffusion 3.5 Medium**
-   * **Onderbouwing:** Gebruikt Multimodal Diffusion Transformer (MM-DiT) architectuur, wat zorgt voor een uitstekende balans tussen beeldkwaliteit en snelheid op Apple Silicon hardware via CoreML.
-3. **Muse Spark**
-   * **Onderbouwing:** Een lichtgewicht, razendsnelle optie voor on-the-fly illustraties die minder rekenkracht vereisen dan de zwaardere FLUX-modellen.
+1. **Stable Diffusion 3.5 Medium**
+   * **Onderbouwing:** De meest realistische lokale keuze. Stability AI positioneert dit model expliciet als resource-efficient, met sterke prompt adherence en goede beeldkwaliteit. Voor single-GPU setups is dit de veiligste standaardkeuze.
+2. **FLUX.1-Kontext [dev]**
+   * **Onderbouwing:** Inhoudelijk zeer aantrekkelijk dankzij in-context editing en consistente personages/objecten. In de praktijk is dit model echter zwaar: het open model is een `12B` image-editing model en de Hugging Face repo toont een groot hoofdbestand van ongeveer `23.8GB`. Daardoor is het op een 24GB GPU alleen haalbaar als andere modellen volledig worden vrijgegeven.
+3. **FLUX.1.1 Pro**
+   * **Onderbouwing:** Een sterke optie wanneer beeldkwaliteit en prompt adherence topprioriteit zijn, maar deze route is primair API-gebaseerd in plaats van lokaal/self-hosted. Daarmee is het een hybride productiekeuze, geen standaard lokale ontwikkelkeuze.
 
 ---
 
@@ -61,22 +61,26 @@ Visuele ondersteuning die de tekstuele opdrachten versterkt.
 De interface tussen AI en kind.
 
 ### Kandidaten & Onderbouwing
-1. **Gemma 3 (27B)**
-   * **Onderbouwing:** Voorzien van een context-window van 128k tokens. Het model is specifiek getraind op pedagogische 'grounding', waardoor het feitelijk accuraat blijft en een veilige, ondersteunende toon hanteert voor kinderen.
+1. **Gemma 3 (12B)**
+   * **Onderbouwing:** Een sterke middenweg voor een ondersteunende, veilige en meertalige chatrol. `gemma3:12b` blijft qua geheugen nog praktisch en is rijk genoeg voor didactische begeleiding zonder meteen naar een 20GB+ assistent te gaan.
 2. **Mistral Nemo (12B)**
-   * **Onderbouwing:** Ontwikkeld door NVIDIA en Mistral. Het is geoptimaliseerd voor FP8-quantizatie zonder verlies van nauwkeurigheid, wat resulteert in bliksemsnelle reacties op de Mac Mini.
-3. **Llama 3.1 8B (Fine-tuned)**
-   * **Onderbouwing:** Een robuust basismodel dat door zijn kleine omvang zeer goed te sturen is met strikte systeem-prompts ("Geef nooit het antwoord").
+   * **Onderbouwing:** Mistral Nemo is compact, snel en beschikt over een grote context window. Daardoor is het een goede kandidaat voor een responsieve assistentrol in een product waar snelheid en stabiliteit belangrijk zijn.
+3. **Llama 3.1 8B**
+   * **Onderbouwing:** Een robuust, klein en goed stuurbaar basismodel. Dit blijft interessant wanneer strikte systeem-prompts belangrijker zijn dan maximale modelgrootte.
 
 ---
 
 ## Bronvermelding & Technische Referenties
 
-* **DeepSeek-AI.** (2024/2025). *DeepSeek-V3 Technical Report*. arXiv:2412.19437. [Focus: Multi-head Latent Attention (MLA) & MoE architecture].
-* **Hui, B., et al.** (2024). *Qwen2.5-Coder Technical Report*. Hugging Face / Alibaba Cloud. [Focus: 5.5T token training & code-specific SFT].
-* **Meta AI Research.** (2026). *Evaluating Meta's Llama 4 Models for Enterprise and Edge Content*. Box AI Blog / Meta Engineering. [Focus: Scout (16 experts) vs Maverick (128 experts) efficiency].
-* **Alibaba Qwen Team.** (2025). *Qwen2.5-VL: Advancements in Visual Understanding and Agentic Capabilities*. QwenLM Blog. [Focus: Naive Dynamic Resolution & Precise Object Grounding].
-* **Black Forest Labs.** (2024). *FLUX.1.1 [pro] and Kontext Technical Specifications*. BFL.ai. [Focus: Flow-matching models & character consistency].
-* **Google DeepMind.** (2025). *Gemma 3: Multimodal Understanding and Pedagogical Grounding*. DeepMind Technical Reports. [Focus: 128K context window & factual grounding benchmarks].
-* **Mistral AI & NVIDIA.** (2024). *Mistral-Nemo-12B: Small footprint, Big Intelligence*. NVIDIA/Mistral Blog. [Focus: 128k context & FP8 quantization].
-* **Apple Machine Learning Team.** (2025/2026). *Optimizing MoE Models for M4 Pro Unified Memory Architecture*. Apple Developer Documentation.
+* **Ollama.** *Qwen2.5 model library*. https://ollama.com/library/qwen2.5
+* **Ollama.** *Qwen3 model library*. https://ollama.com/library/qwen3
+* **Ollama.** *Qwen3-Next model library*. https://ollama.com/library/qwen3-next
+* **Ollama.** *Qwen2.5-Coder model library*. https://ollama.com/library/qwen2.5-coder
+* **Ollama.** *Qwen3-Coder-Next model library*. https://ollama.com/library/qwen3-coder-next
+* **Ollama.** *Qwen2.5-VL model library*. https://ollama.com/library/qwen2.5vl
+* **Ollama.** *Gemma 3 model library*. https://ollama.com/library/gemma3
+* **Ollama.** *Mistral Nemo model library*. https://ollama.com/library/mistral-nemo
+* **Ollama.** *Llama 3.1 model library*. https://ollama.com/library/llama3.1
+* **Stability AI / Hugging Face.** *Stable Diffusion 3.5 Medium model card*. https://huggingface.co/stabilityai/stable-diffusion-3.5-medium
+* **Black Forest Labs / Hugging Face.** *FLUX.1-Kontext-dev model card*. https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev
+* **Black Forest Labs / BFL Docs.** *Kontext documentation*. https://docs.bfl.ai/kontext
