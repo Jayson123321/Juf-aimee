@@ -5,7 +5,9 @@ nav:
   - Mens-AI_Samenwerking.md
   - RAG_en_Vector_Database.md
   - RAS_Unified_Pipeline.md
+  - RAS_Implementatieplan.md
   - OPP-similarity-test.md
   - Modelkeuze.md
   - Model-research.md
-  - Model-tests.md 
+  - Model-tests.md
+  - template_onderzoeksverslag.md

@@ -62,7 +62,7 @@ Juf Aimee genereert opdracht → Judge scoort op rubric → Beslislogica zegt go
 ```mermaid
 flowchart TD
     A[Leerkracht vraagt opdracht aan] --> B[Agent haalt OPP-chunks op via search_opp]
-    B --> C[Qwen2.5 genereert opdracht]
+    B --> C[llm genereert opdracht]
     C --> D[Judge beoordeelt op 7 criteria]
     D --> E{Genormaliseerde score?}
     E -- ">= 0.7 goedkeuren" --> J[Toon opdracht aan leerkracht]
@@ -102,16 +102,45 @@ Juf aimee judge prompt:
 2. Gegenereerde opdracht
 3. Rubric 
 
-```
+#### Bronnen
+Prometheus 2: https://arxiv.org/abs/2405.01535
+### Judge prompt
+
+Per criterium wordt de volgende promptstructuur gebruikt (Prometheus-2 raw format via `ollama.generate()`):
 
 ```
-#### Bronnen
-bron Prometheus 2: https://arxiv.org/abs/2405.01535
-### Judge prompt (Nog agmaken)
-Example Prompt:
+[INST] You are a fair judge assistant tasked with providing clear, objective feedback
+based on specific criteria, ensuring each assessment reflects the absolute standards
+set for performance.
+
+###Task Description:
+1. Write detailed feedback (2-4 sentences) based strictly on the score rubric.
+2. After writing feedback, write a score between 1 and 5.
+3. Output format: "Feedback: (feedback) [RESULT] (score)"
+4. Do not generate any other opening, closing, or explanations.
+
+###The instruction to evaluate:
+Criterion: <criterium naam>
+
+Structured student profile:
+<profielSamenvatting — Engels, gedestilleerd uit OPP>
+
+Supporting OPP excerpts (Dutch source document):
+<ruwe OPP-tekst>
+
+###Response to evaluate:
+<gegenereerde opdracht>
+
+###Reference Answer:
+<referentieantwoord per criterium>
+
+###Score Rubrics:
+Score 1: ...  Score 5: ...
+
+###Feedback: [/INST]
 ```
-"You are an expert AI software architect auditing ..." 
-```
+
+De `profielSamenvatting` is een gestructureerde Engelse samenvatting van het OPP (gebouwd door `buildProfileSummary` in `route.ts`), omdat Prometheus-2 een Engels-eerst model is en ruwe Nederlandse OPP-tekst moeilijker verwerkt. Per criterium worden **3 runs** gedraaid en gemiddeld — dit stabiliseert de score en corrigeert uitbijters.
 ### RAGAS 
 Retrieval Augmented Generation Assesment
 
