@@ -1,4 +1,4 @@
-# Advies: Juf Aimee AI-Assistent
+# Juf Aimee AI-Assistent
 
 **Leeruitkomst**: Advies     
 **Deelnemers**:    

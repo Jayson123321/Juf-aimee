@@ -40,7 +40,7 @@ type JudgeResult = {
   totaalScore: number;
   maxScore: number;
   genormaliseerdeScore: number;
-  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren" | "escaleren";
+  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren";
 };
 
 // ─── Constanten ───────────────────────────────────────────────────────────────
@@ -421,7 +421,6 @@ export function PrototypeAiAssignmentClient({
                   }`}>
                     {judgeResult.beslissing === "goedkeuren" ? "✓ Goedgekeurd"
                       : judgeResult.beslissing === "flaggen" ? "⚠ Menselijke review nodig"
-                      : judgeResult.beslissing === "escaleren" ? "↑ Geëscaleerd"
                       : "↺ Opnieuw genereren"}
                   </span>
                 </div>

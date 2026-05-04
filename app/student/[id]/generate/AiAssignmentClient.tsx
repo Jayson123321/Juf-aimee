@@ -64,7 +64,7 @@ type JudgeResult = {
   totaalScore: number;
   maxScore: number;
   genormaliseerdeScore: number;
-  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren" | "escaleren";
+  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren";
 };
 
 // ─── Constanten ───────────────────────────────────────────────────────────────
@@ -176,6 +176,7 @@ export function AiAssignmentClient({
   const [judgeSteps, setJudgeSteps] = useState<CriteriumScore[]>([]);
   const [judgeTotal, setJudgeTotal] = useState(0);
   const [judgeResult, setJudgeResult] = useState<JudgeResult | null>(null);
+  const [poging, setPoging] = useState(0);
 
   // Na goedkeuring
   const [savedAssignmentId, setSavedAssignmentId] = useState<string | null>(null);
@@ -356,6 +357,7 @@ export function AiAssignmentClient({
     setJudgeSteps([]);
     setJudgeTotal(0);
     setJudging(false);
+    setPoging(0);
     setSavedAssignmentId(null);
     setFeedbackSaved(false);
     if (action === "generate" || !includeIllustration) {
@@ -380,6 +382,17 @@ export function AiAssignmentClient({
             latestAssignment = event.data as GeneratedAssignment;
             setAssignment(latestAssignment);
             setTeacherPrompt("");
+            setJudgeResult(null);
+            setJudgeSteps([]);
+            setPoging((prev) => prev + 1);
+          } else if (event.type === "judge_start") {
+            setJudging(true);
+            setJudgeTotal((event.data as { total: number }).total);
+          } else if (event.type === "judge_step") {
+            setJudgeSteps((prev) => [...prev, event.data as CriteriumScore]);
+          } else if (event.type === "judge_done") {
+            setJudgeResult(event.data as JudgeResult);
+            setJudging(false);
           } else if (event.type === "error") {
             throw new Error((event.data as { message: string }).message);
           }
@@ -397,8 +410,8 @@ export function AiAssignmentClient({
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Opdracht genereren mislukt.");
-      setJudging(false);
     } finally {
+      setJudging(false);
       setLoading(false);
     }
   }
@@ -847,6 +860,15 @@ export function AiAssignmentClient({
         <SectionCard className="border-violet-300 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,248,255,0.95))] shadow-[0_24px_60px_rgba(109,77,200,0.10)]">
           <div className="space-y-8">
 
+            {poging >= 2 && (
+              <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+                <RotateCcw className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                <span>
+                  <span className="font-semibold">Automatisch opnieuw gegenereerd</span> — de eerste versie scoorde te laag op de kwaliteitscheck. Dit is poging 2 van 2, met verbeterpunten uit de eerste beoordeling.
+                </span>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_8px_20px_rgba(98,101,255,0.25)]">
@@ -1047,7 +1069,6 @@ export function AiAssignmentClient({
                     }`}>
                       {judgeResult.beslissing === "goedkeuren" ? "✓ Goedgekeurd"
                         : judgeResult.beslissing === "flaggen" ? "⚠ Menselijke review nodig"
-                        : judgeResult.beslissing === "escaleren" ? "↑ Geëscaleerd"
                         : "↺ Opnieuw genereren"}
                     </span>
                   ) : (

@@ -10,6 +10,8 @@ export type CriteriumScore = {
   naam: string
   feedback: string
   score: number
+  runScores?: number[]
+  failed?: true
 }
 
 export type JudgeInput = {
@@ -21,9 +23,11 @@ export type JudgeInput = {
   beginsituatie: string
   gegenereerdeOpdracht: string
   volledigOpp?: string
+  /** Gestructureerde Engelse samenvatting van het OPP — makkelijker voor de judge dan ruwe Dutch chunks */
+  profielSamenvatting?: string
 }
 
-export type JudgeBeslissing = "goedkeuren" | "flaggen" | "opnieuw_genereren" | "escaleren"
+export type JudgeBeslissing = "goedkeuren" | "flaggen" | "opnieuw_genereren"
 
 export type JudgeResult = {
   scores: CriteriumScore[]
@@ -34,7 +38,43 @@ export type JudgeResult = {
 }
 
 const CRITERIA: CriteriumRubric[] = [
+  // ===== RAGAS criteria =====
   {
+    // RAGAS Faithfulness — Es et al. (2023)
+    naam: "Are all elements in the assignment grounded in the student profile, without invented information?",
+    scores: {
+      1: "Significant hallucinated or invented information",
+      2: "Some invented elements present",
+      3: "Largely grounded with minor inventions",
+      4: "Almost fully grounded in profile data",
+      5: "Every element traceable to the student profile",
+    },
+  },
+  {
+    // RAGAS Context Precision — Es et al. (2023)
+    naam: "Does the assignment use only relevant student information and leave out irrelevant details?",
+    scores: {
+      1: "Much irrelevant information used",
+      2: "Some irrelevant elements",
+      3: "Reasonably focused",
+      4: "Well focused",
+      5: "Only relevant information used",
+    },
+  },
+{
+  // RAGAS Context Recall — Es et al. (2023)
+  naam: "Does the assignment reflect all relevant student characteristics from the profile, including both strengths and documented challenges?",
+  scores: {
+    1: "Key profile elements are missing (e.g. documented challenges ignored, cognitive level not reflected)",
+    2: "Some relevant profile information is incorporated but important aspects are overlooked",
+    3: "Most relevant information is reflected, but one or two notable gaps",
+    4: "Nearly all critical profile characteristics are reflected, either explicitly or implicitly",
+    5: "All critical OPP elements (strengths, challenges, work style, cognitive level) are appropriately reflected in the assignment",
+  },
+},
+  // ===== Hoogbegaafdheidsonderwijs criteria =====
+  {
+    // Renzulli SEM (1977) + Self-Determination Theory (Ryan & Deci, 2000)
     naam: "Does the assignment contain elements that connect to the interests listed in the student profile?",
     scores: {
       1: "No connection to the student's interests whatsoever",
@@ -45,16 +85,18 @@ const CRITERIA: CriteriumRubric[] = [
     },
   },
   {
-    naam: "Does the difficulty of the assignment match the student's specified Bloom level?",
+    // Anderson & Krathwohl (2001) Revised Bloom's Taxonomy
+    naam: "Does the cognitive demand of the assignment correctly reflect the specified Bloom's taxonomy level?",
     scores: {
-      1: "Wrong Bloom level, no match",
-      2: "Level is too high or too low",
-      3: "Broadly appropriate level",
-      4: "Well aligned, minor deviation",
-      5: "Exactly the correct Bloom level",
+      1: "Cognitive demand does not match the specified level (e.g. 'Create' specified but only requires recall)",
+      2: "Significantly above or below the specified Bloom level",
+      3: "Approximately at the right level but inconsistent",
+      4: "Well aligned with the specified Bloom level",
+      5: "Cognitive demand fully matches the specified Bloom level throughout the assignment",
     },
   },
   {
+    // Vygotsky (1978) ZPD + Reis & Renzulli (2010) on independence in gifted learners
     naam: "Can a student of this age and level complete the assignment independently?",
     scores: {
       1: "Unachievable, too complex or too vague",
@@ -65,16 +107,7 @@ const CRITERIA: CriteriumRubric[] = [
     },
   },
   {
-    naam: "Does the assignment connect to the student's starting situation as described in the OPP profile?",
-    scores: {
-      1: "No connection to the starting situation",
-      2: "Little connection",
-      3: "Partial connection",
-      4: "Good connection",
-      5: "Fully aligned with the starting situation",
-    },
-  },
-  {
+    // Piaget (1972) cognitive stages + Silverman (1997) asynchronous development
     naam: "Is the assignment age-appropriate in language, tone, and content for this child?",
     scores: {
       1: "Not age-appropriate",
@@ -82,36 +115,6 @@ const CRITERIA: CriteriumRubric[] = [
       3: "Sufficiently age-appropriate",
       4: "Well age-appropriate",
       5: "Fully age-appropriate and motivating",
-    },
-  },
-  {
-    naam: "Can a teacher easily read, assess, and if necessary adapt the assignment?",
-    scores: {
-      1: "Incomprehensible for the teacher",
-      2: "Difficult to assess",
-      3: "Understandable but not easy to adapt",
-      4: "Clearly readable and adaptable",
-      5: "Fully transparent and easy to adapt",
-    },
-  },
-  {
-    naam: "Can all elements in the assignment be traced back to the student profile, without invented information?",
-    scores: {
-      1: "Much invented information",
-      2: "Some invented elements",
-      3: "Largely correct",
-      4: "Almost entirely correct",
-      5: "Fully based on the student profile",
-    },
-  },
-  {
-    naam: "Does the assignment use only relevant student information and leave out irrelevant details?",
-    scores: {
-      1: "Much irrelevant information used",
-      2: "Some irrelevant elements",
-      3: "Reasonably focused",
-      4: "Well focused",
-      5: "Only relevant information used",
     },
   },
 ]
@@ -126,11 +129,19 @@ function buildJudgePrompt(input: JudgeInput, criteriumIndex: number): string {
 
   const systemPrompt = "You are a fair judge assistant tasked with providing clear, objective feedback based on specific criteria, ensuring each assessment reflects the absolute standards set for performance."
 
-  const studentContext = `Student: ${input.naam}, age ${input.leeftijd}
+  // Geef de judge een gestructureerde profielsamenvatting als die beschikbaar is.
+  // Dat is beter dan de ruwe Dutch OPP-tekst, want prometheus2 is Engels-eerst.
+  const profileBlock = input.profielSamenvatting
+    ? `Structured student profile:\n${input.profielSamenvatting}`
+    : `Student: ${input.naam}, age ${input.leeftijd}
 Bloom level: ${input.bloomNiveau} | Subject: ${input.vak}
 Interests: ${input.interesses}
-Starting situation: ${input.beginsituatie}
-Full OPP: ${input.volledigOpp?.slice(0, 1500) ?? "Not available."}`
+Starting situation: ${input.beginsituatie}`
+
+  const studentContext = `${profileBlock}
+
+Supporting OPP excerpts (Dutch source document):
+${input.volledigOpp ?? "Not available."}`
 
   const taskBlock = `###Task Description:
 An instruction (with student context), a response to evaluate, a reference answer, and a score rubric representing an evaluation criterion are given.
@@ -163,29 +174,26 @@ ${rubricLines}
 
 function getReferenceAnswer(criteriumIndex: number): string {
   const references = [
-    // C1 - Interesses
-    "An excellent assignment uses the student's documented interests (from the OPP) as the core of the task, not just as surface decoration. For a student interested in science and experiments, the task should be structured as an investigation or experiment.",
-    
-    // C2 - Bloom
-    "An excellent assignment matches the target Bloom level precisely. For 'Creëren', the student must produce something new: design, compose, construct, or plan — not merely describe, summarize, or apply existing knowledge. The cognitive demand should match the student's documented ability level (TIQ, uitstroomperspectief).",
-    
-    // C3 - Zelfstandig uitvoerbaar
-    "An excellent assignment has a clear starting point, well-defined scope, and outputs the student can produce independently given their age and documented work habits, while still being cognitively challenging for their ability level.",
-    
-    // C4 - Beginsituatie
-    "An excellent assignment builds on documented strengths from the OPP (e.g. analytical thinking, autonomy, curiosity) and avoids documented weaknesses (e.g. heavy writing for a student with motor issues or writing struggles).",
-    
-    // C5 - Leeftijdspassend
-    "An excellent assignment uses language, tone, and examples appropriate for the student's actual age — neither patronizing nor academically out of reach. Tone should be engaging and motivating.",
-
-    // C6 - Leerkracht
-    "An excellent assignment is written in clear, well-structured Dutch that a teacher can read in under a minute, evaluate for fit, and adjust or shorten without rewriting from scratch.",
-    
-    // C8 - Traceerbaar
+    // index 0 — RAGAS Faithfulness
     "An excellent assignment makes only claims about the student that can be directly traced to the OPP. Every personal reference (e.g. 'since you like X') must be supported by the source document. No student characteristics may be invented.",
-    
-    // C9 - Relevant
+
+    // index 1 — RAGAS Context Precision
     "An excellent assignment uses only OPP information relevant to the task (interests, cognitive level, work style). It omits irrelevant details like medical history, family structure, or historical placement data.",
+
+    // index 2 — RAGAS Context Recall
+    "An excellent assignment uses all documented student characteristics: cognitive strengths (TIQ, uitstroomperspectief), interests, work style, AND documented limitations (e.g. writing difficulties). Nothing relevant is silently dropped.",
+
+    // index 3 — Interesses (Renzulli + SDT)
+    "An excellent assignment uses the student's documented interests (from the OPP) as the core of the task, not just as surface decoration. For a student interested in science and experiments, the task should be structured as an investigation or experiment.",
+
+    // index 4 — Bloom (Anderson & Krathwohl)
+    "An excellent assignment matches the target Bloom level precisely. For 'Creëren', the student must produce something new: design, compose, construct, or plan — not merely describe, summarize, or apply existing knowledge.",
+
+    // index 5 — ZPD (Vygotsky + Reis & Renzulli)
+    "An excellent assignment has a clear starting point, well-defined scope, and outputs the student can produce independently given their age and documented work habits, while still being cognitively challenging for their ability level.",
+
+    // index 6 — Leeftijdspassend (Piaget + Silverman)
+    "An excellent assignment uses language, tone, and examples appropriate for the student's actual age — neither patronizing nor academically out of reach. Tone should be engaging and motivating.",
   ]
   return references[criteriumIndex] ?? "A high-quality response that fully meets this criterion."
 }
@@ -205,7 +213,7 @@ function parseJudgeResponse(response: string): { feedback: string; score: number
 }
 
 function bepaalBeslissing(genormaliseerdeScore: number): JudgeBeslissing {
-  if (genormaliseerdeScore >= 0.75) return "goedkeuren"
+  if (genormaliseerdeScore >= 0.7) return "goedkeuren"
   if (genormaliseerdeScore >= 0.5) return "flaggen"
   return "opnieuw_genereren"
 }
@@ -216,25 +224,24 @@ async function scoreCriterium(input: JudgeInput, index: number, runs = 1) {
       model: JUDGE_MODEL,
       prompt: buildJudgePrompt(input, index),
       raw: true,
-      keep_alive: 0,
-      options: { temperature: 1.0, top_p: 0.9, repeat_penalty: 1.03, num_ctx: 4096, num_predict: 512 },
+      options: { temperature: 1.0, top_p: 0.9, repeat_penalty: 1.03, num_ctx: 16384, num_predict: 512 },
     })
     results.push(result)
   }
   
   const parsed = results.map(r => parseJudgeResponse(r.response?.trim() ?? ""))
-  const avgScore = Math.round(parsed.reduce((sum, p) => sum + p.score, 0) / parsed.length)
-  const bestRun = parsed.reduce((best, p) => 
+  const runScores = parsed.map(p => p.score)
+  const avgScore = Math.round(runScores.reduce((sum, s) => sum + s, 0) / runScores.length)
+  const bestRun = parsed.reduce((best, p) =>
     Math.abs(p.score - avgScore) < Math.abs(best.score - avgScore) ? p : best
   )
-  
-  return { feedback: bestRun.feedback, score: avgScore }
+
+  return { feedback: bestRun.feedback, score: avgScore, runScores }
 }
 
 export async function evalueerOpdrachtStreaming(
   input: JudgeInput,
   onStep: (score: CriteriumScore) => void,
-  poging = 1,
 ): Promise<JudgeResult> {
   const scores: CriteriumScore[] = []
 
@@ -268,21 +275,24 @@ export async function evalueerOpdrachtStreaming(
   try {
     for (let index = 0; index < CRITERIA.length; index++) {
       try {
-        const { feedback, score } = await scoreCriterium(input, index, 1)
+        const { feedback, score, runScores } = await scoreCriterium(input, index, 3)
         const criteriumScore: CriteriumScore = {
           criterium: index + 1,
           naam: CRITERIA[index].naam,
           feedback,
           score,
+          runScores,
         }
         scores.push(criteriumScore)
         onStep(criteriumScore)
-      } catch {
+      } catch (err) {
+        console.error(`[judge] criterium ${index + 1} mislukt:`, err)
         const fallback: CriteriumScore = {
           criterium: index + 1,
           naam: CRITERIA[index].naam,
           feedback: "Beoordeling niet beschikbaar (model fout).",
-          score: 3,
+          score: 0,
+          failed: true,
         }
         scores.push(fallback)
         onStep(fallback)
@@ -292,12 +302,10 @@ export async function evalueerOpdrachtStreaming(
     await releaseOllamaModel(JUDGE_MODEL)
   }
 
-  const totaalScore = scores.reduce((sum, s) => sum + s.score, 0)
+  const totaalScore = scores.filter((s) => !s.failed).reduce((sum, s) => sum + s.score, 0)
   const maxScore = CRITERIA.length * 5
   const genormaliseerdeScore = totaalScore / maxScore
-  const beslissing = poging >= 2 && genormaliseerdeScore < 0.5
-    ? "escaleren"
-    : bepaalBeslissing(genormaliseerdeScore)
+  const beslissing = bepaalBeslissing(genormaliseerdeScore)
 
   return {
     scores,

@@ -1,4 +1,4 @@
-# Advies: Dashboard & Studentpagina
+# Dashboard & Studentpagina
 **Juf Aimee — Studio Responsible AI | Sprint 2**
 
 ---
