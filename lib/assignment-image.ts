@@ -40,6 +40,13 @@ type ImageModelConfig = {
   editModelPath: string;
 };
 
+function compactText(value: string | undefined, maxChars: number) {
+  if (!value) return "";
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxChars) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
 function sanitizePathSegment(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9-_]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "student";
 }
@@ -110,21 +117,24 @@ export function buildAssignmentImagePrompt({
     return promptOverride.trim();
   }
 
-  const interestLine =
-    interests && interests.length > 0
-      ? `Verwerk subtiel iets van deze interesses in de sfeer of context: ${interests.slice(0, 3).join(", ")}.`
-      : "";
+  const compactTitle = compactText(assignmentTitle, 80);
+  const compactFocus = compactText(focusArea || "algemene verdieping", 40);
+  const compactBloom = compactText(bloomLevel, 24);
+  const compactAssignment = compactText(assignmentText, 140);
+  const compactRationale = compactText(rationale, 120);
+  const compactInterest =
+    interests && interests.length > 0 ? compactText(interests[0], 60) : "";
 
   return [
-    "Maak een duidelijke, kindvriendelijke educatieve illustratie in een vrolijke platte schoolstijl.",
-    "Zachte kleuren, overzichtelijke compositie, vriendelijk en rustig beeld, geen tekst, geen watermerk, geen logo.",
-    `Opdracht: ${assignmentTitle}.`,
-    `Schoolvak of focus: ${focusArea || "algemene verdieping"}.`,
-    `Bloom-niveau: ${bloomLevel}.`,
-    `Laat vooral dit zien: ${assignmentText}`.trim(),
-    rationale ? `Didactische bedoeling: ${rationale}` : "",
-    interestLine,
-    `De illustratie is bedoeld voor leerling ${studentName} en moet de opdracht ondersteunen zonder het antwoord weg te geven.`,
+    "Maak een duidelijke, kindvriendelijke educatieve illustratie in een rustige platte schoolstijl.",
+    "Zachte kleuren, overzichtelijke compositie, geen tekst, geen watermerk, geen logo.",
+    compactTitle ? `Thema: ${compactTitle}.` : "",
+    compactFocus ? `Schoolvak: ${compactFocus}.` : "",
+    compactBloom ? `Denkniveau: ${compactBloom}.` : "",
+    compactAssignment ? `Laat dit zien: ${compactAssignment}.` : "",
+    compactRationale ? `Didactisch doel: ${compactRationale}.` : "",
+    compactInterest ? `Subtiele sfeer uit interesse: ${compactInterest}.` : "",
+    `Voor leerling ${studentName}. Ondersteun de opdracht zonder het antwoord weg te geven.`,
   ]
     .filter(Boolean)
     .join(" ");
