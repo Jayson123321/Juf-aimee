@@ -2,92 +2,141 @@
 
 ## Overzicht
 
-Dit document beschrijft stap voor stap hoe de **RAS pipeline** (Retrieval, Analysis, Structure) als aanvulling op de bestaande Agentic RAG aanpak wordt geïntegreerd in de Juf Aimee codebase.
+Dit document beschrijft hoe de **RAS pipeline** (Retrieval-Augmented System) als aanvulling op de bestaande Agentic RAG aanpak is geïntegreerd in de Juf Aimee codebase, inclusief de **portfolio-analyse** voor patroonherkenning uit de leerlinggeschiedenis.
 
-RAS **vervangt Agentic RAG niet** — het bouwt er bovenop. De OPP vector search (het hart van Agentic RAG) blijft de basis. RAS voegt daar een tweede retrieval kanaal aan toe: de **leerlinggeschiedenis** — een opeenstapeling van afgeronde opdrachten, leerkrachtfeedback en leerlingreflecties over tijd.
+RAS **vervangt Agentic RAG niet** — het bouwt er bovenop. De OPP vector search (het hart van Agentic RAG) blijft de basis. RAS voegt daar een tweede retrieval kanaal aan toe: de **leerlinggeschiedenis** — een opeenstapeling van afgeronde opdrachten en leerkrachtfeedback over tijd.
 
 De leerlinggeschiedenis is de kern van de meerwaarde van RAS. Het zijn de dynamische patronen die het verschil maken:
 - Waar liep de leerling steeds tegenaan?
 - Wat vond de leerkracht herhaaldelijk belangrijk?
-- Wat leerde de leerling zelf over zijn eigen aanpak?
+- Op welk Bloom-niveau heeft de leerling al meerdere opdrachten afgerond?
 
 Die patronen maken het mogelijk om niet alleen een relevante opdracht te genereren, maar een opdracht die **aansluit op de ontwikkeling van de leerling over tijd**.
 
 ```
-Agentic RAG:  OPP vector search → genereer opdracht (elke keer opnieuw)
+Agentic RAG:  OPP vector search → genereer opdracht (statisch profiel)
 RAS:          OPP vector search
-            + leerlinggeschiedenis (patronen uit feedback + reflecties)  → analyseer → genereer opdracht
+            + leerlinggeschiedenis (afgeronde opdrachten + leerkrachtfeedback)
+            + portfolio-analyse (patroonherkenning uit leerlinggeschiedenis)
+            → genereer opdracht (dynamisch, aansluitend op ontwikkeling)
 ```
 
 ---
 
-## Huidige situatie
+## Architectuur: wat is gebouwd
+
+De implementatie bestaat uit drie lagen die op elkaar bouwen:
+
+```mermaid
+flowchart TD
+    A([Leraar klikt op Bronnen zoeken]) --> B
+
+    subgraph Pipeline["AI Pipeline — app/api/assign/route.ts"]
+        B["Laag 1: RAG\nzoekVolledigProfiel()\nOPP vector search via pgvector"]
+        C["Laag 2: RAS\nretrieveLeerlinggeschiedenis()\nAfgeronde opdrachten + leerkrachtfeedback"]
+        D["Laag 3: Portfolio-analyse\nanalyzePortfolio()\nBloom-patroonherkenning — geen LLM"]
+        B --> C --> D
+    end
+
+    D --> E{suggestedNextBloom?}
+    E -- "Ja (≥2x niveau afgerond)" --> F["Oranje banner in UI\nAanbeveling zichtbaar voor leraar"]
+    E -- "Nee (onvoldoende data)" --> G["Geen banner\nNormale werking"]
+
+    F --> H{Leraar beslist}
+    H -- "Gebruik dit niveau" --> I([Bloom-niveau aangepast])
+    H -- "Negeren" --> J([Eigen keuze leraar])
+
+    style Pipeline fill:#f0f4ff,stroke:#94a3b8
+    style F fill:#fef3c7,stroke:#f59e0b
+    style H fill:#f0fdf4,stroke:#22c55e
+```
+
+```mermaid
+flowchart LR
+    subgraph DB["Database (PostgreSQL + pgvector)"]
+        OPP[("OppChunk\nOPP-documenten\nvector embeddings")]
+        ASSIGN[("Assignment\nAfgeronde opdrachten\nBloom-niveaus")]
+        FEEDBACK[("TeacherFeedback\nLeerkrachtfeedback\nper opdracht")]
+    end
+
+    subgraph RAG["Laag 1 — RAG (bestaand)\nlib/ollama.ts + pgvector"]
+        R1["zoekVolledigProfiel()\nStatisch leerlingprofiel\nuit OPP-documenten"]
+    end
+
+    subgraph RAS["Laag 2 — RAS (nieuw)\nlib/ras/retrieveLeerlinggeschiedenis.ts"]
+        R2["retrieveLeerlinggeschiedenis()\nDynamische geschiedenis\nlaatste 5 afgeronde opdrachten"]
+        R3["formatLeerlinggeschiedenis()\nOmzetten naar leesbare\ntekst voor LLM-prompt"]
+        R2 --> R3
+    end
+
+    subgraph PORTFOLIO["Laag 3 — Portfolio-analyse (nieuw)\nlib/portfolio-analysis.ts"]
+        R4["analyzePortfolio()\nBloom-frequentie tellen\nPatroonherkenning"]
+        R5["suggestedNextBloom\nHoogste niveau ≥2x\n→ stel volgend niveau voor"]
+        R4 --> R5
+    end
+
+    subgraph LLM["Generatie\nOllama LLM"]
+        PROMPT["Unified prompt\nOPP + Geschiedenis\n+ Portfolio context"]
+        GEN["Gegenereerde opdracht\nop maat voor leerling"]
+        PROMPT --> GEN
+    end
+
+    OPP --> R1
+    ASSIGN --> R2
+    ASSIGN --> R4
+    FEEDBACK --> R2
+    FEEDBACK --> R4
+
+    R1 --> PROMPT
+    R3 --> PROMPT
+    R5 --> PROMPT
+
+    style RAG fill:#eff6ff,stroke:#3b82f6
+    style PORTFOLIO fill:#f0fdf4,stroke:#22c55e
+    style RAG fill:#eff6ff,stroke:#3b82f6
+    style LLM fill:#faf5ff,stroke:#a855f7
+    style DB fill:#f8fafc,stroke:#94a3b8
+```
+
+### Laag 1 — RAG (bestaand)
+OPP vector search: haalt statische profielinformatie op over de leerling via pgvector.
+
+### Laag 2 — RAS: `lib/ras/retrieveLeerlinggeschiedenis.ts`
+Haalt de dynamische leerlinggeschiedenis op: de laatste N afgeronde opdrachten inclusief leerkrachtfeedback en ingediende bestanden.
+
+### Laag 3 — Portfolio-analyse: `lib/portfolio-analysis.ts`
+Deterministisch patroonherkenning bovenop de leerlinggeschiedenis. Geen LLM — puur op basis van data. Detecteert Bloom-patronen en suggereert het volgende niveau.
+
+---
+
+## Gerealiseerde bestanden
 
 | Bestand | Rol |
 |---|---|
-| `app/api/prototype/assignment/route.ts` | Doet alles: OPP search, prompt bouwen, LLM call, rejection opslaan |
-| `lib/tools/searchDocs.ts` | Vector search op OppChunk tabel |
-| `lib/ollama.ts` | Ollama client + embedding functie |
-| `lib/db.ts` | Prisma client |
-
-**Knelpunten in de huidige aanpak:**
-- Rejection feedback wordt opgeslagen als `OppChunk` met prefix — onnauwkeurig en moeilijk te queryen
-- leerling data die meegestuurd wordt: alleen `title`, `status`, `bloomLevel` — geen feedback of reflectie
-- Alles staat in één `route.ts` — moeilijk te onderhouden en uit te breiden
+| `lib/ras/retrieveLeerlinggeschiedenis.ts` | Haalt afgeronde opdrachten op met feedback uit de database |
+| `lib/portfolio-analysis.ts` | Analyseert Bloom-patronen deterministisch, genereert `suggestedNextBloom` |
+| `app/api/assign/route.ts` | Integreert RAG + RAS + portfolio-analyse in de AI pipeline |
+| `app/student/[id]/generate/AiAssignmentClient.tsx` | Toont de aanbevelingsbanner aan de leraar in de UI |
 
 ---
 
-## Doelarchitectuur
+## Stap 1 — `lib/ras/retrieveLeerlinggeschiedenis.ts`
 
-```
-lib/
-├── ras/
-│   ├── pipeline.ts          ← orkestreert retrieval + analyse + generatie
-│   ├── retrievePortfolio.ts ← haalt completed assignments op met feedback + reflecties
-│   └── structureContext.ts  ← combineert OPP + portfolio, extraheert patronen
-├── db.ts                    (ongewijzigd)
-└── ollama.ts                (ongewijzigd)
-
-app/api/prototype/assignment/
-└── route.ts                 ← generate/revise roept pipeline.ts aan, reject slaat TeacherFeedback op
-```
-
----
-
-## Stap 1 — Migratie draaien
-
-**Vereiste:** Schema is al bijgewerkt op branch `feature/ras-prisma-schema` met `TeacherFeedback` en `Reflection` modellen.
-
-```bash
-npx prisma migrate dev --name add-teacher-feedback-and-reflection
-```
-
-Dit maakt de twee nieuwe tabellen aan in de database. Daarna:
-
-```bash
-npx prisma generate
-```
-
-**Resultaat:** `TeacherFeedback` en `Reflection` tabellen beschikbaar in de database.
-
----
-
-## Stap 2 — `lib/ras/retrieveLeerlinggeschiedenis.ts` aanmaken
-
-Haalt de leerlinggeschiedenis op: de laatste N afgeronde opdrachten inclusief leerkrachtfeedback en leerlingreflecties. Dit zijn de dynamische patronen die RAS onderscheiden van Agentic RAG.
+Haalt de laatste 5 afgeronde opdrachten op per leerling, inclusief leerkrachtfeedback en ingediende bestanden.
 
 ```ts
-import { prisma } from "@/lib/db";
-
-export async function retrieveLeerlinggeschiedenis(studentId: string, take = 5) {
+export async function retrieveLeerlinggeschiedenis(
+  studentId: string,
+  take = 5
+): Promise<LeerlinggeschiedenisItem[]> {
   return prisma.assignment.findMany({
-    where: {
-      studentId,
-      status: "COMPLETED",
-    },
-    include: {
-      teacherFeedback: true,
-      reflection: true,
+    where: { studentId, status: "COMPLETED" },
+    select: {
+      title: true,
+      bloomLevel: true,
+      studentWork: true,
+      teacherFeedback: { select: { content: true } },
+      submissions: { select: { fileName: true } },
     },
     orderBy: { updatedAt: "desc" },
     take,
@@ -95,195 +144,189 @@ export async function retrieveLeerlinggeschiedenis(studentId: string, take = 5) 
 }
 ```
 
+De functie `formatLeerlinggeschiedenis()` zet de opgehaalde data om naar een leesbare tekst die als context meegegeven wordt aan het LLM.
+
 **Wat het teruggeeft per opdracht:**
-- `title`, `bloomNiveau`, `bloomLevel` — wat voor opdracht het was en op welk niveau
+- `title`, `bloomLevel` — wat voor opdracht het was en op welk niveau
 - `studentWork` — het ingeleverde werk van de leerling
 - `teacherFeedback.content` — geschreven feedback van de leerkracht
-- `reflection.content` — zelfreflectie van de leerling: wat vond de leerling moeilijk, wat leerde hij
-
-**Samen vormen deze velden de leerlinggeschiedenis** — niet een losse lijst opdrachten, maar een tijdlijn van ontwikkeling waaruit patronen te extraheren zijn.
+- `submissions` — ingediende bestanden (bijv. tekeningen)
 
 ---
 
-## Stap 3 — `lib/ras/structureContext.ts` aanmaken
+## Stap 2 — `lib/portfolio-analysis.ts`
 
-Extraheert patronen uit de leerlinggeschiedenis en koppelt die aan de OPP-doelen. Dit is de Analysis Layer — het verschil tussen data doorgeven en begrijpen wat de leerling nodig heeft.
+Analyseert de leerlinggeschiedenis **deterministisch** — zonder LLM. Detecteert patronen in Bloom-niveaus en leerkrachtfeedback.
+
+### Bloom-patroonherkenning
 
 ```ts
-type OppChunk = { tekst: string; score: number };
-type LeerlinggeschiedenisItem = {
-  title: string;
-  bloomLevel: string | null;
-  studentWork: string | null;
-  teacherFeedback: { content: string } | null;
-  reflection: { content: string } | null;
+const BLOOM_ORDER = [
+  "Onthouden", "Begrijpen", "Toepassen",
+  "Analyseren", "Evalueren", "Creëren",
+];
+
+// suggestedNextBloom: het niveau ná het hoogste niveau dat ≥2x is afgerond
+for (let i = BLOOM_ORDER.length - 1; i >= 0; i--) {
+  const level = BLOOM_ORDER[i];
+  if ((bloomFrequency[level] ?? 0) >= 2) {
+    suggestedNextBloom = BLOOM_ORDER[i + 1] ?? null;
+    break;
+  }
+}
+```
+
+**Logica:** Als een leerling een Bloom-niveau minimaal 2x heeft afgerond, is er voldoende bewijs dat dit niveau beheerst wordt. Het systeem suggereert dan het volgende niveau.
+
+### Feedback-analyse
+
+De functie detecteert ook moeite- en succesgebieden op basis van trefwoorden in leerkrachtfeedback:
+
+```ts
+const NEGATIVE_KEYWORDS = ["te makkelijk", "moeite", "moeilijk", "meer uitdaging", "niet goed"];
+const POSITIVE_KEYWORDS = ["goed gedaan", "uitstekend", "sterk", "prima", "goed gelukt"];
+```
+
+### Output: `PortfolioInsights`
+
+```ts
+type PortfolioInsights = {
+  completedCount: number;           // aantal afgeronde opdrachten
+  bloomFrequency: Record<string, number>; // hoe vaak elk niveau is afgerond
+  suggestedNextBloom: string | null; // aanbevolen volgend Bloom-niveau
+  strugglingAreas: string[];        // opdrachten met negatieve feedback
+  successAreas: string[];           // opdrachten met positieve feedback
+  portfolioSummary: string;         // leesbare samenvatting voor in de prompt
 };
-
-export function structureContext(oppChunks: OppChunk[], geschiedenis: LeerlinggeschiedenisItem[]) {
-  const oppContext = oppChunks
-    .map((c, i) => `Bron ${i + 1} (score: ${c.score.toFixed(2)}): "${c.tekst}"`)
-    .join("\n");
-
-  // Tijdlijn van de leerling — patronen over tijd zichtbaar maken
-  const geschiedenisContext = geschiedenis
-    .map((a) => {
-      const lines = [`Opdracht: "${a.title}" (Bloom: ${a.bloomLevel ?? "onbekend"})`];
-      if (a.studentWork) lines.push(`  Ingeleverd werk: ${a.studentWork}`);
-      if (a.teacherFeedback) lines.push(`  Leerkracht feedback: ${a.teacherFeedback.content}`);
-      if (a.reflection) lines.push(`  Leerlingreflectie: ${a.reflection.content}`);
-      return lines.join("\n");
-    })
-    .join("\n\n");
-
-  // Terugkerende patronen extraheren uit feedback en reflecties
-  const terugkerendePatronen = geschiedenis
-    .filter((a) => a.teacherFeedback || a.reflection)
-    .map((a) => a.teacherFeedback?.content ?? a.reflection?.content ?? "")
-    .filter(Boolean);
-
-  return { oppContext, geschiedenisContext, terugkerendePatronen };
-}
 ```
 
 ---
 
-## Stap 4 — `lib/ras/pipeline.ts` aanmaken
+## Stap 3 — Integratie in `app/api/assign/route.ts`
 
-Orkestreert de volledige RAS pipeline: parallel retrieval → structureren → één LLM call.
+De drie lagen worden gecombineerd in de API route:
 
 ```ts
-import { retrievePortfolio } from "./retrievePortfolio";
-import { structureContext } from "./structureContext";
-import { executeSearchOpp } from "@/app/ai/tools/search_opp";
-import { GEN_MODEL, ollama } from "@/lib/ollama";
+// Laag 1: RAG — statisch leerlingprofiel
+const sources = await zoekVolledigProfiel(student.id, focusArea);
 
-export async function runRasPipeline(args: {
-  studentId: string;
-  studentName: string;
-  groep: string;
-  bloomLabel: string;
-  focusArea: string;
-  teacherPrompt?: string;
-  currentAssignment?: { title?: string; assignment?: string; rationale?: string } | null;
-}) {
-  const { studentId, studentName, groep, bloomLabel, focusArea, teacherPrompt, currentAssignment } = args;
+// Laag 2: RAS — dynamische leerlinggeschiedenis
+const geschiedenisItems = await retrieveLeerlinggeschiedenis(student.id);
+const geschiedenis = formatLeerlinggeschiedenis(geschiedenisItems);
 
-  // Parallel retrieval — OPP (RAG basis) + leerlinggeschiedenis (RAS aanvulling)
-  const query = [focusArea, bloomLabel, `passende opdracht voor ${studentName}`, "interesses", "onderwijsbehoeften"].join(", ");
-  const [searchResults, geschiedenis] = await Promise.all([
-    executeSearchOpp(studentId, query, 5),            // altijd uitgevoerd (RAG basis)
-    retrieveLeerlinggeschiedenis(studentId, 5),        // leeg als leerling geen geschiedenis heeft
-  ]);
-
-  // Structureer context — extraheer patronen uit leerlinggeschiedenis
-  const oppChunks = parseOppResults(searchResults);
-  const { oppContext, geschiedenisContext, terugkerendePatronen } = structureContext(oppChunks, geschiedenis);
-
-  // Bouw unified prompt
-  const prompt = buildUnifiedPrompt({
-    studentName, groep, bloomLabel, focusArea,
-    oppContext, geschiedenisContext, terugkerendePatronen,
-    teacherPrompt, currentAssignment,
-  });
-
-  // Één LLM call
-  const response = await ollama.chat({
-    model: GEN_MODEL,
-    messages: [{ role: "user", content: prompt }],
-    options: { temperature: 0.3, num_predict: 500 },
-  });
-
-  return response.message.content?.trim() ?? "";
-}
+// Laag 3: Portfolio-analyse — patroonherkenning
+const portfolioInsights = analyzePortfolio(student.assignments);
 ```
 
----
-
-## Stap 5 — `route.ts` updaten
-
-### A) `generate` en `revise` actions
-
-Vervang de huidige `buildGenerationPrompt` + directe `ollama.chat` aanroep door:
+Bij de `search` actie wordt `suggestedNextBloom` direct teruggegeven aan de frontend:
 
 ```ts
-const content = await runRasPipeline({
-  studentId: student.id,
-  studentName: student.fullName,
-  groep: student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend",
-  bloomLabel: resolvedBloom,
-  focusArea,
-  teacherPrompt,
-  currentAssignment,
-});
-```
-
-### B) `reject` action
-
-Huidige aanpak (verwijderen):
-```ts
-// Feedback wordt opgeslagen als OppChunk met prefix
-await prisma.$executeRaw`INSERT INTO "OppChunk" ...`
-```
-
-Nieuwe aanpak:
-```ts
-// Feedback wordt opgeslagen als TeacherFeedback record
-const assignment = await prisma.assignment.findFirst({
-  where: { studentId: student.id, title: assignmentTitle },
-  orderBy: { createdAt: "desc" },
-});
-
-if (assignment) {
-  await prisma.teacherFeedback.create({
-    data: {
-      assignmentId: assignment.id,
-      content: rejectReason.trim(),
-    },
+if (action === "search") {
+  return NextResponse.json({
+    sources,
+    suggestedNextBloom: portfolioInsights.suggestedNextBloom,
   });
 }
 ```
 
----
-
-## Uitvoervolgorde
-
-| # | Stap | Bestand | Afhankelijk van |
-|---|---|---|---|
-| 1 | Migratie draaien | — | Schema (klaar) |
-| 2 | Leerlinggeschiedenis ophalen | `lib/ras/retrieveLeerlinggeschiedenis.ts` | Migratie |
-| 3 | Context structureren | `lib/ras/structureContext.ts` | Stap 2 |
-| 4 | Pipeline orkestratie | `lib/ras/pipeline.ts` | Stap 2 + 3 |
-| 5a | Route: generate/revise | `route.ts` | Stap 4 |
-| 5b | Route: reject action | `route.ts` | Migratie |
+De `LEERLINGGESCHIEDENIS` en `PORTFOLIO ANALYSE` secties worden als context meegegeven in de prompt aan het LLM.
 
 ---
 
-## Wat niet verandert
+## Stap 4 — UI: aanbevelingsbanner in `AiAssignmentClient.tsx`
 
-- `lib/tools/searchDocs.ts` — OPP vector search blijft ongewijzigd, wordt aangeroepen vanuit de pipeline
-- `lib/ollama.ts` — Ollama client ongewijzigd
-- `lib/db.ts` — Prisma client ongewijzigd
-- Het frontend van de prototype pagina — zelfde API interface, zelfde acties
+Na het klikken op "Bronnen zoeken" verschijnt een oranje banner als het systeem een aanbeveling heeft:
+
+```tsx
+{suggestedNextBloom && suggestedNextBloom !== selectedBloom && (
+  <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+    <p className="text-sm text-amber-800">
+      <span className="font-semibold">Aanbeveling:</span> Op basis van eerdere opdrachten
+      is <span className="font-semibold">{suggestedNextBloom}</span> het volgende
+      passende niveau voor {student.name}.
+    </p>
+    <button onClick={() => setSelectedBloom(suggestedNextBloom)}>
+      Gebruik dit niveau
+    </button>
+  </div>
+)}
+```
+
+**Ontwerpkeuze — leraar behoudt de eindbeslissing:** De banner is een suggestie, geen automatische overschrijving. De leraar klikt zelf op "Gebruik dit niveau" of negeert de aanbeveling. Dit is in lijn met het kernprincipe van Juf Aimee: *AI ondersteunt de leraar, vervangt deze niet.*
 
 ---
 
 ## Gedrag zonder portfolio (graceful degradation)
 
-RAS is een aanvulling op Agentic RAG, geen vervanging. Dit betekent:
+RAS is een aanvulling op Agentic RAG, geen vervanging:
 
 | Situatie | Gedrag |
 |---|---|
-| Leerling heeft geen afgeronde opdrachten | Pipeline gebruikt alleen OPP bronnen — identiek aan huidig RAG gedrag |
-| Leerling heeft opdrachten maar nog geen feedback/reflectie | Pipeline gebruikt OPP + opdrachttitels/bloom niveaus |
-| Leerling heeft volledige leerlinggeschiedenis | Pipeline extraheert patronen uit feedback + reflecties — volledig RAS gedrag |
+| Leerling heeft geen afgeronde opdrachten | Alleen OPP-bronnen gebruikt — identiek aan huidig RAG gedrag |
+| Leerling heeft opdrachten maar één per niveau | `suggestedNextBloom` is null, geen banner getoond |
+| Leerling heeft ≥2 opdrachten op hetzelfde niveau | `suggestedNextBloom` wijst naar het volgende niveau, banner verschijnt |
+| Leerling heeft Creëren ≥2x afgerond | Geen volgend niveau mogelijk, `suggestedNextBloom` is null |
 
-Het systeem verbetert dus **progressief** naarmate de leerlinggeschiedenis groeit, zonder dat bestaande functionaliteit breekt.
+Het systeem verbetert **progressief** naarmate de leerlinggeschiedenis groeit, zonder dat bestaande functionaliteit breekt.
 
-## Na implementatie: leerlinggeschiedenis laten opbouwen
+---
 
-De leerlinggeschiedenis heeft data nodig om meerwaarde te geven. Dit vereist later frontend werk (buiten de scope van dit plan):
+## Ethiek en ontwerpverantwoording
 
-- **TeacherFeedback** — leerkracht geeft feedback op een afgeronde opdracht
-- **Reflection** — leerling vult zelfreflectie in na het afronden van een opdracht
+### Stakeholder: de leraar staat centraal
 
-Hoe meer leerlinggeschiedenis beschikbaar is, hoe beter de patronen zijn die RAS kan extraheren en hoe persoonlijker de gegenereerde opdrachten worden.
+De primaire stakeholder van deze oplossing is de **leraar**. Tijdens het ontwerp is bewust gekozen om de aanbeveling als *suggestie* te tonen in plaats van automatisch het Bloom-niveau over te schrijven.
+
+**Ontwerpkeuze:** De leraar klikt zelf op "Gebruik dit niveau" of negeert de aanbeveling volledig.
+
+**Onderbouwing:** Een leraar kent de leerling persoonlijk — context die het systeem niet heeft. Factoren zoals motivatie, thuissituatie of een moeilijke week zijn niet zichtbaar in de data. De AI ondersteunt de leraar, maar de **eindbeslissing blijft altijd bij de leraar**. Dit is in lijn met het kernprincipe van Juf Aimee.
+
+---
+
+### Privacy (AVG)
+
+Leerlingdata die verwerkt wordt door RAS en portfolio-analyse:
+- Titels en Bloom-niveaus van afgeronde opdrachten
+- Leerkrachtfeedback
+- Ingeleverd werk van de leerling
+
+**Maatregelen:**
+| Risico | Maatregel |
+|---|---|
+| Leerlingdata naar externe partijen | Alle verwerking lokaal via Ollama — geen data verlaat het systeem |
+| Opslag van gevoelige feedback | Data blijft in de eigen database (Prisma/PostgreSQL) |
+| Onbevoegde toegang | Alleen de ingelogde leraar heeft toegang tot de leerlingdata |
+
+De lokale verwerking via Ollama is een bewuste architectuurkeuze met privacy als motivatie, conform de **AVG** (Algemene Verordening Gegevensbescherming).
+
+---
+
+### Ethische implicaties
+
+**1. Algoritmische aanbeveling kan verkeerd zijn**
+Het systeem baseert `suggestedNextBloom` op frequentie (≥2x afgerond). Dit is een simplificatie — een leerling kan een niveau meerdere keren hebben afgerond zonder het echt te beheersen.
+
+*Maatregel:* De aanbeveling is zichtbaar als suggestie met een toelichting ("Op basis van eerdere opdrachten"). De leraar beoordeelt zelf of de aanbeveling klopt.
+
+**2. Bias door beperkte data**
+Als een leerling weinig afgeronde opdrachten heeft, is de analyse minder betrouwbaar. Een leerling die net begint krijgt geen aanbeveling (`suggestedNextBloom` is null).
+
+*Maatregel:* Het systeem toont de banner alleen als er voldoende bewijs is (minimaal 2 afgeronde opdrachten op hetzelfde niveau). Bij onvoldoende data wordt geen aanbeveling gedaan.
+
+**3. Leraar afhankelijkheid van AI**
+Er is een risico dat leraren klakkeloos de aanbeveling volgen zonder kritisch na te denken.
+
+*Maatregel:* De banner is bewust terughoudend in toon ("Op basis van eerdere opdrachten is X **het volgende passende niveau**") en vereist een actieve klik van de leraar.
+
+---
+
+### Leerlinggeschiedenis
+
+Het systeem werkt voor alle leerlingen, ongeacht hoeveel geschiedenis beschikbaar is:
+- **Geen geschiedenis** → geen banner, normale werking
+- **Weinig geschiedenis** → geen banner, normale werking
+- **Voldoende geschiedenis** → banner met aanbeveling
+
+Er wordt geen onderscheid gemaakt op basis van kenmerken van de leerling. De aanbeveling is puur gebaseerd op aantoonbaar gedrag (afgeronde opdrachten).
+
+---
