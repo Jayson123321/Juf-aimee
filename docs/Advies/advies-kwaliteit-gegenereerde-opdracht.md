@@ -181,3 +181,5 @@ De maatschappelijke meerwaarde is duidelijk: betere opdrachten voor kwetsbare le
 - Xu, W., Zhu, G., Zhao, X., Pan, L., Li, L., & Wang, W. Y. (2024). *Pride and Prejudice: LLM Amplifies Self-Bias in Self-Refinement*. arXiv:2402.11436. https://arxiv.org/abs/2402.11436
 
 - Zheng, L., Chiang, W.-L., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., Lin, Z., Li, Z., Li, D., Xing, E. P., Zhang, H., Gonzalez, J. E., & Stoica, I. (2023). *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena*. arXiv:2306.05685. https://arxiv.org/abs/2306.05685
+
+- https://docs.ragas.io/en/latest/concepts/metrics/available_metrics/
