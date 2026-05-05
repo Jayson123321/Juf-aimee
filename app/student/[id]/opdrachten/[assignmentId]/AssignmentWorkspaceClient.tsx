@@ -310,7 +310,7 @@ export function AssignmentWorkspaceClient({
               </button>
               <button
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={saving || submitting || work.trim().length < 5}
+                disabled={saving || submitting || (work.trim().length < 5 && uploadedFiles.length === 0)}
                 onClick={submitWork}
                 type="button"
               >
