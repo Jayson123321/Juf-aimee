@@ -29,22 +29,22 @@ De implementatie bestaat uit drie lagen die op elkaar bouwen:
 
 ```mermaid
 flowchart TD
-    A([Leraar klikt op Bronnen zoeken]) --> B
+    A([Leraar klikt op bronnen zoeken]) --> B
 
-    subgraph Pipeline["AI Pipeline — app/api/assign/route.ts"]
-        B["Laag 1: RAG\nzoekVolledigProfiel()\nOPP vector search via pgvector"]
-        C["Laag 2: RAS\nretrieveLeerlinggeschiedenis()\nAfgeronde opdrachten + leerkrachtfeedback"]
-        D["Laag 3: Portfolio-analyse\nanalyzePortfolio()\nBloom-patroonherkenning — geen LLM"]
+    subgraph Pipeline["Wat er op de achtergrond gebeurt"]
+        B["Stap 1 — wie is de leerling? OPP-documenten worden opgezocht"]
+        C["Stap 2 — wat heeft de leerling eerder gedaan? Afgeronde opdrachten ophalen"]
+        D["Stap 3 — zit er een patroon in? Bloom-niveaus tellen"]
         B --> C --> D
     end
 
-    D --> E{suggestedNextBloom?}
-    E -- "Ja (≥2x niveau afgerond)" --> F["Oranje banner in UI\nAanbeveling zichtbaar voor leraar"]
-    E -- "Nee (onvoldoende data)" --> G["Geen banner\nNormale werking"]
+    D --> E{Is er een aanbeveling?}
+    E -- "ja, minstens 2x hetzelfde niveau afgerond" --> F["Oranje banner met het volgende Bloom-niveau"]
+    E -- "nee, te weinig data" --> G["Geen banner, alles werkt gewoon door"]
 
-    F --> H{Leraar beslist}
-    H -- "Gebruik dit niveau" --> I([Bloom-niveau aangepast])
-    H -- "Negeren" --> J([Eigen keuze leraar])
+    F --> H{Leraar kiest zelf}
+    H -- "Gebruik dit niveau" --> I([Niveau wordt overgenomen])
+    H -- "Toch een ander niveau" --> J([Leraar houdt eigen keuze])
 
     style Pipeline fill:#f0f4ff,stroke:#94a3b8
     style F fill:#fef3c7,stroke:#f59e0b
@@ -53,31 +53,31 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    subgraph DB["Database (PostgreSQL + pgvector)"]
-        OPP[("OppChunk\nOPP-documenten\nvector embeddings")]
-        ASSIGN[("Assignment\nAfgeronde opdrachten\nBloom-niveaus")]
-        FEEDBACK[("TeacherFeedback\nLeerkrachtfeedback\nper opdracht")]
+    subgraph DB["Wat staat er in de database?"]
+        OPP[("OPP-documenten over de leerling")]
+        ASSIGN[("Afgeronde opdrachten met Bloom-niveau")]
+        FEEDBACK[("Feedback van de leraar")]
     end
 
-    subgraph RAG["Laag 1 — RAG (bestaand)\nlib/ollama.ts + pgvector"]
-        R1["zoekVolledigProfiel()\nStatisch leerlingprofiel\nuit OPP-documenten"]
+    subgraph RAG["Stap 1 — wie is de leerling? bestaande functionaliteit"]
+        R1["Zoek het leerlingprofiel op via OPP-documenten"]
     end
 
-    subgraph RAS["Laag 2 — RAS (nieuw)\nlib/ras/retrieveLeerlinggeschiedenis.ts"]
-        R2["retrieveLeerlinggeschiedenis()\nDynamische geschiedenis\nlaatste 5 afgeronde opdrachten"]
-        R3["formatLeerlinggeschiedenis()\nOmzetten naar leesbare\ntekst voor LLM-prompt"]
+    subgraph RAS["Stap 2 — wat heeft de leerling gedaan? nieuw gebouwd"]
+        R2["Haal de laatste 5 afgeronde opdrachten op"]
+        R3["Zet de data om naar leesbare tekst"]
         R2 --> R3
     end
 
-    subgraph PORTFOLIO["Laag 3 — Portfolio-analyse (nieuw)\nlib/portfolio-analysis.ts"]
-        R4["analyzePortfolio()\nBloom-frequentie tellen\nPatroonherkenning"]
-        R5["suggestedNextBloom\nHoogste niveau ≥2x\n→ stel volgend niveau voor"]
+    subgraph PORTFOLIO["Stap 3 — zit er een patroon in? nieuw gebouwd"]
+        R4["Tel hoe vaak elk Bloom-niveau is afgerond"]
+        R5["Bereken het volgende aanbevolen niveau"]
         R4 --> R5
     end
 
-    subgraph LLM["Generatie\nOllama LLM"]
-        PROMPT["Unified prompt\nOPP + Geschiedenis\n+ Portfolio context"]
-        GEN["Gegenereerde opdracht\nop maat voor leerling"]
+    subgraph LLM["Opdracht genereren"]
+        PROMPT["Alles samenvoegen tot één prompt"]
+        GEN["Gepersonaliseerde opdracht voor de leerling"]
         PROMPT --> GEN
     end
 
@@ -92,8 +92,8 @@ flowchart LR
     R5 --> PROMPT
 
     style RAG fill:#eff6ff,stroke:#3b82f6
+    style RAS fill:#eff6ff,stroke:#3b82f6
     style PORTFOLIO fill:#f0fdf4,stroke:#22c55e
-    style RAG fill:#eff6ff,stroke:#3b82f6
     style LLM fill:#faf5ff,stroke:#a855f7
     style DB fill:#f8fafc,stroke:#94a3b8
 ```
