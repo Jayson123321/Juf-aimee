@@ -187,6 +187,9 @@ export function AiAssignmentClient({
   const [teacherPrompt, setTeacherPrompt] = useState("");
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [rejectedAndReady, setRejectedAndReady] = useState(false);
+  const [thinkingContent, setThinkingContent] = useState<string | null>(null);
+  const [thinkingOpen, setThinkingOpen] = useState(false);
 
   useEffect(() => {
     if (!imageGenerating) {
@@ -378,6 +381,9 @@ export function AiAssignmentClient({
         (event) => {
           if (event.type === "sources") {
             setSources(event.data as string[]);
+          } else if (event.type === "thinking") {
+            setThinkingContent((event.data as { content: string }).content);
+            setThinkingOpen(true);
           } else if (event.type === "assignment") {
             latestAssignment = event.data as GeneratedAssignment;
             setAssignment(latestAssignment);
@@ -399,14 +405,10 @@ export function AiAssignmentClient({
         },
       );
 
-      if (latestAssignment) {
-        if (includeIllustration) {
-          await generateIllustration(latestAssignment, {
-            previousImageUrl: previousImageUrlForRevision,
-          });
-        }
-
-        await runJudge(latestAssignment);
+      if (latestAssignment && includeIllustration) {
+        await generateIllustration(latestAssignment, {
+          previousImageUrl: previousImageUrlForRevision,
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Opdracht genereren mislukt.");
@@ -548,6 +550,13 @@ export function AiAssignmentClient({
     resetImageState();
     setRejectMode(false);
     setRejectReason("");
+    setRejectedAndReady(true);
+  }
+
+  function generateAfterReject() {
+    setRejectedAndReady(false);
+    if (mode === "mc") runGenerateMcStream();
+    else runGenerateStream("generate");
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -741,7 +750,22 @@ export function AiAssignmentClient({
                 {searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}
                 Zoek Bronnen met AI
               </button>
-              {mode === "text" ? (
+              {rejectedAndReady ? (
+                <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4">
+                  <p className="text-sm font-semibold text-rose-800">
+                    Opdracht afgekeurd — reden is opgeslagen. Genereer een nieuwe opdracht op basis van je feedback.
+                  </p>
+                  <button
+                    className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-rose-500 to-violet-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(200,80,80,0.18)] transition hover:from-rose-600 hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={busy}
+                    onClick={generateAfterReject}
+                    type="button"
+                  >
+                    {generating ? <Loader2 className="size-5 animate-spin" /> : <RotateCcw className="size-5" />}
+                    Genereer nieuwe opdracht
+                  </button>
+                </div>
+              ) : mode === "text" ? (
                 <button
                   className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
                   disabled={busy}
@@ -866,6 +890,26 @@ export function AiAssignmentClient({
                 <span>
                   <span className="font-semibold">Automatisch opnieuw gegenereerd</span> — de eerste versie scoorde te laag op de kwaliteitscheck. Dit is poging 2 van 2, met verbeterpunten uit de eerste beoordeling.
                 </span>
+              </div>
+            )}
+
+            {thinkingContent && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50">
+                <button
+                  className="flex w-full items-center justify-between px-5 py-3 text-left"
+                  onClick={() => setThinkingOpen((o) => !o)}
+                  type="button"
+                >
+                  <span className="text-xs font-semibold uppercase tracking-widest text-amber-700">
+                    🧠 Redenering van de AI
+                  </span>
+                  <span className="text-xs text-amber-600">{thinkingOpen ? "Verberg" : "Toon"}</span>
+                </button>
+                {thinkingOpen && (
+                  <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap px-5 pb-4 text-xs leading-6 text-amber-900">
+                    {thinkingContent}
+                  </pre>
+                )}
               </div>
             )}
 
