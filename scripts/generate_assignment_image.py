@@ -10,6 +10,7 @@ from diffusers.utils import load_image
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate assignment illustration with FLUX Kontext.")
+    parser.add_argument("--model-family")
     parser.add_argument("--model-path", required=True)
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--prompt", required=True)
@@ -28,7 +29,7 @@ def main() -> None:
 
   device = "cuda" if torch.cuda.is_available() else "cpu"
   dtype = torch.float16 if device == "cuda" else torch.float32
-  model_family = os.getenv("ASSIGNMENT_IMAGE_MODEL_FAMILY", "flux").lower()
+  model_family = (args.model_family or os.getenv("ASSIGNMENT_IMAGE_MODEL_FAMILY", "sd3")).lower()
 
   started_at = time.time()
 
@@ -78,6 +79,8 @@ def main() -> None:
       "output_path": args.output_path,
       "prompt": args.prompt,
       "duration_ms": int((time.time() - started_at) * 1000),
+      "model_family_used": model_family,
+      "model_label_used": "Stable Diffusion 3.5 Medium" if model_family == "sd3" else "FLUX.1 Kontext [dev]",
   }
   print(json.dumps(result))
 

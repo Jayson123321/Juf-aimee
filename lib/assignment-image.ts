@@ -20,6 +20,8 @@ type PythonImageResult = {
   output_path?: string;
   prompt?: string;
   duration_ms?: number;
+  model_family_used?: string;
+  model_label_used?: string;
 };
 
 type RemoteImageResult = {
@@ -27,6 +29,15 @@ type RemoteImageResult = {
   prompt?: string;
   duration_ms?: number;
   estimated_seconds?: number;
+  model_family_used?: string;
+  model_label_used?: string;
+};
+
+type ImageModelConfig = {
+  renderModelFamily: string;
+  renderModelPath: string;
+  editModelFamily: string;
+  editModelPath: string;
 };
 
 function sanitizePathSegment(value: string) {
@@ -44,6 +55,45 @@ export function getAssignmentImageEstimateSeconds() {
 
 function getRemoteImageApiUrl() {
   return process.env.ASSIGNMENT_IMAGE_API_URL?.trim() || "";
+}
+
+function normalizeModelFamily(value: string | undefined, fallback: string) {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed || fallback;
+}
+
+function getConfiguredImageModels(): ImageModelConfig {
+  const legacyPrimaryModelFamily = process.env.ASSIGNMENT_IMAGE_MODEL_FAMILY;
+  const legacyPrimaryModelPath = process.env.ASSIGNMENT_IMAGE_MODEL_PATH?.trim();
+  const legacyFallbackModelFamily = process.env.ASSIGNMENT_IMAGE_FALLBACK_MODEL_FAMILY;
+  const legacyFallbackModelPath = process.env.ASSIGNMENT_IMAGE_FALLBACK_MODEL_PATH?.trim();
+
+  const renderModelFamily = normalizeModelFamily(
+    process.env.ASSIGNMENT_IMAGE_RENDER_MODEL_FAMILY,
+    normalizeModelFamily(legacyFallbackModelFamily, normalizeModelFamily(legacyPrimaryModelFamily, "sd3")),
+  );
+
+  const renderModelPath =
+    process.env.ASSIGNMENT_IMAGE_RENDER_MODEL_PATH?.trim() ||
+    legacyFallbackModelPath ||
+    legacyPrimaryModelPath ||
+    path.join(process.cwd(), "models", "stable-diffusion-3.5-medium");
+
+  const editModelFamily = normalizeModelFamily(
+    process.env.ASSIGNMENT_IMAGE_EDIT_MODEL_FAMILY,
+    renderModelFamily,
+  );
+
+  const editModelPath =
+    process.env.ASSIGNMENT_IMAGE_EDIT_MODEL_PATH?.trim() ||
+    renderModelPath;
+
+  return {
+    renderModelFamily,
+    renderModelPath,
+    editModelFamily,
+    editModelPath,
+  };
 }
 
 export function buildAssignmentImagePrompt({
@@ -157,6 +207,8 @@ async function generateAssignmentImageRemote(args: GenerateAssignmentImageArgs) 
     prompt: payload.prompt?.trim() || prompt,
     durationMs: payload.duration_ms ?? 0,
     estimatedSeconds: payload.estimated_seconds ?? getAssignmentImageEstimateSeconds(),
+    modelFamilyUsed: payload.model_family_used ?? "",
+    modelLabelUsed: payload.model_label_used ?? "",
   };
 }
 
@@ -172,11 +224,13 @@ export async function generateAssignmentImage(args: GenerateAssignmentImageArgs)
   const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}.png`;
   const outputPath = path.join(outputDir, fileName);
   const inputImagePath = await resolveInputImagePath(args.previousImageUrl);
+  const modelConfig = getConfiguredImageModels();
+  const useEditModel = Boolean(inputImagePath);
+  const modelFamily = useEditModel ? modelConfig.editModelFamily : modelConfig.renderModelFamily;
+  const modelPath = useEditModel ? modelConfig.editModelPath : modelConfig.renderModelPath;
 
   const pythonBin = process.env.ASSIGNMENT_IMAGE_PYTHON_BIN || "python3";
   const scriptPath = path.join(process.cwd(), "scripts", "generate_assignment_image.py");
-  const modelPath =
-    process.env.ASSIGNMENT_IMAGE_MODEL_PATH || path.join(process.cwd(), "models", "FLUX.1-Kontext-dev");
 
   const width = String(parsePositiveInt(process.env.ASSIGNMENT_IMAGE_WIDTH, 1024));
   const height = String(parsePositiveInt(process.env.ASSIGNMENT_IMAGE_HEIGHT, 768));
@@ -184,6 +238,8 @@ export async function generateAssignmentImage(args: GenerateAssignmentImageArgs)
 
   const commandArgs = [
     scriptPath,
+    "--model-family",
+    modelFamily,
     "--model-path",
     modelPath,
     "--output-path",
@@ -243,5 +299,7 @@ export async function generateAssignmentImage(args: GenerateAssignmentImageArgs)
     prompt: parsed.prompt?.trim() || prompt,
     durationMs: parsed.duration_ms ?? Date.now() - startedAt,
     estimatedSeconds: getAssignmentImageEstimateSeconds(),
+    modelFamilyUsed: parsed.model_family_used ?? modelFamily,
+    modelLabelUsed: parsed.model_label_used ?? modelFamily.toUpperCase(),
   };
 }

@@ -153,6 +153,9 @@ export default async function StudentAssignmentDetailPage({
         {isMc && mcContent ? (
           <MultipleChoiceClient
             assignmentId={assignment.id}
+            assignmentTitle={assignment.title}
+            assignmentTip={assignment.studentTip ?? null}
+            bloomLevel={bloomLevel}
             firstName={firstName}
             initialWork={assignment.studentWork ?? ""}
             isCompleted={assignment.status === "COMPLETED"}
@@ -162,6 +165,10 @@ export default async function StudentAssignmentDetailPage({
         ) : (
           <AssignmentWorkspaceClient
             assignmentId={assignment.id}
+            assignmentDescription={assignment.description ?? ""}
+            assignmentTitle={assignment.title}
+            assignmentTip={assignment.studentTip ?? null}
+            bloomLevel={bloomLevel}
             firstName={firstName}
             initialWork={assignment.studentWork ?? ""}
             isCompleted={assignment.status === "COMPLETED"}
