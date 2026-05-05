@@ -32,7 +32,7 @@ Ik heb meerdere obstakels tijdig gesignaleerd en direct actie ondernomen:
 - Merge conflict door ontbrekende `git pull` met het team afgesproken dat iedereen eerst main pullt voor ze verder werken op hun eigen branch
 - Cloud werkte niet bij iedereen — samen op campus gebleven tot het werkend was, afspraak gemaakt om de cloud te pauzeren als er niet aan gewerkt wordt
 
-**Agenda en uitnodigingen**          
+*Agenda en uitnodigingen*       
 Na het signaleren van het probleem met vergaderingen worden alle meetings nu consequent in Teams gezet met alle groepsleden uitgenodigd.
 Afgesproken om minimaal één werkdag per week gezamenlijk te werken op locatie bij de opdrachtgever
 
@@ -41,10 +41,10 @@ Afgesproken om minimaal één werkdag per week gezamenlijk te werken op locatie 
 
 ## Wat kon beter
 
-**Onvoldoende user stories aan het begin van de sprint**                  
+*Onvoldoende user stories aan het begin van de sprint*                
 Een obstakel dat ik heb vastgelegd maar niet volledig heb kunnen oplossen: niet alle teamleden hadden tijdig voldoende user stories aangemaakt. Ik heb dit besproken in de meeting, maar het beter bewaken van dit punt voor de volgende sprint is een leerpunt.
 
-**Meer actief doorvragen tijdens stand-ups**              
+*Meer actief doorvragen tijdens stand-ups*         
 Soms gaven teamleden korte antwoorden terwijl er wel degelijk blokkades lagen zoals bij merge conflicts. Ik had eerder en actiever kunnen doorvragen om dit sneller boven water te krijgen.
 
 ---
