@@ -197,6 +197,7 @@ export function AiAssignmentClient({
   const [rejectedAndReady, setRejectedAndReady] = useState(false);
   const [thinkingContent, setThinkingContent] = useState<string | null>(null);
   const [thinkingOpen, setThinkingOpen] = useState(false);
+  const [suggestedNextBloom, setSuggestedNextBloom] = useState<string | null>(null);
 
   useEffect(() => {
     if (!imageGenerating) {
@@ -607,17 +608,39 @@ export function AiAssignmentClient({
 
           <div className="space-y-8">
             <div className="space-y-3">
-              <label className="block text-[1.05rem] font-semibold text-slate-950">Bloom&apos;s Taxonomie Niveau</label>
-              <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
-                onChange={(e) => setSelectedBloom(e.target.value)}
-                value={selectedBloom}
-              >
-                {bloomOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-              <p className="text-[1.05rem] text-slate-500">Huidig niveau van {student.name}: {student.status}</p>
+              <label className="block text-[1.05rem] font-semibold text-slate-950">
+                Bloom&apos;s Taxonomie Niveau
+              </label>
+              <div className="relative">
+                <select
+                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                  onChange={(event) => setSelectedBloom(event.target.value)}
+                  value={selectedBloom}
+                >
+                  {bloomOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-[1.05rem] text-slate-500">
+                Huidig niveau van {student.name}: {student.status}
+              </p>
+              {suggestedNextBloom && suggestedNextBloom !== selectedBloom && (
+                <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-semibold">Aanbeveling:</span> Op basis van eerdere opdrachten is <span className="font-semibold">{suggestedNextBloom}</span> het volgende passende niveau voor {student.name}.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBloom(suggestedNextBloom)}
+                    className="ml-4 shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"
+                  >
+                    Gebruik dit niveau
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">
