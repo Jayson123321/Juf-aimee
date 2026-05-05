@@ -4,6 +4,8 @@ nav:
   - dashboard.md
   - advies-prototype.md
   - vision-model-tekeningen.md
+  - testplan-tekeninganalyse.md
+  - RAS_Implementatieplan.md
   - Testplan-leraar.md
   - testresultaten
   - llm-as-judge.md
