@@ -1,4 +1,4 @@
-import { ollama, JUDGE_MODEL } from "@/lib/ollama"
+import { ollama, JUDGE_MODEL, releaseAllOllamaModels, releaseOllamaModel } from "@/lib/ollama"
 
 type CriteriumRubric = {
   naam: string
@@ -272,30 +272,36 @@ export async function evalueerOpdrachtStreaming(
 
   // Losse call per criterium via ollama.generate() met raw Prometheus-format.
   // NIET ollama.chat() gebruiken: de Llama-2 chat template veroorzaakt direct EOS (eval_count=1).
-  for (let index = 0; index < CRITERIA.length; index++) {
-    try {
-      const { feedback, score, runScores } = await scoreCriterium(input, index, 3)
-      const criteriumScore: CriteriumScore = {
-        criterium: index + 1,
-        naam: CRITERIA[index].naam,
-        feedback,
-        score,
-        runScores,
+  await releaseAllOllamaModels()
+
+  try {
+    for (let index = 0; index < CRITERIA.length; index++) {
+      try {
+        const { feedback, score, runScores } = await scoreCriterium(input, index, 3)
+        const criteriumScore: CriteriumScore = {
+          criterium: index + 1,
+          naam: CRITERIA[index].naam,
+          feedback,
+          score,
+          runScores,
+        }
+        scores.push(criteriumScore)
+        onStep(criteriumScore)
+      } catch (err) {
+        console.error(`[judge] criterium ${index + 1} mislukt:`, err)
+        const fallback: CriteriumScore = {
+          criterium: index + 1,
+          naam: CRITERIA[index].naam,
+          feedback: "Beoordeling niet beschikbaar (model fout).",
+          score: 0,
+          failed: true,
+        }
+        scores.push(fallback)
+        onStep(fallback)
       }
-      scores.push(criteriumScore)
-      onStep(criteriumScore)
-    } catch (err) {
-      console.error(`[judge] criterium ${index + 1} mislukt:`, err)
-      const fallback: CriteriumScore = {
-        criterium: index + 1,
-        naam: CRITERIA[index].naam,
-        feedback: "Beoordeling niet beschikbaar (model fout).",
-        score: 0,
-        failed: true,
-      }
-      scores.push(fallback)
-      onStep(fallback)
     }
+  } finally {
+    await releaseOllamaModel(JUDGE_MODEL)
   }
 
   const totaalScore = scores.filter((s) => !s.failed).reduce((sum, s) => sum + s.score, 0)

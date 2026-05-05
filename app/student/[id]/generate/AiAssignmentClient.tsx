@@ -48,6 +48,8 @@ type GeneratedAssignmentImage = {
   prompt: string;
   durationMs: number;
   estimatedSeconds: number;
+  modelFamilyUsed?: string;
+  modelLabelUsed?: string;
 };
 
 type AssignmentMode = "text" | "mc";
@@ -93,6 +95,11 @@ const TIME_OPTIONS = [
 // ─── UI-hulpcomponenten ───────────────────────────────────────────────────────
 
 const DEFAULT_IMAGE_WAIT_SECONDS = 70;
+
+function getImageModelLabel(image: GeneratedAssignmentImage | null) {
+  if (!image) return "";
+  return image.modelLabelUsed || image.modelFamilyUsed?.toUpperCase() || "";
+}
 
 function SectionCard({ className = "", children }: { className?: string; children: React.ReactNode }) {
   return (
@@ -956,11 +963,18 @@ export function AiAssignmentClient({
                     <ImageIcon className="size-4 shrink-0" />
                     <p className="text-sm font-semibold uppercase tracking-wide">Ondersteunende afbeelding</p>
                   </div>
-                  {assignmentImage && !imageGenerating && (
-                    <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
-                      Klaar in {Math.max(1, Math.round(assignmentImage.durationMs / 1000))} sec
-                    </span>
-                  )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {assignmentImage?.modelLabelUsed && !imageGenerating && (
+                      <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        Model: {getImageModelLabel(assignmentImage)}
+                      </span>
+                    )}
+                    {assignmentImage && !imageGenerating && (
+                      <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
+                        Klaar in {Math.max(1, Math.round(assignmentImage.durationMs / 1000))} sec
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {assignmentImage ? (
@@ -1033,6 +1047,11 @@ export function AiAssignmentClient({
                     {!assignmentImage && !imageGenerating && (
                       <p className="text-sm text-slate-500">
                         De afbeelding wordt automatisch gemaakt als dit vakje aan stond tijdens genereren. Je kunt hem hier ook handmatig starten.
+                      </p>
+                    )}
+                    {assignmentImage && (
+                      <p className="text-sm text-slate-500">
+                        Op 24GB VRAM gebruiken we standaard hetzelfde stabiele beeldmodel voor de eerste render en voor opnieuw maken.
                       </p>
                     )}
                   </div>
