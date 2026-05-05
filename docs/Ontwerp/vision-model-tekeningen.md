@@ -51,25 +51,32 @@ Dit sluit aan op het kernprincipe van Juf Aimee: *AI ondersteunt de leraar, verv
 
 ## Gebruikersstroom
 
-```
-Leerling stuurt tekening in
-        ↓
-Docent opent opdracht in dashboard
-        ↓
-Knop "Analyseer tekening" verschijnt
-        ↓
-Docent klikt → vision model analyseert
-        ↓
-Feedbacksuggestie verschijnt in tekstbox
-        ↓
-Docent past aan en slaat op
-        ↓
-Leerling ziet feedback in leerlingportaal
+```mermaid
+flowchart TD
+    A([Leerling stuurt tekening in]) --> B
+    B["Docent opent opdracht in dashboard"] --> C
+    C["Knop Analyseer tekening verschijnt"] --> D
+
+    D{Docent klikt op de knop?}
+    D -- ja --> E["Vision model analyseert de tekening"]
+    D -- nee --> F([Docent schrijft zelf feedback])
+
+    E --> G["Feedbacksuggestie verschijnt in de tekstbox"]
+    G --> H{Docent tevreden?}
+    H -- "past aan" --> I["Docent bewerkt de tekst"]
+    H -- "goedkeuren" --> J["Docent slaat feedback op"]
+    I --> J
+
+    J --> K([Leerling ziet feedback in het leerlingportaal])
+
+    style C fill:#fef3c7,stroke:#f59e0b
+    style E fill:#eff6ff,stroke:#3b82f6
+    style G fill:#f0fdf4,stroke:#22c55e
 ```
 
 ---
 
-## Testplan
+## Resultaat
 
 *Opdracht genereren*
 
@@ -84,8 +91,7 @@ Leerling ziet feedback in leerlingportaal
 ![alt text](images/ingediende-opdracht-daan.png)
 
 *tekening leerling*
-
-![alt text](<mijn fantastisch stad .png>)
+![alt text](<images/mijn fantastisch stad .png>)
 
 *Gegenereerde feedback voor leraar*
 ![alt text](images/vooringevulde-feedback-leraar.png)
