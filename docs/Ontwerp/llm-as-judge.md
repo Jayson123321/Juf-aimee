@@ -3,6 +3,7 @@
 Hoofdvraag:
 Juf Aimee genereert een opdracht voor een leerling, maar hoe weet je of die opdracht goed genoeg is om aan het hoogbegaafde kind te geven? 
 
+![llm-as-judge-image](images/llm-as-judge-image.jpg)
 
 ## Onzekerheden
 
@@ -56,7 +57,6 @@ Met rubric: de judge-AI scoort de opdracht op 7 meetbare criteria (1–5), geeft
 ```
 Juf Aimee genereert opdracht → Judge scoort op rubric → Beslislogica zegt goedkeuren / flaggen / opnieuw genereren → Leerkracht ziet het resultaat
 ```
-![llm-as-judge-image](images/llm-as-judge-image.jpg)
 ## Evaluatiepipeline
 
 ```mermaid
@@ -240,27 +240,6 @@ regenschaduw). Wat heb je nodig? Wat meet je? Wat verwacht je te zien?
 Eindproduct: een onderzoeksverslag met hypothese, data-analyse en
 experimentontwerp.
 ```
-#### Testresultaten
-
-Getest met `scripts/test-judge.ts`, model: `tensortemplar/prometheus2:7b-fp16`, `runs=3` per criterium.
-Volledige rapporten: `docs/judge-testrapport-2026-05-02T*.txt`
-
-Gemiddelde scores over 3 testruns (2026-05-02):
-
-| Criterium | Goede opdracht | Slechte opdracht | Verschil |
-|-----------|---------------|-----------------|---------|
-| C1: Faithfulness | 3/5 | 1/5 | +2 |
-| C2: Context Precision | 4–5/5 | 2/5 | +2–3 |
-| C3: Context Recall | 2/5 | 1/5 | +1 |
-| C4: Interesses | 4/5 | 1/5 | +3 |
-| C5: Bloom-niveau | 5/5 | 1–2/5 | +3–4 |
-| C6: Zelfstandig uitvoerbaar | 5/5 | 2–4/5 | +1–3 |
-| C7: Leeftijdspassend | 4–5/5 | 1–2/5 | +2–4 |
-| **Totaal** | **27–28/35 (77–80%)** | **8–12/35 (23–34%)** | |
-| **Beslissing** | **goedkeuren** | **opnieuw_genereren** | |
-
----
-
 ### Wat maakt een slechte opdracht voor Noah Smit?
 
 - **Geen aansluiting heeft op zijn interesses**: niets met wetenschap of experimenten
@@ -277,49 +256,54 @@ Schrijf bij elk land de hoofdstad op. Maak het mooi en netjes. Zorg dat je
 binnen de lijnen kleurt.
 ```
 
-#### Testresultaten
+### Testresultaten
 
-Gemiddelde scores over 3 testruns (2026-05-02):
+Getest met `scripts/test-judge.ts`, model: `tensortemplar/prometheus2:7b-fp16`, `runs=3` per criterium.
+Volledig rapport: [judge-testrapport-2026-05-02T10-38-48.txt](../Judge_tests/judge-testrapport-2026-05-02T10-38-48.txt)
 
-| Criterium | Score | Runs (voorbeeld) | Opmerkingen |
-|-----------|-------|-----------------|------------|
-| C1: Faithfulness | 1/5 | 1, 1, 1 | Zeer stabiel, geen profiel gebruikt |
-| C2: Context Precision | 2/5 | 1, 1, 5 | Uitbijters: judge geeft soms 5/5 ten onrechte |
-| C3: Context Recall | 1/5 | 1, 1, 1 | Zeer stabiel |
-| C4: Interesses | 1/5 | 1, 1, 1 | Zeer stabiel |
-| C5: Bloom-niveau | 1–2/5 | 1, 5, 1 | Uitbijters bij C5 |
-| C6: Zelfstandig | 2–4/5 | 2, 5, 5 | Logisch: simpele taak IS uitvoerbaar |
-| C7: Leeftijdspassend | 1–2/5 | 1, 1, 1 | Stabiel |
-| **Totaal** | **9–12/35 (26–34%)** | | **→ opnieuw_genereren** |
+Testresultaten (2026-05-02):
+
+| Criterium | Goede opdracht | Slechte opdracht | Verschil |
+|-----------|---------------|-----------------|---------|
+| C1: Faithfulness | 3/5 | 1/5 | +2 |
+| C2: Context Precision | 3/5 | 2/5 | +1 |
+| C3: Context Recall | 2/5 | 1/5 | +1 |
+| C4: Interesses | 4/5 | 1/5 | +3 |
+| C5: Bloom-niveau | 4/5 | 1/5 | +3 |
+| C6: Zelfstandig uitvoerbaar | 4/5 | 2/5 | +2 |
+| C7: Leeftijdspassend | 5/5 | 1/5 | +4 |
+| **Totaal** | **25/35 (71%)** | **9/35 (26%)** | |
+| **Beslissing** | **goedkeuren** | **opnieuw_genereren** | |
+
+---
+
+#### Test resultaat 
+
+Volledig rapport: [judge-testrapport-2026-05-02T10-33-12.txt](../Judge_tests/judge-testrapport-2026-05-02T10-33-12.txt)
+
+Testresultaten (2026-05-02):
+
+| Criterium | Goede opdracht | Slechte opdracht | Verschil |
+|-----------|---------------|-----------------|---------|
+| C1: Faithfulness | 3/5 | 1/5 | +2 |
+| C2: Context Precision | 4/5 | 2/5 | +2 |
+| C3: Context Recall | 2/5 | 1/5 | +1 |
+| C4: Interesses | 4/5 | 1/5 | +3 |
+| C5: Bloom-niveau | 5/5 | 2/5 | +3 |
+| C6: Zelfstandig | 5/5 | 2/5 | +3 |
+| C7: Leeftijdspassend | 5/5 | 2/5 | +3 |
+| **Totaal** | **28/35 (80%)** | **11/35 (31%)** | |
+| **Beslissing** | **goedkeuren** | **opnieuw_genereren** | |
 
 ---
 
 ### Bevindingen en conclusies
 
-#### Beslislogica werkt correct
-De judge discrimineert betrouwbaar tussen goed en slecht:
-- Slechte opdracht: consistent 23–34% → altijd `opnieuw_genereren`
-- Goede opdracht: consistent 77–80% → altijd `goedkeuren`
+- De judge herkent betrouwbaar het verschil tussen een goede en slechte opdracht. De slechte opdracht scoort altijd onder 35% en wordt altijd opnieuw gegenereerd. De goede opdracht scoort altijd boven 70% en wordt altijd goedgekeurd.
 
-#### Runs=3 stabiliseert de beslissing
-Met `runs=1` (vorige versie) scoorde de goede opdracht soms 65.7% → `flaggen`. Met `runs=3` is de beslissing stabiel op `goedkeuren`. De middeling over drie runs corrigeert uitbijters.
+- De opdracht 3 keer scoren en middelen maakt de uitkomst stabieler. Met 1 run scoorde de goede opdracht soms net te laag en werd onterecht geflagd. Met 3 runs gebeurt dat niet meer.
 
-#### Meest betrouwbare criteria: C5 en C6
-Runs van `5,5,5`: de judge is het hier altijd over eens. Bloom-niveau en zelfstandige uitvoerbaarheid zijn goed te beoordelen.
-
-#### Minst betrouwbare criteria: C1 en C2
-- **C1** (Faithfulness): runs zoals `4, 1, 5` op dezelfde goede opdracht, met maximale spreiding. De judge is het fundamenteel oneens met zichzelf.
-- **C2** (Context Precision): soms geeft de judge 5/5 op de slechte opdracht (`1, 5, 1`), terwijl die opdracht geen enkele leerlinginformatie gebruikt. Dit is een duidelijke judge-fout die `runs=3` via middeling corrigeert.
-
-#### C3 scoort structureel laag op de goede opdracht (2/5), terecht
-De judge wijst er consistent op dat het eindproduct een onderzoeksverslag vereist, terwijl Noah moeite heeft met schrijven. Dit is een valide kritiekpunt op de goede opdracht zelf, niet op de judge.
-
-#### De score kan per run verschillen
-LLM-judges geven soms verschillende scores op dezelfde opdracht. Dit komt doordat Prometheus 2 een vaste instelling vereist (`temperature: 1.0`) waarbij het model niet altijd hetzelfde antwoord geeft. Door de opdracht 3 keer te scoren en te middelen (`runs=3`) wordt dit effect verminderd. Meer runs (`runs=5`) zou de score stabieler maken, maar de beoordeling duurt dan drie keer zo lang.
-
-### Tests bij 'goede' opdrachten voor hoogbegaafde leerlingen
-
-Een 'goede' opdracht voor Noah sluit aan op zijn interesses, geeft autonomie, vraagt eigen redenering en is volledig traceerbaar naar zijn OPP.
+- De judge geeft soms per run een andere score op dezelfde opdracht. Dat is normaal, omdat het model niet altijd hetzelfde antwoord geeft. Door te middelen over 3 runs wordt dit effect kleiner.
 
 #### Test 1 
 [text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)
