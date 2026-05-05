@@ -6,6 +6,8 @@ import { GEN_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaM
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
 import { callModel, getModelForRole } from "@/lib/llm-models";
+import { retrieveLeerlinggeschiedenis, formatLeerlinggeschiedenis } from "@/lib/ras/retrieveLeerlinggeschiedenis";
+import { analyzePortfolio, type PortfolioInsights } from "@/lib/portfolio-analysis";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -284,8 +286,10 @@ function buildGenerationPrompt(args: {
   currentAssignment?: { title?: string; assignment?: string; rationale?: string } | null;
   rejectedAssignments?: RejectedAssignment[];
   judgeFeedback?: string;
+  geschiedenis?: string;
+  portfolioInsights?: PortfolioInsights;
 }) {
-  const { student, resolvedBloom, focusArea, estimatedTime, sources, teacherPrompt, currentAssignment, rejectedAssignments, judgeFeedback } = args;
+  const { student, resolvedBloom, focusArea, estimatedTime, sources, teacherPrompt, currentAssignment, rejectedAssignments, judgeFeedback, geschiedenis, portfolioInsights } = args;
   const oppBronnen = sources.length > 0
     ? sources.join("\n\n---\n\n")
     : "Geen OPP-informatie beschikbaar.";
@@ -330,6 +334,14 @@ ${currentAssignment
 
 INSTRUCTIE VAN DE LEERKRACHT
 ${teacherPrompt || "Maak de best passende eerste versie."}
+
+LEERLINGGESCHIEDENIS (gebruik dit om de nieuwe opdracht beter te laten aansluiten op wat de leerling eerder heeft gedaan)
+${geschiedenis ?? "Geen eerdere opdrachten beschikbaar."}
+
+PORTFOLIO ANALYSE (gebruik dit om rekening te houden met de ontwikkeling van de leerling)
+${portfolioInsights?.portfolioSummary
+  ? `${portfolioInsights.portfolioSummary}${portfolioInsights.suggestedNextBloom ? `\nAanbevolen Bloom-niveau voor nieuwe opdracht: ${portfolioInsights.suggestedNextBloom}` : ""}`
+  : "Geen eerdere opdrachten beschikbaar."}
 
 VERBODEN ONDERWERPEN EN FORMATS (uit afgekeurde opdrachten)
 ${rejectedAssignments?.length
@@ -420,9 +432,15 @@ export async function POST(req: NextRequest) {
     include: {
       profile: { select: { currentSchoolYearGroup: true, schoolHistory: true } },
       assignments: {
-        select: { title: true, status: true, bloomLevel: true },
-        orderBy: { createdAt: "desc" },
-        take: 5,
+        select: {
+          title: true,
+          status: true,
+          bloomLevel: true,
+          teacherFeedback: { select: { content: true } },
+        },
+        where: { status: "COMPLETED" },
+        orderBy: { updatedAt: "desc" },
+        take: 10,
       },
     },
   });
@@ -431,11 +449,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Student niet gevonden." }, { status: 404 });
   }
 
+  const portfolioInsights = analyzePortfolio(student.assignments);
   const resolvedBloom = normalizeBloomLabel(bloomLevel || getBloomLevelLabel(student.bloomNiveau));
 
   try {
-    // Haal OPP-bronnen + leerkrachtfeedback op
-    const [profileSources, feedbackChunks] = await Promise.all([
+    // Haal OPP-bronnen + leerkrachtfeedback + leerlinggeschiedenis op
+    const [profileSources, feedbackChunks, geschiedenisItems] = await Promise.all([
       zoekVolledigProfiel(student.id, focusArea),
       prisma.oppChunk.findMany({
         where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
@@ -443,7 +462,9 @@ export async function POST(req: NextRequest) {
         orderBy: { id: "desc" },
         take: 5,
       }),
+      retrieveLeerlinggeschiedenis(student.id),
     ]);
+    const geschiedenis = formatLeerlinggeschiedenis(geschiedenisItems);
     const sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
 
     // ── Actie: bronnen zoeken ─────────────────────────────────────────────────
@@ -779,6 +800,8 @@ ${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
               currentAssignment: currentAssignmentForGen,
               rejectedAssignments,
               judgeFeedback,
+              geschiedenis,
+              portfolioInsights,
             });
 
             await releaseAllOllamaModels();
