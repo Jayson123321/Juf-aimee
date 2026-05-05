@@ -166,6 +166,7 @@ export async function POST(req: NextRequest) {
     assignmentTip,
     assignmentQuestion,
     draftWork = "",
+    conversation = [],
   } = body ?? {};
 
   if (!action || !studentId) {
@@ -246,10 +247,11 @@ export async function POST(req: NextRequest) {
           studentWork: activeAssignmentRecord?.studentWork ?? "",
         }
       : null;
+  const assignmentScoped = Boolean(assignmentId);
 
   try {
     if (action === "init") {
-      if (session.messages.length > 0) {
+      if (!assignmentScoped && session.messages.length > 0) {
         return NextResponse.json({ messages: mapMessages(session.messages) });
       }
 
@@ -301,6 +303,12 @@ export async function POST(req: NextRequest) {
 
       const welcomeMessage = response.message.content?.trim() || fallbackWelcome(firstName);
 
+      if (assignmentScoped) {
+        return NextResponse.json({
+          messages: [{ role: "assistant", content: welcomeMessage }],
+        });
+      }
+
       const updatedSession = await prisma.studentChatSession.update({
         where: { id: session.id },
         data: {
@@ -329,23 +337,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bericht is leeg." }, { status: 400 });
     }
 
-    await prisma.studentChatMessage.create({
-      data: {
-        sessionId: session.id,
-        role: "USER",
-        content: String(message).trim(),
-      },
-    });
-
-    const latestSession = await prisma.studentChatSession.findUnique({
-      where: { id: session.id },
-      include: {
-        messages: {
-          orderBy: { createdAt: "desc" },
-          take: 8,
+    if (!assignmentScoped) {
+      await prisma.studentChatMessage.create({
+        data: {
+          sessionId: session.id,
+          role: "USER",
+          content: String(message).trim(),
         },
-      },
-    });
+      });
+    }
+
+    const latestSession = assignmentScoped
+      ? null
+      : await prisma.studentChatSession.findUnique({
+          where: { id: session.id },
+          include: {
+            messages: {
+              orderBy: { createdAt: "desc" },
+              take: 8,
+            },
+          },
+        });
 
     const oppContext = await executeSearchOpp(
       student.id,
@@ -369,7 +381,12 @@ export async function POST(req: NextRequest) {
       resolvedAssignment,
       String(draftWork ?? ""),
     );
-    const conversation = [...(latestSession?.messages ?? [])].reverse();
+    const conversationMessages = assignmentScoped
+      ? (Array.isArray(conversation) ? conversation : [])
+      : [...(latestSession?.messages ?? [])].reverse().map((item) => ({
+          role: item.role === "ASSISTANT" ? "assistant" : "user",
+          content: item.content,
+        }));
 
     const response = await ollama.chat({
       model: ASSISTANT_MODEL,
@@ -387,8 +404,8 @@ export async function POST(req: NextRequest) {
             oppContext,
             assignmentContext,
             conversation:
-              conversation
-                .map((item) => `${item.role === "USER" ? "Leerling" : "Juf Aimee"}: ${item.content}`)
+              conversationMessages
+                .map((item) => `${item.role === "user" ? "Leerling" : "Juf Aimee"}: ${item.content}`)
                 .join("\n") || "Nog geen eerdere berichten.",
             latestInstruction: String(message).trim(),
           }),
@@ -399,13 +416,15 @@ export async function POST(req: NextRequest) {
 
     const assistantMessage = response.message.content?.trim() || fallbackAnswer(firstName);
 
-    await prisma.studentChatMessage.create({
-      data: {
-        sessionId: session.id,
-        role: "ASSISTANT",
-        content: assistantMessage,
-      },
-    });
+    if (!assignmentScoped) {
+      await prisma.studentChatMessage.create({
+        data: {
+          sessionId: session.id,
+          role: "ASSISTANT",
+          content: assistantMessage,
+        },
+      });
+    }
 
     return NextResponse.json({
       message: assistantMessage,

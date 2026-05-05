@@ -60,6 +60,7 @@ export function StudentChatClient({
       assignmentTip,
       assignmentQuestion,
       draftWork,
+      conversation: messages.slice(-8),
     };
   }
 
