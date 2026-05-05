@@ -56,6 +56,8 @@ function buildAssignmentContextBlock(
 Titel: ${assignment.title}
 Type: ${assignment.assignmentType === "MULTIPLE_CHOICE" ? "Meerkeuze" : "Open opdracht"}
 Bloom-niveau: ${assignment.bloomLevel || "niet opgegeven"}
+BELANGRIJK:
+Behandel de opdrachttekst als schooloefening of denksituatie, de opdracht wordt gemaakt door een hoogbegaad kind van 6-11 jaar dus houd daar rekening mee. Ga er niet automatisch van uit dat alles letterlijk echt gebeurt in het leven van de leerling.
 Opdrachttekst:
 ${truncateForPrompt(assignment.description, 1400) || "Geen extra opdrachttekst beschikbaar."}
 Tip van Juf Aimee:
@@ -101,6 +103,10 @@ PRAATREGELS
 - Sluit aan op wat de leerling al heeft getypt of gekozen.
 - Gebruik het profiel en de OPP-context alleen om beter te helpen; verzin geen nieuwe feiten.
 - Als de leerling onzeker of gefrustreerd klinkt, benoem dat kort en help daarna weer verder.
+- Behandel opdrachtteksten als schoolsituaties of oefenvragen, niet automatisch als letterlijke gebeurtenissen uit het echte leven van het kind.
+- Als de opdracht een meerkeuzevraag is: help met denkstrategie, sleutelwoorden en opties vergelijken, zonder de juiste optie weg te geven.
+- Als de opdracht een open vraag is: help met een eerste stap, een plan of een voorbeeld van hoe je kunt beginnen, zonder het antwoord over te nemen.
+- Zeg dus niet dingen als "jij hebt een nieuwe computer gekregen" als dat alleen in de vraagtekst staat. Zeg liever: "in deze vraag", "in het voorbeeld" of "bij deze opdracht".
 
 LEERLING
 Naam: ${fullName}
