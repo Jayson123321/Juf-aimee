@@ -285,19 +285,13 @@ De primaire stakeholder van deze oplossing is de **leraar**. Tijdens het ontwerp
 
 ### Privacy (AVG)
 
-Leerlingdata die verwerkt wordt door RAS en portfolio-analyse:
-- Titels en Bloom-niveaus van afgeronde opdrachten
-- Leerkrachtfeedback
-- Ingeleverd werk van de leerling
+Het systeem verwerkt leerlingdata: afgeronde opdrachten, leerkrachtfeedback en ingeleverd werk. Dit valt onder de AVG (Algemene Verordening Gegevensbescherming).
 
-**Maatregelen:**
-| Risico | Maatregel |
-|---|---|
-| Leerlingdata naar externe partijen | Alle verwerking lokaal via Ollama — geen data verlaat het systeem |
-| Opslag van gevoelige feedback | Data blijft in de eigen database (Prisma/PostgreSQL) |
-| Onbevoegde toegang | Alleen de ingelogde leraar heeft toegang tot de leerlingdata |
+De volgende maatregelen zijn genomen:
 
-De lokale verwerking via Ollama is een bewuste architectuurkeuze met privacy als motivatie, conform de **AVG** (Algemene Verordening Gegevensbescherming).
+- **Geen data naar buiten** — alle verwerking gebeurt lokaal via Ollama, er wordt niets naar externe partijen gestuurd
+- **Data blijft in eigen beheer** — alles wordt opgeslagen in de eigen database
+- **Toegang beperkt** — alleen de ingelogde leraar heeft toegang tot de gegevens van zijn leerlingen
 
 ---
 
