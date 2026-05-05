@@ -6,8 +6,8 @@ console.log(`Ollama host: ${OLLAMA_HOST}`)
 
 export const ollama = new Ollama({ host: OLLAMA_HOST })
 export const EMBED_MODEL = process.env.EMBED_MODEL || "jeffh/intfloat-multilingual-e5-large:f16"
-export const GEN_MODEL = process.env.GEN_MODEL || "qwen2.5"
-export const ASSISTANT_MODEL = process.env.ASSISTANT_MODEL || GEN_MODEL
+export const GEN_MODEL = process.env.GEN_MODEL || "qwen3:14b"
+export const ASSISTANT_MODEL = process.env.ASSISTANT_MODEL || "mistral-nemo:12b"
 export const GEN_MODEL_LOCALE = "gemma4:31b-cloud"
 export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
 

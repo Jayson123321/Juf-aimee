@@ -20,11 +20,11 @@ type RoleConfig = {
 export const MODELS: Record<LLMRole, RoleConfig> = {
   // 1. De Planner — Opdracht-generatie & RAG
   // Kandidaten:
-  //  [1] qwen2.5            (huidige baseline, lokaal beschikbaar)
-  //  [2] deepseek-v3.2      (reasoning mode, uitstekend in gestructureerde JSON)
-  //  [3] llama4:scout       (17B MoE, efficiënt op Apple Silicon)
+  //  [1] qwen3:14b          (aanbevolen 24GB-keuze voor planner/RAG)
+  //  [2] qwen2.5:latest     (lichtere fallback, lokaal breed beschikbaar)
+  //  [3] deepseek-v3.2      (reasoning mode, uitstekend in gestructureerde JSON)
   planner: {
-    model: "qwen2.5",
+    model: "qwen3:14b",
     description:
       "De dirigent: leest RAG-bronnen, bepaalt Bloom-niveau, bouwt een opdracht-plan als JSON.",
     prompt: `Je bent Juf Aimee: een deskundige in hoogbegaafdheidsonderwijs op de basisschool.
@@ -138,11 +138,11 @@ Zachte kleuren, eenvoudige vormen, geen enge of onrustige elementen. Geen tekst 
 
   // 5. De Assistent — Didactische chat (Juf Aimee sidebar)
   // Kandidaten:
-  //  [1] gemma3:27b           (vriendelijke menselijke toon, sterk Nederlands)
-  //  [2] mistral-nemo:12b     (snel, goed in "geef geen antwoord"-instructies volgen)
-  //  [3] llama3.1:8b          (betrouwbaar werkpaard)
+  //  [1] mistral-nemo:12b     (aanbevolen 24GB-keuze, snel en goed te sturen)
+  //  [2] gemma3:12b           (warmere toon, maar iets zwaarder)
+  //  [3] llama3.1:8b          (betrouwbare lichte fallback)
   assistant: {
-    model: "gemma3:27b",
+    model: "mistral-nemo:12b",
     description:
       "Zit in de sidebar en praat als Juf Aimee: warm, aanmoedigend, geeft hints ipv antwoorden.",
     prompt: `Je bent Juf Aimee, een warme en aanmoedigende digitale leerkracht voor hoogbegaafde basisschoolleerlingen.

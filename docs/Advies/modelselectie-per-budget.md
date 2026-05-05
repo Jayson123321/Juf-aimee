@@ -160,7 +160,7 @@ Sterke middenklasse setup voor een echt lokaal prototype.
 **Modelstack:**
 
 * Planner -> `qwen3:14b`
-* Assistent -> `gemma3:12b`
+* Assistent -> `mistral-nemo:12b`
 * Code -> `qwen2.5-coder:14b`
 * Vision -> `qwen2.5-vl:7b`
 * Image -> `Stable Diffusion 3.5 Medium`
@@ -168,7 +168,7 @@ Sterke middenklasse setup voor een echt lokaal prototype.
 **Onderbouwing:**
 
 * `qwen3:14b` is met ongeveer `9.3GB` sterk genoeg zonder de volledige `24GB` op te eten
-* `gemma3:12b` is ongeveer `8.1GB` en blijft daardoor praktisch op één GPU
+* `mistral-nemo:12b` is ongeveer `7.1GB` en blijft daardoor sneller en praktischer op één GPU
 * `qwen2.5-coder:14b` is met ongeveer `9.0GB` een goede codekeuze zonder 20GB+ in te gaan
 * `qwen2.5-vl:7b` is de logische vision-keuze voor documenten, OCR en layout-analyse
 * `Stable Diffusion 3.5 Medium` is op `24GB` de veilige lokale image-keuze
@@ -177,7 +177,7 @@ Sterke middenklasse setup voor een echt lokaal prototype.
 **Bronnen:**
 
 * `Qwen3`: https://ollama.com/library/qwen3
-* `Gemma 3`: https://ollama.com/library/gemma3
+* `Mistral NeMo`: https://ollama.com/library/mistral-nemo
 * `Qwen2.5-Coder`: https://ollama.com/library/qwen2.5-coder
 * `Qwen2.5-VL`: https://ollama.com/library/qwen2.5vl
 * `Stable Diffusion 3.5 Medium`: https://huggingface.co/stabilityai/stable-diffusion-3.5-medium
@@ -291,7 +291,7 @@ Hier worden `Qwen 3 Next` en `Qwen 3 Coder Next` voor het eerst echt logisch.
 
 * Bij `24GB VRAM` (bijvoorbeeld een `RTX 4090` of `NVIDIA A10`):
 
-  * + `Qwen3:14b`, `Qwen2.5-Coder:14b`, `Gemma3:12b` en `Qwen2.5-VL:7b` zijn realistische keuzes
+  * + `Qwen3:14b`, `Qwen2.5-Coder:14b`, `Mistral-NeMo:12b` en `Qwen2.5-VL:7b` zijn realistische keuzes
   * - `FLUX.1-Kontext-dev` blijft krap zodra er ook andere modellen op dezelfde GPU meedraaien
   * + `Stable Diffusion 3.5 Medium` is het beste lokale beeldalternatief
 
@@ -303,7 +303,7 @@ Hier worden `Qwen 3 Next` en `Qwen 3 Coder Next` voor het eerst echt logisch.
 
 * Beste setup voor dit project op één GPU:
 
-> **Qwen3:14b + Qwen2.5-Coder:14b + Gemma3:12b + Qwen2.5-VL:7b + Stable Diffusion 3.5 Medium**
+> **Qwen3:14b + Qwen2.5-Coder:14b + Mistral-Nemo:12b + Qwen2.5-VL:7b + Stable Diffusion 3.5 Medium**
 
 Dit biedt:
 

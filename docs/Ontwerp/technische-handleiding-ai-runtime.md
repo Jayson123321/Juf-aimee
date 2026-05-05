@@ -39,8 +39,8 @@ De lokale app praat met de cloud via SSH-tunnels.
 
 ### Tekst en chat
 
-- `GEN_MODEL = qwen2.5`
-- `ASSISTANT_MODEL = mistral-nemo:12b` via `.env` aanbevolen
+- `GEN_MODEL = qwen3:14b`
+- `ASSISTANT_MODEL = mistral-nemo:12b`
 - `JUDGE_MODEL = vicgalle/prometheus-7b-v2.0:latest`
 - `EMBED_MODEL = jeffh/intfloat-multilingual-e5-large:f16`
 
@@ -146,6 +146,7 @@ Daarom is de standaard nu bewust conservatief ingesteld.
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/juf-aimee"
 EMBED_MODEL="jeffh/intfloat-multilingual-e5-large:f16"
+GEN_MODEL=qwen3:14b
 OLLAMA_HOST=http://127.0.0.1:11435
 ASSISTANT_MODEL=mistral-nemo:12b
 ASSIGNMENT_IMAGE_API_URL=http://127.0.0.1:8000/generate
@@ -214,7 +215,7 @@ python -m uvicorn scripts.assignment_image_service:app --host 0.0.0.0 --port 800
 Voor de huidige setup zijn minimaal deze modellen nodig:
 
 ```bash
-ollama pull qwen2.5
+ollama pull qwen3:14b
 ollama pull qwen2.5-coder:7b
 ollama pull vicgalle/prometheus-7b-v2.0:latest
 ollama pull jeffh/intfloat-multilingual-e5-large:f16
