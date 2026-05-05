@@ -69,27 +69,6 @@ Leerling ziet feedback in leerlingportaal
 
 ---
 
-## Testplan
-
-*Opdracht genereren*
-
-![alt text](images/opdracht-genereren.png)
-
-*Opdrachtomschrijving*
-
-![alt text](images/gegenereerde-opdracht.png)
-
-*Ingestuurde assignment leerling*
-
-![alt text](images/ingediende-opdracht-daan.png)
-
-*tekening leerling*
-
-![alt text](<mijn fantastisch stad .png>)
-
-*Gegenereerde feedback voor leraar*
-![alt text](images/vooringevulde-feedback-leraar.png)
-
 ## Technische realisatie
 
 - **API route**: `app/api/analyze-drawing/route.ts`

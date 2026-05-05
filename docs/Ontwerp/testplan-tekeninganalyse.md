@@ -1,6 +1,6 @@
-# Testplan: AI-tekeninganalyse (issue #65)
+# Testplan: AI-tekeninganalyse 
 
-**Datum:** 01-05-2026
+**Datum:** 01-05-2026     
 **Feature:** Leraar kan een ingestuurde tekening laten analyseren door LLaVA:7b, waarna een feedbacksuggestie verschijnt in de tekstbox.
 
 ---
@@ -9,9 +9,9 @@
 
 Zorg dat het volgende klaar staat voordat je begint:
 
-- [ ] Ollama draait lokaal: `ollama list` toont `llava:7b`
-- [ ] De applicatie draait: `npm run dev`
-- [ ] Er is een testleerling met een opdracht in de database
+- Ollama draait lokaal: `ollama list` toont `llava:7b`
+- De applicatie draait: `npm run dev`
+- Er is een testleerling met een opdracht in de database
 
 ---
 
@@ -72,6 +72,27 @@ Zorg dat het volgende klaar staat voordat je begint:
 1. Ververs de pagina
 
 **Verwacht:** de knop "Analyseer tekening" is **niet** meer zichtbaar (er is al feedback opgeslagen)
+
+## Testresultaat
+
+*Opdracht genereren*
+
+![alt text](images/opdracht-genereren.png)
+
+*Opdrachtomschrijving*
+
+![alt text](images/gegenereerde-opdracht.png)
+
+*Ingestuurde assignment leerling*
+
+![alt text](images/ingediende-opdracht-daan.png)
+
+*tekening leerling*
+![alt text](<images/mijn fantastisch stad .png>)
+
+*Gegenereerde feedback voor leraar*
+![alt text](images/vooringevulde-feedback-leraar.png)
+
 
 ---
 
