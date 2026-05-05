@@ -1,6 +1,6 @@
 # Testplan: AI-tekeninganalyse (issue #65)
 
-**Datum:** 2026-05-01  
+**Datum:** 01-05-2026
 **Feature:** Leraar kan een ingestuurde tekening laten analyseren door LLaVA:7b, waarna een feedbacksuggestie verschijnt in de tekstbox.
 
 ---
@@ -35,14 +35,14 @@ Zorg dat het volgende klaar staat voordat je begint:
 
 **Verwacht:**
 - De ingeleverde tekening staat vermeld onder "Ingediende bestanden"
-- De knop **"Analyseer tekening"** is zichtbaar in het feedbackformulier
+- De knop *"Analyseer tekening"* is zichtbaar in het feedbackformulier
 - Er staat nog geen feedback in de tekstbox
 
 ---
 
 ## Stap 3 — Leraar analyseert de tekening
 
-1. Klik op **"Analyseer tekening"**
+1. Klik op *"Analyseer tekening"*
 
 **Verwacht tijdens het analyseren:**
 - Knop toont "Analyseren…" met een laadspinner

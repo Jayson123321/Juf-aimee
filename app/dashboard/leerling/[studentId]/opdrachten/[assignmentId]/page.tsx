@@ -26,7 +26,6 @@ async function getAssignment(assignmentId: string, studentId: string) {
           fileSize: true,
           filePath: true,
           uploadedAt: true,
-          analysis: true,
         },
         orderBy: { uploadedAt: "desc" },
       },
@@ -175,15 +174,21 @@ export default async function TeacherAssignmentDetailPage({
           </div>
         )}
 
-        {/* Feedback sectie — alleen bij COMPLETED */}
-        {assignment.status === "COMPLETED" && (
-          <TeacherFeedbackForm
-            assignmentId={assignment.id}
-            studentId={assignment.student.id}
-            existingFeedback={assignment.teacherFeedback?.content ?? null}
-            studentName={assignment.student.fullName}
-          />
-        )}
+        {/* Feedback sectie */}
+        {(() => {
+          const imageSubmission = assignment.submissions.find(
+            (s) => /\.(png|jpe?g|gif|webp)$/i.test(s.fileName)
+          )
+          return (
+            <TeacherFeedbackForm
+              assignmentId={assignment.id}
+              existingFeedback={assignment.teacherFeedback?.content ?? null}
+              studentName={assignment.student.fullName}
+              studentId={assignment.student.id}
+              imageSubmissionId={imageSubmission?.id ?? null}
+            />
+          )
+        })()}
       </div>
     </div>
   );

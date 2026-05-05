@@ -4,18 +4,6 @@ import { prisma } from "@/lib/db"
 
 const VISION_MODEL = "llava:7b"
 
-export async function GET(req: NextRequest) {
-  const submissionId = req.nextUrl.searchParams.get("submissionId")
-  if (!submissionId) {
-    return NextResponse.json({ error: "submissionId is verplicht." }, { status: 400 })
-  }
-  const submission = await prisma.assignmentSubmission.findUnique({
-    where: { id: submissionId },
-    select: { analysis: true },
-  })
-  return NextResponse.json({ analysis: submission?.analysis ?? null })
-}
-
 export async function POST(req: NextRequest) {
   const { submissionId } = await req.json()
 
@@ -23,7 +11,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "submissionId is verplicht." }, { status: 400 })
   }
 
-  // Haal de submission op — filePath bevat de base64 afbeelding
   const submission = await prisma.assignmentSubmission.findUnique({
     where: { id: submissionId },
     select: {
@@ -66,7 +53,7 @@ Schrijf in helder Nederlands. Wees concreet en positief. Gebruik alleen dit form
         {
           role: "user",
           content: prompt,
-          images: [submission.filePath], // filePath is base64
+          images: [submission.filePath],
         },
       ],
       options: { temperature: 0.3 },
@@ -74,12 +61,6 @@ Schrijf in helder Nederlands. Wees concreet en positief. Gebruik alleen dit form
     })
 
     const analysis = response.message.content?.trim() ?? ""
-
-    await prisma.assignmentSubmission.update({
-      where: { id: submissionId },
-      data: { analysis },
-    })
-
     return NextResponse.json({ analysis })
   } catch (error) {
     return NextResponse.json(
