@@ -3,6 +3,7 @@
 Hoofdvraag:
 Juf Aimee genereert een opdracht voor een leerling, maar hoe weet je of die opdracht goed genoeg is om aan het hoogbegaafde kind te geven? 
 
+![llm-as-judge-image](images/llm-as-judge-image.jpg)
 
 ## Onzekerheden
 
@@ -56,7 +57,6 @@ Met rubric: de judge-AI scoort de opdracht op 7 meetbare criteria (1–5), geeft
 ```
 Juf Aimee genereert opdracht → Judge scoort op rubric → Beslislogica zegt goedkeuren / flaggen / opnieuw genereren → Leerkracht ziet het resultaat
 ```
-![llm-as-judge-image](images/llm-as-judge-image.jpg)
 ## Evaluatiepipeline
 
 ```mermaid
@@ -95,18 +95,14 @@ Uit het onderzoek van Kim et al. (2024) - "Prometheus 2: An Open Source Language
 
 Onderzoek prompt template:
 
-![Prometheus 2 onderzoek, kant en klare prompt templates](images/direct-assesment-prompt-template.png)
-
-Juf aimee judge prompt:
-1. Leerling profiel
-2. Gegenereerde opdracht
-3. Rubric 
+![Prometheus 2 onderzoek, kant en klare prompt templates](images/direct-assesment-prompt-template.png) 
 
 #### Bronnen
-Prometheus 2: https://arxiv.org/abs/2405.01535
+Kim, S., Suk, J., Longpre, S., Lin, B. Y., Shin, J., Welleck, S., Neubig, G., Lee, M., Lee, H., & Seo, M. (2024). *Prometheus 2: An open source language model specialized in evaluating other language models*. arXiv:2405.01535. https://arxiv.org/abs/2405.01535
+
 ### Judge prompt
 
-Per criterium wordt de volgende promptstructuur gebruikt (Prometheus-2 raw format via `ollama.generate()`):
+Per criterium wordt de volgende promptstructuur gebruikt (Prometheus-2 Direct Assesment Prompt Template):
 
 ```
 [INST] You are a fair judge assistant tasked with providing clear, objective feedback
@@ -140,21 +136,7 @@ Score 1: ...  Score 5: ...
 ###Feedback: [/INST]
 ```
 
-De `profielSamenvatting` is een gestructureerde Engelse samenvatting van het OPP (gebouwd door `buildProfileSummary` in `route.ts`), omdat Prometheus-2 een Engels-eerst model is en ruwe Nederlandse OPP-tekst moeilijker verwerkt. Per criterium worden **3 runs** gedraaid en gemiddeld — dit stabiliseert de score en corrigeert uitbijters.
-### RAGAS 
-Retrieval Augmented Generation Assesment
-
-### Evaluatierubric opstellen
-
-| # | Criterium | Type | Bron |
-|---|---|---|---|
-| 1 | Zijn alle elementen in de opdracht terug te herleiden naar het leerlingprofiel, zonder verzonnen info? | RAGAS | Es et al., 2023 — faithfulness metric |
-| 2 | Gebruikt de opdracht alleen relevante leerlinginfo en laat het irrelevante details weg? | RAGAS | Es et al., 2023 — context precision metric |
-| 3 | Weerspiegelt de opdracht alle relevante profielkenmerken, inclusief sterke punten én gedocumenteerde beperkingen? | RAGAS | Es et al., 2023 — context recall metric |
-| 4 | Bevat de opdracht elementen die aansluiten op de interesses die in het leerlingprofiel staan? | Onderwijsspecifiek | Renzulli SEM (1977) + Self-Determination Theory (Ryan & Deci, 2000) |
-| 5 | Past de cognitieve moeilijkheidsgraad van de opdracht bij het opgegeven Bloom-niveau van de leerling? | Onderwijsspecifiek | Bloom's Taxonomy (Anderson & Krathwohl, 2001) |
-| 6 | Kan een leerling van deze leeftijd en dit niveau de opdracht zelfstandig uitvoeren? | Onderwijsspecifiek | Vygotsky ZPD (1978) + Reis & Renzulli (2010) |
-| 7 | Is de opdracht leeftijdspassend in taalgebruik, toon en inhoud voor dit kind? | Onderwijsspecifiek | Piaget (1972) + Silverman (1997) |
+De `profielSamenvatting` is een gestructureerde Engelse samenvatting van het OPP (gebouwd door `buildProfileSummary` in `route.ts`), omdat Prometheus-2 een Engels-eerst model is en ruwe Nederlandse OPP-tekst moeilijker verwerkt. Per criterium worden **3 runs** gedraaid en gemiddeld, wat de score stabiliseert en uitbijters corrigeert.
 
 ## Implementatie
 
@@ -172,7 +154,7 @@ De judge (`lib/judge.ts`) scoort elke gegenereerde opdracht op 7 criteria, elk o
 | 6 | Kan de leerling de opdracht zelfstandig uitvoeren? | Vygotsky ZPD (1978) + Reis & Renzulli (2010) |
 | 7 | Is de opdracht leeftijdspassend in taal, toon en inhoud? | Piaget (1972) + Silverman (1997) |
 
-Per criterium bouwt de judge een aparte prompt op in Prometheus-2 format en roept `ollama.generate()` aan (niet `ollama.chat()` — de Llama-2 chat template veroorzaakt bij Prometheus direct EOS).
+Per criterium bouwt de judge een aparte prompt op in Prometheus-2 format en roept `ollama.generate()` aan (niet `ollama.chat()`, de Llama-2 chat template veroorzaakt bij Prometheus direct EOS).
 
 ### Beslislogica
 
@@ -186,7 +168,7 @@ De genormaliseerde score (totaal gedeeld door maximum) bepaalt de beslissing:
 
 ### Feedbackloop bij opnieuw genereren
 
-Als de score onder 0.5 valt, genereert het systeem automatisch een tweede poging — maar de generator krijgt dan gerichte feedback mee zodat hij weet wat er mis was.
+Als de score onder 0.5 valt, genereert het systeem automatisch een tweede poging, maar de generator krijgt dan gerichte feedback mee zodat hij weet wat er mis was.
 
 **Hoe het werkt (`app/api/assign/route.ts`):**
 
@@ -201,7 +183,7 @@ VERBETERPUNTEN UIT VORIGE VERSIE:
 - Het cognitieve niveau klopt niet met Bloom-niveau "Creëren". ontwerpen, construeren, samenstellen — de leerling MAAKT iets nieuws dat nog niet bestond.
 ```
 
-De generator ziet dit als instructies van de leerkracht — er wordt niet vermeld dat een judge dit heeft bepaald. Criteria met score ≥ 3 worden niet genoemd; die waren goed genoeg.
+De generator ziet dit als instructies van de leerkracht; er wordt niet vermeld dat een judge dit heeft bepaald. Criteria met score ≥ 3 worden niet genoemd; die waren goed genoeg.
 
 **Maximum 2 pogingen.** Als na de tweede poging de score nog steeds onder 0.5 ligt, wordt de beste versie toch getoond aan de leerkracht.
 
@@ -210,16 +192,13 @@ De generator ziet dit als instructies van de leerkracht — er wordt niet vermel
 ## Volgende stappen 
 Pairwise Ranking prompt zodat er twee opdrachten met elkaar vergeleken kunnen worden.
  
-## Wetenschappelijke Bronnen
+## Bronnen
 
-- **LLM-as-judge**: Zheng et al. (2023) — https://arxiv.org/abs/2306.05685
-- **G-Eval**: Liu et al. (2023) — https://arxiv.org/abs/2303.16634
-- **RAGAS**: Es et al. (2023) — https://arxiv.org/abs/2309.15217
-
-- Basisboek (Hoog)begaafdheid voor po en vo: 
-
-## bronnen
-- https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
+- Zheng, L., Chiang, W., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., Lin, H., Li, Z., Li, D., Xing, E., Zhang, H., Gonzalez, J., & Stoica, I. (2023). *Judging LLM-as-a-judge with MT-bench and Chatbot Arena*. arXiv:2306.05685. https://arxiv.org/abs/2306.05685
+- Liu, Y., Iter, D., Xu, Y., Wang, S., Xu, R., & Zhu, C. (2023). *G-Eval: NLG evaluation using GPT-4 with better human alignment*. arXiv:2303.16634. https://arxiv.org/abs/2303.16634
+- Es, S., James, J., Espinosa-Anke, L., & Schockaert, S. (2023). *RAGAS: Automated evaluation of retrieval augmented generation*. arXiv:2309.15217. https://arxiv.org/abs/2309.15217
+- Basisboek (Hoog)begaafdheid voor po en vo
+- Guo, S. (2025). *LLM-as-a-judge: A practical guide*. Towards Data Science. https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
 
 
 ## Tests 
@@ -243,17 +222,17 @@ Noah, jij wordt klimaatwetenschapper. Kies één klimaatzone op aarde (bijv.
 woestijn, tropisch regenwoud of toendra) en doe onderzoek naar waarom het
 daar zo regent — of juist niet.
 
-Stap 1 — Formuleer een hypothese
+Stap 1: Formuleer een hypothese
 Bedenk een verklaring: waarom valt er in jouw gekozen klimaatzone zo veel of
 zo weinig neerslag? Schrijf dit op als een echte wetenschappelijke hypothese
 ("Ik denk dat... omdat...").
 
-Stap 2 — Test je hypothese met data
+Stap 2: Test je hypothese met data
 Zoek klimaatdata op (temperatuur, neerslag, wind) van jouw zone. Vergelijk
 minstens twee maanden met elkaar. Klopt jouw hypothese? Pas hem aan als dat
 nodig is.
 
-Stap 3 — Ontwerp een experiment
+Stap 3: Ontwerp een experiment
 Beschrijf een experiment dat je in de klas zou kunnen uitvoeren om één aspect
 van jouw klimaatzone na te bootsen (bijv. verdamping, condensatie,
 regenschaduw). Wat heb je nodig? Wat meet je? Wat verwacht je te zien?
@@ -261,27 +240,6 @@ regenschaduw). Wat heb je nodig? Wat meet je? Wat verwacht je te zien?
 Eindproduct: een onderzoeksverslag met hypothese, data-analyse en
 experimentontwerp.
 ```
-#### Testresultaten
-
-Getest met `scripts/test-judge.ts` — model: `tensortemplar/prometheus2:7b-fp16`, `runs=3` per criterium.
-Volledige rapporten: `docs/judge-testrapport-2026-05-02T*.txt`
-
-Gemiddelde scores over 3 testruns (2026-05-02):
-
-| Criterium | Goede opdracht | Slechte opdracht | Verschil |
-|-----------|---------------|-----------------|---------|
-| C1 — Faithfulness | 3/5 | 1/5 | +2 |
-| C2 — Context Precision | 4–5/5 | 2/5 | +2–3 |
-| C3 — Context Recall | 2/5 | 1/5 | +1 |
-| C4 — Interesses | 4/5 | 1/5 | +3 |
-| C5 — Bloom-niveau | 5/5 | 1–2/5 | +3–4 |
-| C6 — Zelfstandig uitvoerbaar | 5/5 | 2–4/5 | +1–3 |
-| C7 — Leeftijdspassend | 4–5/5 | 1–2/5 | +2–4 |
-| **Totaal** | **27–28/35 (77–80%)** | **8–12/35 (23–34%)** | |
-| **Beslissing** | **goedkeuren** | **opnieuw_genereren** | |
-
----
-
 ### Wat maakt een slechte opdracht voor Noah Smit?
 
 - **Geen aansluiting heeft op zijn interesses**: niets met wetenschap of experimenten
@@ -298,52 +256,76 @@ Schrijf bij elk land de hoofdstad op. Maak het mooi en netjes. Zorg dat je
 binnen de lijnen kleurt.
 ```
 
-#### Testresultaten
+### Testresultaten
 
-Gemiddelde scores over 3 testruns (2026-05-02):
+Getest met `scripts/test-judge.ts`, model: `tensortemplar/prometheus2:7b-fp16`, `runs=3` per criterium.
+Volledig rapport: [judge-testrapport-2026-05-02T10-38-48.txt](../Judge_tests/judge-testrapport-2026-05-02T10-38-48.txt)
 
-| Criterium | Score | Runs (voorbeeld) | Opmerkingen |
-|-----------|-------|-----------------|------------|
-| C1 — Faithfulness | 1/5 | 1, 1, 1 | Zeer stabiel — geen profiel gebruikt |
-| C2 — Context Precision | 2/5 | 1, 1, 5 | Uitbijters: judge geeft soms 5/5 ten onrechte |
-| C3 — Context Recall | 1/5 | 1, 1, 1 | Zeer stabiel |
-| C4 — Interesses | 1/5 | 1, 1, 1 | Zeer stabiel |
-| C5 — Bloom-niveau | 1–2/5 | 1, 5, 1 | Uitbijters bij C5 |
-| C6 — Zelfstandig | 2–4/5 | 2, 5, 5 | Logisch: simpele taak IS uitvoerbaar |
-| C7 — Leeftijdspassend | 1–2/5 | 1, 1, 1 | Stabiel |
-| **Totaal** | **9–12/35 (26–34%)** | | **→ opnieuw_genereren** |
+Testresultaten (2026-05-02):
+
+| Criterium | Goede opdracht | Slechte opdracht | Verschil |
+|-----------|---------------|-----------------|---------|
+| C1: Faithfulness | 3/5 | 1/5 | +2 |
+| C2: Context Precision | 3/5 | 2/5 | +1 |
+| C3: Context Recall | 2/5 | 1/5 | +1 |
+| C4: Interesses | 4/5 | 1/5 | +3 |
+| C5: Bloom-niveau | 4/5 | 1/5 | +3 |
+| C6: Zelfstandig uitvoerbaar | 4/5 | 2/5 | +2 |
+| C7: Leeftijdspassend | 5/5 | 1/5 | +4 |
+| **Totaal** | **25/35 (71%)** | **9/35 (26%)** | |
+| **Beslissing** | **goedkeuren** | **opnieuw_genereren** | |
+
+---
+
+#### Test resultaat 
+
+Volledig rapport: [judge-testrapport-2026-05-02T10-33-12.txt](../Judge_tests/judge-testrapport-2026-05-02T10-33-12.txt)
+
+Testresultaten (2026-05-02):
+
+| Criterium | Goede opdracht | Slechte opdracht | Verschil |
+|-----------|---------------|-----------------|---------|
+| C1: Faithfulness | 3/5 | 1/5 | +2 |
+| C2: Context Precision | 4/5 | 2/5 | +2 |
+| C3: Context Recall | 2/5 | 1/5 | +1 |
+| C4: Interesses | 4/5 | 1/5 | +3 |
+| C5: Bloom-niveau | 5/5 | 2/5 | +3 |
+| C6: Zelfstandig | 5/5 | 2/5 | +3 |
+| C7: Leeftijdspassend | 5/5 | 2/5 | +3 |
+| **Totaal** | **28/35 (80%)** | **11/35 (31%)** | |
+| **Beslissing** | **goedkeuren** | **opnieuw_genereren** | |
 
 ---
 
 ### Bevindingen en conclusies
 
-#### Beslislogica werkt correct
-De judge discrimineert betrouwbaar tussen goed en slecht:
-- Slechte opdracht: consistent 23–34% → altijd `opnieuw_genereren`
-- Goede opdracht: consistent 77–80% → altijd `goedkeuren`
+- De judge herkent betrouwbaar het verschil tussen een goede en slechte opdracht. De slechte opdracht scoort altijd onder 35% en wordt altijd opnieuw gegenereerd. De goede opdracht scoort altijd boven 70% en wordt altijd goedgekeurd.
 
-#### Runs=3 stabiliseert de beslissing
-Met `runs=1` (vorige versie) scoorde de goede opdracht soms 65.7% → `flaggen`. Met `runs=3` is de beslissing stabiel op `goedkeuren`. De middeling over drie runs corrigeert uitbijters.
+- De opdracht 3 keer scoren en middelen maakt de uitkomst stabieler. Met 1 run scoorde de goede opdracht soms net te laag en werd onterecht geflagd. Met 3 runs gebeurt dat niet meer.
 
-#### Meest betrouwbare criteria: C5 en C6
-Runs van `5,5,5` — de judge is het hier altijd over eens. Bloom-niveau en zelfstandige uitvoerbaarheid zijn goed te beoordelen.
-
-#### Minst betrouwbare criteria: C1 en C2
-- **C1** (Faithfulness): runs zoals `4, 1, 5` op dezelfde goede opdracht — maximale spreiding. De judge is het fundamenteel oneens met zichzelf.
-- **C2** (Context Precision): soms geeft de judge 5/5 op de slechte opdracht (`1, 5, 1`), terwijl die opdracht geen enkele leerlinginformatie gebruikt. Dit is een duidelijke judge-fout die `runs=3` via middeling corrigeert.
-
-#### C3 scoort structureel laag op de goede opdracht (2/5) — terecht
-De judge wijst er consistent op dat het eindproduct een onderzoeksverslag vereist, terwijl Noah moeite heeft met schrijven. Dit is een valide kritiekpunt op de goede opdracht zelf, niet op de judge.
-
-#### Niet-determinisme is inherent
-LLM-judges zijn niet deterministisch bij `temperature: 1.0` (vereist door Prometheus 2). Dezelfde opdracht kan per run anders scoren. `runs=3` vermindert dit effect significant; `runs=5` zou C2 verder stabiliseren maar verdrievoudigt de evaluatietijd.
-
-### Tests bij 'goede' opdrachten voor hoogbegaafde leerlingen
-
-Een 'goede' opdracht voor Noah sluit aan op zijn interesses, geeft autonomie, vraagt eigen redenering en is volledig traceerbaar naar zijn OPP.
+- De judge geeft soms per run een andere score op dezelfde opdracht. Dat is normaal, omdat het model niet altijd hetzelfde antwoord geeft. Door te middelen over 3 runs wordt dit effect kleiner.
 
 #### Test 1 
 [text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)
 
 #### Test 2 
 ![alt text](images/judge-test-2-selectie.png) ![alt text](images/judge-test-2-opdracht.png) ![alt text](images/judge-test-2-beoordeling-1.png) ![alt text](images/judge-test-2-beoordeling-2.png)
+
+---
+
+## Bronnen (tests)
+
+- Saha et al. (2026). *LLM-as-a-Judge on a Budget*. arXiv:2602.15481. https://arxiv.org/html/2602.15481v1#S6
+- Guo, S. (2025). *LLM-as-a-judge: A practical guide*. Towards Data Science. https://towardsdatascience.com/llm-as-a-judge-a-practical-guide/
+- Kim, S., Suk, J., Longpre, S., Lin, B. Y., Shin, J., Welleck, S., Neubig, G., Lee, M., Lee, H., & Seo, M. (2024). *Prometheus 2: An open source language model specialized in evaluating other language models*. arXiv:2405.01535. https://arxiv.org/abs/2405.01535
+- Zheng, L., Chiang, W., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., Lin, H., Li, Z., Li, D., Xing, E., Zhang, H., Gonzalez, J., & Stoica, I. (2023). *Judging LLM-as-a-judge with MT-bench and Chatbot Arena*. arXiv:2306.05685. https://arxiv.org/abs/2306.05685
+- Liu, Y., Iter, D., Xu, Y., Wang, S., Xu, R., & Zhu, C. (2023). *G-Eval: NLG evaluation using GPT-4 with better human alignment*. arXiv:2303.16634. https://arxiv.org/abs/2303.16634
+- Es, S., James, J., Espinosa-Anke, L., & Schockaert, S. (2023). *RAGAS: Automated evaluation of retrieval augmented generation*. arXiv:2309.15217. https://arxiv.org/abs/2309.15217
+- Renzulli, J. S. (1977). *The enrichment triad model*. Creative Learning Press.
+- Ryan, R. M., & Deci, E. L. (2000). Self-determination theory and the facilitation of intrinsic motivation, social development, and well-being. *American Psychologist, 55*(1), 68–78.
+- Anderson, L. W., & Krathwohl, D. R. (2001). *A taxonomy for learning, teaching, and assessing: A revision of Bloom's taxonomy of educational objectives*. Longman.
+- Vygotsky, L. S. (1978). *Mind in society: The development of higher psychological processes*. Harvard University Press.
+- Reis, S. M., & Renzulli, J. S. (2010). Is there still a need for gifted education? An examination of current research. *Learning and Individual Differences, 20*(4), 308–317.
+- Piaget, J. (1972). *Intellectual evolution from adolescence to adulthood*. Human Development.
+- Silverman, L. K. (1997). The construct of asynchronous development. *Peabody Journal of Education, 72*(3&4), 36–58.
+- Basisboek (Hoog)begaafdheid voor po en vo

@@ -125,13 +125,13 @@ Antwoord in het Nederlands, kort en feitelijk.`,
 
   // 4. De Kunstenaar — Educatieve afbeeldingen
   // Kandidaten:
-  //  [1] flux.1-kontext        (lokaal, beste tekst-in-beeld)
-  //  [2] stable-diffusion-3.5  (efficiënt op Apple GPU, fine-tunebaar)
+  //  [1] stable-diffusion-3.5  (praktische keuze voor 24GB VRAM, stabiel voor eerste render én hergeneratie)
+  //  [2] flux.1-kontext        (mooie edit-kwaliteit, maar zwaar op 24GB)
   //  [3] muse-spark            (razendsnel, lichtgewicht)
   image: {
-    model: "flux.1-kontext",
+    model: "stable-diffusion-3.5-medium",
     description:
-      "Maakt visuele ondersteuning bij opdrachten in een consistente kinder-vriendelijke stijl.",
+      "Maakt visuele ondersteuning bij opdrachten in een consistente kindvriendelijke stijl.",
     prompt: `Genereer een vrolijke, kindvriendelijke cartoon-illustratie in een platte schoolstijl.
 Zachte kleuren, eenvoudige vormen, geen enge of onrustige elementen. Geen tekst in het beeld tenzij expliciet gevraagd.`,
   },

@@ -1,16 +1,19 @@
 import { Ollama } from "ollama"
+
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434"
 
-console.log(`🔌 Ollama host: ${OLLAMA_HOST}`) 
+console.log(`Ollama host: ${OLLAMA_HOST}`)
 
 export const ollama = new Ollama({ host: OLLAMA_HOST })
 export const EMBED_MODEL = process.env.EMBED_MODEL || "jeffh/intfloat-multilingual-e5-large:f16"
-export const GEN_MODEL = "qwen2.5"
+export const GEN_MODEL = process.env.GEN_MODEL || "qwen2.5"
+export const ASSISTANT_MODEL = process.env.ASSISTANT_MODEL || GEN_MODEL
 export const GEN_MODEL_LOCALE = "gemma4:31b-cloud"
 export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
 
 const UNLOAD_POLL_MS = 250
 const UNLOAD_TIMEOUT_MS = 10_000
+const MAX_EMBED_CHARS = 1000
 
 function sanitizeEmbeddingInput(text: string) {
   return text
@@ -28,8 +31,6 @@ function isValidEmbedding(embedding: number[]) {
     embedding.every((value) => Number.isFinite(value))
   )
 }
-
-const MAX_EMBED_CHARS = 1000
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
