@@ -5,7 +5,7 @@ Alle keuzes zijn gebaseerd op:
 
 * VRAM-beperkingen
 * Praktijktest: `FLUX.1-Kontext-dev` is op `24GB VRAM` erg krap zodra er ook planner/judge-modellen op dezelfde GPU actief zijn
-* Prioriteit: Planner > Assistent > Code > Vision > Image
+* Prioriteit: Planner > Assistent > Code > Image > Vision
 * Officiële modelgroottes en modelcards van Ollama, Hugging Face en Stability AI
 
 Belangrijke correctie op de eerdere versie:

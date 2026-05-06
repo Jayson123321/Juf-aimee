@@ -978,7 +978,7 @@ export function AiAssignmentClient({
                 </div>
 
                 {assignmentImage ? (
-                  <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_10px_30px_rgba(59,130,246,0.08)]">
+                  <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_10px_30px_rgba(59,130,246,0.08)]">
                     <Image
                       alt={`Illustratie bij ${assignment.title}`}
                       className="h-auto w-full object-cover"

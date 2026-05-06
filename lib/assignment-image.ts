@@ -127,7 +127,7 @@ export function buildAssignmentImagePrompt({
 
   return [
     "Maak een duidelijke, kindvriendelijke educatieve illustratie in een rustige platte schoolstijl.",
-    "Zachte kleuren, overzichtelijke compositie, geen tekst, geen watermerk, geen logo.",
+    "Zachte kleuren, overzichtelijke compositie, geen tekst, geen watermerk, geen logo. Er moet geen tekst in komen want die kun je niet leesbaar maken.",
     compactTitle ? `Thema: ${compactTitle}.` : "",
     compactFocus ? `Schoolvak: ${compactFocus}.` : "",
     compactBloom ? `Denkniveau: ${compactBloom}.` : "",

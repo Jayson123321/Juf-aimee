@@ -19,8 +19,7 @@ def _normalize_family(value: Optional[str], fallback: str) -> str:
 
 
 # 24GB-vriendelijke standaard:
-# - eerste render: Stable Diffusion 3.5 Medium
-# - opnieuw maken: ook Stable Diffusion 3.5 Medium
+# - model: Stable Diffusion 3.5 Medium
 # Wil je later experimenteren met een zwaarder edit-model zoals FLUX?
 # Zet dan expliciet:
 #   ASSIGNMENT_IMAGE_EDIT_MODEL_FAMILY=flux
