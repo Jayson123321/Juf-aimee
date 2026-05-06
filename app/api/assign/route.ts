@@ -822,6 +822,7 @@ ${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
 
             send({ type: "assignment", data: { ...parsed, sources } });
 
+            send({ type: "judge_start", data: { total: 7 } });
             try {
               judgeResult = await evalueerOpdrachtStreaming(
                 {
@@ -835,8 +836,9 @@ ${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
                   volledigOpp: sources.join("\n\n---\n\n"),
                   profielSamenvatting,
                 },
-                () => {},
+                (step) => send({ type: "judge_step", data: step }),
               );
+              send({ type: "judge_done", data: judgeResult });
             } catch {
               break;
             }
