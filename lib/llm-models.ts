@@ -1,4 +1,4 @@
-import { ollama } from "@/lib/ollama"
+import { ASSISTANT_MODEL, GEN_MODEL, ollama } from "@/lib/ollama"
 import type { Message, Tool } from "ollama"
 
 /**
@@ -24,7 +24,7 @@ export const MODELS: Record<LLMRole, RoleConfig> = {
   //  [2] qwen2.5:latest     (lichtere fallback, lokaal breed beschikbaar)
   //  [3] deepseek-v3.2      (reasoning mode, uitstekend in gestructureerde JSON)
   planner: {
-    model: "qwen3:14b",
+    model: GEN_MODEL,
     description:
       "De dirigent: leest RAG-bronnen, bepaalt Bloom-niveau, bouwt een opdracht-plan als JSON.",
     prompt: `Je bent Juf Aimee: een deskundige in hoogbegaafdheidsonderwijs op de basisschool.
@@ -142,7 +142,7 @@ Zachte kleuren, eenvoudige vormen, geen enge of onrustige elementen. Geen tekst 
   //  [2] gemma3:12b           (warmere toon, maar iets zwaarder)
   //  [3] llama3.1:8b          (betrouwbare lichte fallback)
   assistant: {
-    model: "mistral-nemo:12b",
+    model: ASSISTANT_MODEL,
     description:
       "Zit in de sidebar en praat als Juf Aimee: warm, aanmoedigend, geeft hints ipv antwoorden.",
     prompt: `Je bent Juf Aimee, een warme en aanmoedigende digitale leerkracht voor hoogbegaafde basisschoolleerlingen.
