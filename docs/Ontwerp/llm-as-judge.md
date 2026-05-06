@@ -305,6 +305,8 @@ Testresultaten (2026-05-02):
 
 - De judge geeft soms per run een andere score op dezelfde opdracht. Dat is normaal, omdat het model niet altijd hetzelfde antwoord geeft. Door te middelen over 3 runs wordt dit effect kleiner.
 
+- Prometheus is te klein om subtiele context-instructies consistent te volgen, waardoor sommige criteria structureel te laag scoren — ook bij goed ontworpen opdrachten. Het model kijkt of profielkenmerken letterlijk in de opdrachttekst staan, in plaats van te redeneren over hoe de opdrachtstructuur daarop inspeelt. Meer verfijning via prompt-engineering lost dit niet op.
+
 #### Test 1 
 [text](llm-as-judge.md) ![text](images/judge-test-1-selectie.png) ![text](images/judge-test-1-opdracht.png) ![text](images/judge-test-1-beoordeling-1.png) ![text](images/judge-test-1-beoordeling-2.png)
 
