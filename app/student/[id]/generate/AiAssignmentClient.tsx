@@ -497,6 +497,43 @@ export function AiAssignmentClient({
     }
   }
 
+  async function runGemmaStream() {
+    setGemmaGenerating(true);
+    setGemmaError("");
+    setGemmaText("");
+    setGemmaSteps(["idle", "idle", "idle", "idle", "idle"]);
+
+    try {
+      await streamApi(
+        {
+          action: "generate_gemma",
+          studentId: student.id,
+          focusArea: resolvedFocusArea,
+          bloomLevel: selectedBloom,
+          vak: selectedVak,
+        },
+        (event) => {
+          if (event.type === "gemma_step") {
+            const { stage, status } = event.data as { stage: number; status: "running" | "done" };
+            setGemmaSteps((prev) => {
+              const next = [...prev];
+              next[stage - 1] = status;
+              return next;
+            });
+          } else if (event.type === "chunk") {
+            setGemmaText((prev) => prev + (event.data as string));
+          } else if (event.type === "error") {
+            throw new Error((event.data as { message: string }).message);
+          }
+        },
+      );
+    } catch (err) {
+      setGemmaError(err instanceof Error ? err.message : "Gemma genereren mislukt.");
+    } finally {
+      setGemmaGenerating(false);
+    }
+  }
+
   // ── Goedkeuren ───────────────────────────────────────────────────────────────
 
   async function approveAssignment() {

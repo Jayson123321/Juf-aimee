@@ -524,8 +524,8 @@ export async function POST(req: NextRequest) {
   const resolvedBloom = normalizeBloomLabel(bloomLevel || getBloomLevelLabel(student.bloomNiveau));
 
   try {
-    let sources: string[] = [];
     // Haal OPP-bronnen + leerkrachtfeedback + leerlinggeschiedenis op
+    const needsSourcesUpfront = action !== "generate" && action !== "revise";
     const [profileSources, feedbackChunks, geschiedenisItems] = await Promise.all([
       zoekVolledigProfiel(student.id, focusArea),
       prisma.oppChunk.findMany({
@@ -538,21 +538,6 @@ export async function POST(req: NextRequest) {
     ]);
     const geschiedenis = formatLeerlinggeschiedenis(geschiedenisItems);
     const sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
-    // For non-generate actions, fetch sources upfront
-    const needsSourcesUpfront = action !== "generate" && action !== "revise";
-    let sources: string[] = [];
-    if (needsSourcesUpfront) {
-      const [profileSources, feedbackChunks] = await Promise.all([
-        zoekVolledigProfiel(student.id, focusArea),
-        prisma.oppChunk.findMany({
-          where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
-          select: { tekst: true },
-          orderBy: { id: "desc" },
-          take: 5,
-        }),
-      ]);
-      sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
-    }
 
     // ── Actie: bronnen zoeken ─────────────────────────────────────────────────
     if (action === "search") {
