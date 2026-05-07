@@ -610,6 +610,13 @@ export async function POST(req: NextRequest) {
       if (!feedback?.trim()) {
         return NextResponse.json({ error: "Feedback is verplicht." }, { status: 400 });
       }
+      if (assignmentId) {
+        await prisma.teacherFeedback.upsert({
+          where: { assignmentId },
+          create: { assignmentId, content: feedback.trim() },
+          update: { content: feedback.trim() },
+        });
+      }
       const feedbackText = `[LEERKRACHT FEEDBACK - goedgekeurde opdracht]\nOpdracht ID: "${assignmentId ?? "onbekend"}"\nFeedback: "${feedback.trim()}"`;
       try {
         const embedding = await getEmbedding(feedbackText);
