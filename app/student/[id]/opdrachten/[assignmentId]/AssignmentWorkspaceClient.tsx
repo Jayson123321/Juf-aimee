@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2,
@@ -11,10 +12,145 @@ import {
   Save,
   Send,
   Sparkles,
+  ThumbsUp,
   Trash2,
   Upload,
 } from "lucide-react";
 import { StudentChatClient } from "../../chat/StudentChatClient";
+import aimeePortrait from "@/app/Images/Aimee.png";
+
+type AnswerAnalysis = {
+  verdict: string;
+  verdictMessage: string;
+  strengths: string[];
+  tips: string[];
+};
+
+function verdictTone(verdict: string): { label: string; bg: string; text: string; ring: string; emoji: string } {
+  const v = verdict.toLowerCase();
+  if (v.includes("sterk")) return { label: "Sterk", bg: "bg-emerald-100", text: "text-emerald-700", ring: "ring-emerald-200", emoji: "🌟" };
+  if (v.includes("kan beter")) return { label: "Kan beter", bg: "bg-amber-100", text: "text-amber-700", ring: "ring-amber-200", emoji: "💪" };
+  return { label: "Op weg", bg: "bg-sky-100", text: "text-sky-700", ring: "ring-sky-200", emoji: "🚀" };
+}
+
+function AimeeAnalysisCard({
+  analyzing,
+  analysis,
+  error,
+}: {
+  analyzing: boolean;
+  analysis: AnswerAnalysis | null;
+  error: string;
+}) {
+  const tone = analysis ? verdictTone(analysis.verdict) : null;
+
+  return (
+    <div className="relative pt-14">
+      {/* Aimee portrait peeking above the cloud */}
+      <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2">
+        <div className="relative size-24 overflow-hidden rounded-full bg-white shadow-[0_8px_24px_rgba(92,114,180,0.18)] ring-4 ring-white">
+          <Image
+            alt="Juf Aimee"
+            className="object-cover object-[center_20%]"
+            fill
+            src={aimeePortrait}
+          />
+        </div>
+      </div>
+
+      <div className="relative">
+        {/* Bumpy cloud top */}
+        <svg
+          aria-hidden
+          className="absolute inset-x-0 -top-4 z-10 h-10 w-full text-white drop-shadow-[0_-4px_8px_rgba(125,140,200,0.10)]"
+          preserveAspectRatio="none"
+          viewBox="0 0 400 40"
+        >
+          <path
+            d="M 0,40 L 0,30 C 16,28 26,16 44,18 C 56,4 86,2 102,16 C 116,4 142,2 158,18 C 174,4 204,4 220,20 C 236,6 268,8 282,22 C 298,10 326,12 342,24 C 356,16 384,20 400,30 L 400,40 Z"
+            fill="currentColor"
+          />
+        </svg>
+
+        {/* Cloud body */}
+        <div className="relative overflow-hidden rounded-[28px] rounded-t-[12px] bg-white pb-6 pt-10 shadow-[0_12px_36px_rgba(92,114,180,0.14)]">
+          {/* Soft gradient inside */}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,1)_0%,rgba(240,247,255,1)_60%,rgba(225,240,255,0.9)_100%)]" />
+
+          <div className="relative space-y-4 px-6">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Juf Aimee zegt</p>
+              <h3 className="mt-1 text-base font-bold text-slate-950">
+                {analyzing ? "Ik kijk even mee…" : analysis ? "Ik heb je antwoord gelezen!" : "Sla je antwoord op voor feedback"}
+              </h3>
+            </div>
+
+            {analyzing && (
+              <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/70 px-4 py-3 text-sm text-slate-600 ring-1 ring-blue-100">
+                <Loader2 className="size-4 animate-spin text-blue-500" />
+                <span>Analyseren…</span>
+              </div>
+            )}
+
+            {error && !analyzing && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+                {error}
+              </div>
+            )}
+
+            {analysis && !analyzing && tone && (
+              <>
+                <div className={`flex items-start gap-3 rounded-2xl ${tone.bg} px-4 py-3 ring-1 ${tone.ring}`}>
+                  <span className="text-xl">{tone.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-xs font-bold uppercase tracking-wide ${tone.text}`}>{tone.label}</p>
+                    {analysis.verdictMessage && (
+                      <p className="mt-1 text-sm leading-6 text-slate-700">{analysis.verdictMessage}</p>
+                    )}
+                  </div>
+                </div>
+
+                {analysis.strengths.length > 0 && (
+                  <div className="space-y-2 rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-emerald-100">
+                    <div className="flex items-center gap-2">
+                      <ThumbsUp className="size-4 text-emerald-600" />
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Wat ging goed</p>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {analysis.strengths.map((s, i) => (
+                        <li className="flex gap-2 text-sm leading-6 text-slate-700" key={i}>
+                          <span className="text-emerald-500">•</span>
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {analysis.tips.length > 0 && (
+                  <div className="space-y-2 rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-violet-100">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb className="size-4 text-violet-600" />
+                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Tips om te verbeteren</p>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {analysis.tips.map((t, i) => (
+                        <li className="flex gap-2 text-sm leading-6 text-slate-700" key={i}>
+                          <span className="text-violet-500">•</span>
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type UploadedFile = {
   id: string;
@@ -22,6 +158,103 @@ type UploadedFile = {
   fileSize: number;
   uploadedAt: string;
 };
+
+function ReflectionSection({
+  reflection,
+  saving,
+  saved,
+  onChange,
+  onSave,
+  firstName,
+}: {
+  reflection: string;
+  saving: boolean;
+  saved: boolean;
+  onChange: (v: string) => void;
+  onSave: () => void;
+  firstName: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-blue-100 bg-[linear-gradient(180deg,#dce4ff_0%,#cdd8ff_100%)] shadow-[0_12px_36px_rgba(92,114,180,0.06)]">
+      <div className="flex items-center gap-3 border-b border-blue-100 px-6 py-4">
+        <div className="flex size-8 items-center justify-center rounded-xl bg-blue-100">
+          <Lightbulb className="size-4 text-blue-700" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-slate-950">Reflectie</h2>
+          <p className="text-xs text-slate-500">Wat heb je geleerd? Wat vond je makkelijk of moeilijk?</p>
+        </div>
+      </div>
+
+      <div className="px-6 py-5 space-y-4">
+        {/* Keuze-opties */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-blue-800">Klik op wat voor jou klopt — je kunt er meerdere kiezen:</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              "Ik heb vandaag iets nieuws geleerd.",
+              "Ik vond het moeilijk, maar ik heb het toch geprobeerd.",
+              "Ik vond de opdracht leuk om te doen.",
+              "Ik ben trots op wat ik heb gemaakt.",
+              "Ik wil dit onderwerp beter leren begrijpen.",
+              "Het was makkelijker dan ik dacht.",
+              "Ik had hulp nodig.",
+            ].map((answer) => {
+              const selected = reflection.includes(answer);
+              return (
+                <button
+                  key={answer}
+                  type="button"
+                  onClick={() => {
+                    if (selected) {
+                      onChange(reflection.replace(answer, "").replace(/\n{3,}/g, "\n\n").trim());
+                    } else {
+                      onChange(reflection ? `${reflection.trim()}\n${answer}` : answer);
+                    }
+                  }}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    selected
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "border-blue-300 bg-white/70 text-blue-800 hover:bg-white hover:border-blue-500"
+                  }`}
+                >
+                  {answer}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <textarea
+          className="min-h-[140px] w-full resize-y rounded-2xl border border-blue-200 bg-white px-5 py-4 text-[1.02rem] leading-8 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`Hé ${firstName}, schrijf hier wat je hebt geleerd of wat je de volgende keer anders zou doen…`}
+          value={reflection}
+        />
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-slate-400">Je reflectie wordt opgeslagen en helpt je leraar je beter te begeleiden.</p>
+          <button
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={saving || !reflection.trim()}
+            onClick={onSave}
+            type="button"
+          >
+            <span>{saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}</span>
+            Opslaan
+          </button>
+        </div>
+
+        {saved && (
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
+            Reflectie opgeslagen!
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -37,6 +270,7 @@ export function AssignmentWorkspaceClient({
   bloomLevel,
   firstName,
   initialWork,
+  initialReflection = "",
   isCompleted,
   studentId,
   teacherFeedback,
@@ -48,11 +282,15 @@ export function AssignmentWorkspaceClient({
   bloomLevel: string;
   firstName: string;
   initialWork: string;
+  initialReflection?: string;
   isCompleted: boolean;
   studentId: string;
   teacherFeedback?: string | null;
 }) {
   const [work, setWork] = useState(initialWork);
+  const [reflection, setReflection] = useState(initialReflection);
+  const [savingReflection, setSavingReflection] = useState(false);
+  const [reflectionSaved, setReflectionSaved] = useState(false);
   const [tips, setTips] = useState<string[]>([]);
   const [loadingTips, setLoadingTips] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,6 +303,9 @@ export function AssignmentWorkspaceClient({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [analysis, setAnalysis] = useState<AnswerAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -113,10 +354,36 @@ export function AssignmentWorkspaceClient({
       setSavedOnce(true);
       setMessage("Opgeslagen!");
       setTimeout(() => setMessage(""), 3000);
+      void analyzeAnswer();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Opslaan mislukt.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function analyzeAnswer() {
+    if (!work.trim()) return;
+    setAnalyzing(true);
+    setAnalysisError("");
+    try {
+      const response = await fetch("/api/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "analyze_answer", studentId, assignmentId, work }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Analyse mislukt.");
+      setAnalysis({
+        verdict: data.verdict ?? "op weg",
+        verdictMessage: data.verdictMessage ?? "",
+        strengths: Array.isArray(data.strengths) ? data.strengths : [],
+        tips: Array.isArray(data.tips) ? data.tips : [],
+      });
+    } catch (err) {
+      setAnalysisError(err instanceof Error ? err.message : "Analyse mislukt.");
+    } finally {
+      setAnalyzing(false);
     }
   }
 
@@ -164,6 +431,26 @@ export function AssignmentWorkspaceClient({
     }
   }
 
+  async function saveReflection() {
+    if (!reflection.trim()) return;
+    setSavingReflection(true);
+    setReflectionSaved(false);
+    try {
+      const response = await fetch("/api/prototype/student-assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reflect", studentId, assignmentId, reflection }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Opslaan mislukt.");
+      setReflectionSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reflectie opslaan mislukt.");
+    } finally {
+      setSavingReflection(false);
+    }
+  }
+
   async function deleteFile(submissionId: string) {
     try {
       await fetch(
@@ -176,8 +463,12 @@ export function AssignmentWorkspaceClient({
     }
   }
 
+  const showAnalysis = analyzing || analysis !== null || analysisError !== "";
   const chatSidebar = (
-    <aside className="xl:sticky xl:top-6 xl:self-start">
+    <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+      {showAnalysis && (
+        <AimeeAnalysisCard analyzing={analyzing} analysis={analysis} error={analysisError} />
+      )}
       <StudentChatClient
         assignmentDescription={assignmentDescription}
         assignmentId={assignmentId}
@@ -251,6 +542,16 @@ export function AssignmentWorkspaceClient({
         </div>
 
         {chatSidebar}
+
+        {/* Reflectie */}
+        <ReflectionSection
+          reflection={reflection}
+          saving={savingReflection}
+          saved={reflectionSaved}
+          onChange={setReflection}
+          onSave={saveReflection}
+          firstName={firstName}
+        />
       </div>
     );
   }
@@ -400,6 +701,16 @@ export function AssignmentWorkspaceClient({
             )}
           </div>
         </div>
+
+      {/* Reflectie */}
+      <ReflectionSection
+        reflection={reflection}
+        saving={savingReflection}
+        saved={reflectionSaved}
+        onChange={setReflection}
+        onSave={saveReflection}
+        firstName={firstName}
+      />
 
         <div className="overflow-hidden rounded-3xl border border-violet-100 bg-[linear-gradient(180deg,#faf8ff_0%,#f3f0ff_100%)] shadow-[0_12px_36px_rgba(92,114,180,0.06)]">
           <div className="flex items-center gap-3 border-b border-violet-100 px-6 py-4">
