@@ -5,7 +5,7 @@ console.log(`🔌 Ollama host: ${OLLAMA_HOST}`)  // ← tijdelijk toevoegen
 
 export const ollama = new Ollama({ host: OLLAMA_HOST })
 export const EMBED_MODEL = process.env.EMBED_MODEL || "jeffh/intfloat-multilingual-e5-large:f16"
-export const GEN_MODEL = "qwen3:32b"
+export const GEN_MODEL = "qwen3:14b"
 export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
 
 function sanitizeEmbeddingInput(text: string) {

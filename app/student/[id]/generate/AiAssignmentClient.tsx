@@ -20,6 +20,7 @@ import {
   Search,
   Sparkles,
   Target,
+  User,
 } from "lucide-react";
 import type { PrototypeBloomLevel, PrototypeStudent } from "@/lib/prototype-runtime";
 
@@ -147,6 +148,7 @@ export function AiAssignmentClient({
   const [approving, setApproving] = useState(false);
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [mcStage, setMcStage] = useState<"idle" | "planner" | "coder" | "done">("idle");
+  const [generationStep, setGenerationStep] = useState(0);
   const [error, setError] = useState("");
   const [approvalMessage, setApprovalMessage] = useState("");
 
@@ -164,6 +166,14 @@ export function AiAssignmentClient({
   const [savedAssignmentId, setSavedAssignmentId] = useState<string | null>(null);
   const [teacherFeedback, setTeacherFeedback] = useState("");
   const [feedbackSaved, setFeedbackSaved] = useState(false);
+
+  // Gemma 4 sectie
+  const [gemmaText, setGemmaText] = useState("");
+  const [gemmaGenerating, setGemmaGenerating] = useState(false);
+  const [gemmaError, setGemmaError] = useState("");
+  const [gemmaSteps, setGemmaSteps] = useState<("idle" | "running" | "done")[]>(
+    ["idle", "idle", "idle", "idle", "idle"],
+  );
 
   // Leerkrachtsinteractie
   const [teacherPrompt, setTeacherPrompt] = useState("");
@@ -264,7 +274,9 @@ export function AiAssignmentClient({
           currentAssignment: action === "revise" ? assignment : undefined,
         },
         (event) => {
-          if (event.type === "sources") {
+          if (event.type === "step") {
+            setGenerationStep(event.data as number);
+          } else if (event.type === "sources") {
             setSources(event.data as string[]);
           } else if (event.type === "assignment") {
             setAssignment(event.data as GeneratedAssignment);
@@ -402,6 +414,44 @@ export function AiAssignmentClient({
     setError("");
     setRejectMode(false);
     setRejectReason("");
+  }
+
+  // ── Gemma 4 — uitgebreide opdracht genereren ────────────────────────────────
+
+  async function runGemmaStream() {
+    setGemmaGenerating(true);
+    setGemmaText("");
+    setGemmaError("");
+    setGemmaSteps(["idle", "idle", "idle", "idle", "idle"]);
+    try {
+      await streamApi(
+        {
+          action: "generate_gemma",
+          studentId: student.id,
+          focusArea: resolvedFocusArea,
+          bloomLevel: selectedBloom,
+          vak: selectedVak,
+        },
+        (event) => {
+          if (event.type === "chunk") {
+            setGemmaText((prev) => prev + (event.data as string));
+          } else if (event.type === "gemma_step") {
+            const { stage, status } = event.data as { stage: number; status: "running" | "done" };
+            setGemmaSteps((prev) => {
+              const next = [...prev];
+              if (stage >= 1 && stage <= next.length) next[stage - 1] = status;
+              return next;
+            });
+          } else if (event.type === "error") {
+            throw new Error((event.data as { message: string }).message);
+          }
+        },
+      );
+    } catch (err) {
+      setGemmaError(err instanceof Error ? err.message : "Gemma genereren mislukt.");
+    } finally {
+      setGemmaGenerating(false);
+    }
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -1006,6 +1056,123 @@ export function AiAssignmentClient({
           </div>
         </SectionCard>
       )}
+
+      {/* Gemma 4 — uitgebreide opdracht */}
+      <SectionCard className="border-blue-200 bg-[linear-gradient(180deg,rgba(248,252,255,0.97),rgba(240,249,255,0.93))]">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]">
+              <Sparkles className="size-5" />
+            </div>
+            <div>
+              <h2 className="text-[1.15rem] font-semibold text-slate-950">Gemma 4 — Uitgebreide Opdracht</h2>
+              <p className="text-sm text-slate-500">Genereert een lange, gedetailleerde opdracht speciaal voor hoogbegaafde leerlingen</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <span className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800">
+              <BookOpen className="size-4" />
+              {selectedVak}
+            </span>
+            {resolvedFocusArea && resolvedFocusArea !== selectedVak && (
+              <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
+                <Target className="size-4" />
+                {resolvedFocusArea}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700">
+              {selectedBloom}
+            </span>
+          </div>
+
+          <button
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 text-[1.05rem] font-semibold text-white shadow-[0_12px_24px_rgba(59,130,246,0.22)] transition hover:from-blue-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={busy || gemmaGenerating}
+            onClick={runGemmaStream}
+            type="button"
+          >
+            <span className="flex shrink-0">{gemmaGenerating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+            <span>Genereer met Gemma 4</span>
+          </button>
+
+          {gemmaError && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{gemmaError}</div>
+          )}
+
+          {(gemmaGenerating || gemmaSteps.some((s) => s !== "idle")) && (() => {
+            const GEMMA_STEPS = [
+              { label: "Studentprofiel", icon: User },
+              { label: "Leerkrachtfeedback", icon: MessageSquare },
+              { label: "Reflecties", icon: Lightbulb },
+              { label: "Eerdere opdrachten", icon: FileText },
+              { label: "Genereren", icon: Sparkles },
+            ] as const;
+            const doneCount = gemmaSteps.filter((s) => s === "done").length;
+            const runningCount = gemmaSteps.filter((s) => s === "running").length;
+            const progressPct = ((doneCount + runningCount * 0.5) / GEMMA_STEPS.length) * 100;
+            return (
+              <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/40 px-5 py-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-blue-900">RAS-pijplijn</p>
+                  <span className="text-xs font-medium text-blue-700">{doneCount}/{GEMMA_STEPS.length} stappen</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-blue-100">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-700 ease-out"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {GEMMA_STEPS.map((step, idx) => {
+                    const status = gemmaSteps[idx];
+                    const Icon = step.icon;
+                    return (
+                      <div className="flex flex-col items-center gap-1.5 text-center" key={step.label}>
+                        <div
+                          className={`flex size-10 items-center justify-center rounded-full ring-2 transition ${
+                            status === "done"
+                              ? "bg-emerald-500 text-white ring-emerald-200"
+                              : status === "running"
+                              ? "animate-pulse bg-blue-500 text-white ring-blue-200"
+                              : "bg-slate-100 text-slate-400 ring-slate-200"
+                          }`}
+                        >
+                          {status === "done" ? <Check className="size-4" />
+                            : status === "running" ? <Loader2 className="size-4 animate-spin" />
+                            : <Icon className="size-4" />}
+                        </div>
+                        <p
+                          className={`text-[0.7rem] leading-tight ${
+                            status === "done" ? "font-semibold text-emerald-700"
+                              : status === "running" ? "font-semibold text-blue-700"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          {step.label}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {(gemmaGenerating || gemmaText) && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-blue-600" />
+                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Gegenereerde opdracht</p>
+                {gemmaGenerating && <Loader2 className="size-3 animate-spin text-blue-500" />}
+              </div>
+              <div className="min-h-[120px] rounded-2xl border border-blue-100 bg-white px-6 py-5 text-[1.02rem] leading-8 text-slate-800 shadow-[0_4px_12px_rgba(15,23,42,0.04)] whitespace-pre-wrap">
+                {gemmaText || <span className="text-slate-400 italic">Opdracht wordt gegenereerd...</span>}
+              </div>
+            </div>
+          )}
+        </div>
+      </SectionCard>
 
       {/* Verantwoorde AI */}
       <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(252,250,255,0.96),rgba(247,243,255,0.92))]">

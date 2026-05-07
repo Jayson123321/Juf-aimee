@@ -248,6 +248,76 @@ ${rag}
 Maak nu het JSON-plan voor een meerkeuzevraag over ${focusArea}, volgens het schema in je instructie.`;
 }
 
+function buildGemmaPrompt(args: {
+  student: AssignmentApiStudent;
+  resolvedBloom: string;
+  focusArea: string;
+  vak: string;
+  profileSources: string[];
+  feedbackTexts: string[];
+  reflections: Array<{ assignmentTitle: string; content: string }>;
+  previousAssignments: Array<{ title: string; status: string; bloomLevel: string | null }>;
+}) {
+  const { student, resolvedBloom, focusArea, vak, profileSources, feedbackTexts, reflections, previousAssignments } = args;
+  const subject = vak || focusArea || "Algemeen";
+  const groep = student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend";
+
+  const profileBlock = profileSources.length
+    ? profileSources.slice(0, 5).join("\n\n---\n\n")
+    : "Geen aanvullende OPP-informatie beschikbaar.";
+
+  const feedbackBlock = feedbackTexts.length
+    ? feedbackTexts.slice(0, 5).map((t, i) => `${i + 1}. ${t}`).join("\n\n")
+    : "Geen eerdere leerkrachtfeedback beschikbaar.";
+
+  const reflectionBlock = reflections.length
+    ? reflections.map((r, i) => `${i + 1}. Bij "${r.assignmentTitle}": ${r.content}`).join("\n\n")
+    : "Geen eerdere reflecties van de leerling beschikbaar.";
+
+  const previousBlock = previousAssignments.length
+    ? previousAssignments.map((a, i) => `${i + 1}. "${a.title}" (status: ${a.status}, niveau: ${a.bloomLevel ?? "onbekend"})`).join("\n")
+    : "Geen eerdere opdrachten beschikbaar.";
+
+  return `Je bent een onderwijsdeskundige gespecialiseerd in hoogbegaafdheidsonderwijs op de basisschool.
+
+Maak een uitgebreide, concrete en uitdagende verrijkingsopdracht voor de volgende leerling.
+Gebruik de hieronder verzamelde context (profiel, leerkrachtfeedback, reflecties en eerdere
+opdrachten) om de opdracht echt persoonlijk te maken — vermijd herhaling van eerdere opdrachten
+en sluit aan op wat eerder werkte of juist niet.
+
+LEERLING: ${student.fullName}
+GROEP: ${groep}
+BLOOM-NIVEAU: ${resolvedBloom}
+SCHOOLVAK: ${subject}
+FOCUSGEBIED: ${focusArea || subject}
+
+STUDENTPROFIEL (uit OPP)
+${profileBlock}
+
+EERDERE LEERKRACHTFEEDBACK
+${feedbackBlock}
+
+REFLECTIES VAN DE LEERLING OP EERDERE OPDRACHTEN
+${reflectionBlock}
+
+EERDERE OPDRACHTEN (vermijd herhaling van onderwerp en format)
+${previousBlock}
+
+EISEN AAN DE OPDRACHT:
+- Schrijf in helder, verzorgd Nederlands
+- De opdracht is minimaal 400 woorden lang
+- Begin met een duidelijke, pakkende titel
+- Geef een gedetailleerde taakomschrijving met concrete stappen
+- Sluit aan bij Bloom-niveau: ${resolvedBloom}
+- Voeg beoordelingscriteria toe (wat wordt er beoordeeld?)
+- Eindig met 3 uitdagende verdiepingsvragen die verder denken stimuleren
+- De opdracht is praktisch uitvoerbaar binnen een schoolsetting
+- De opdracht past bij een hoogbegaafde leerling die extra uitdaging nodig heeft
+- Bouw voort op wat goed werkte volgens feedback en reflecties; vermijd onderwerpen of formats van eerdere opdrachten
+
+Geef een volledige, goed gestructureerde opdracht.`;
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -259,6 +329,7 @@ export async function POST(req: NextRequest) {
     bloomLevel = "",
     teacherPrompt = "",
     currentAssignment = null,
+    vak = "",
   } = body ?? {};
 
   if (!studentId || !action) {
@@ -284,17 +355,21 @@ export async function POST(req: NextRequest) {
   const resolvedBloom = normalizeBloomLabel(bloomLevel || getBloomLevelLabel(student.bloomNiveau));
 
   try {
-    // Haal OPP-bronnen + leerkrachtfeedback op
-    const [profileSources, feedbackChunks] = await Promise.all([
-      zoekVolledigProfiel(student.id, focusArea),
-      prisma.oppChunk.findMany({
-        where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
-        select: { tekst: true },
-        orderBy: { id: "desc" },
-        take: 5,
-      }),
-    ]);
-    const sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
+    // For non-generate actions, fetch sources upfront
+    const needsSourcesUpfront = action !== "generate" && action !== "revise";
+    let sources: string[] = [];
+    if (needsSourcesUpfront) {
+      const [profileSources, feedbackChunks] = await Promise.all([
+        zoekVolledigProfiel(student.id, focusArea),
+        prisma.oppChunk.findMany({
+          where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
+          select: { tekst: true },
+          orderBy: { id: "desc" },
+          take: 5,
+        }),
+      ]);
+      sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
+    }
 
     // ── Actie: bronnen zoeken ─────────────────────────────────────────────────
     if (action === "search") {
@@ -365,6 +440,93 @@ export async function POST(req: NextRequest) {
         );
       }
       return NextResponse.json({ ok: true });
+    }
+
+    // ── Actie: Gemma 4 — uitgebreide opdracht genereren (5-staps RAG) ────────
+    if (action === "generate_gemma") {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const send = (event: Record<string, unknown>) => {
+            controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+          };
+          try {
+            // Stap 1: Studentprofiel ophalen (RAG via OPP)
+            send({ type: "gemma_step", data: { stage: 1, status: "running" } });
+            const profileSources = await zoekVolledigProfiel(student.id, focusArea);
+            send({ type: "gemma_step", data: { stage: 1, status: "done" } });
+
+            // Stap 2: Leerkrachtfeedback verzamelen
+            send({ type: "gemma_step", data: { stage: 2, status: "running" } });
+            const feedbackChunks = await prisma.oppChunk.findMany({
+              where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
+              select: { tekst: true },
+              orderBy: { id: "desc" },
+              take: 5,
+            });
+            send({ type: "gemma_step", data: { stage: 2, status: "done" } });
+
+            // Stap 3: Reflecties van de leerling ophalen
+            send({ type: "gemma_step", data: { stage: 3, status: "running" } });
+            const reflectionRows = await prisma.reflection.findMany({
+              where: { assignment: { studentId: student.id } },
+              select: { content: true, assignment: { select: { title: true } } },
+              orderBy: { createdAt: "desc" },
+              take: 5,
+            });
+            const reflections = reflectionRows.map((r) => ({
+              assignmentTitle: r.assignment.title,
+              content: r.content,
+            }));
+            send({ type: "gemma_step", data: { stage: 3, status: "done" } });
+
+            // Stap 4: Eerdere opdrachten ophalen
+            send({ type: "gemma_step", data: { stage: 4, status: "running" } });
+            const previousAssignments = await prisma.assignment.findMany({
+              where: { studentId: student.id },
+              select: { title: true, status: true, bloomLevel: true },
+              orderBy: { createdAt: "desc" },
+              take: 5,
+            });
+            send({ type: "gemma_step", data: { stage: 4, status: "done" } });
+
+            // Stap 5: Genereren met Gemma 4
+            send({ type: "gemma_step", data: { stage: 5, status: "running" } });
+            const prompt = buildGemmaPrompt({
+              student,
+              resolvedBloom,
+              focusArea,
+              vak,
+              profileSources,
+              feedbackTexts: feedbackChunks.map((c) => c.tekst),
+              reflections,
+              previousAssignments,
+            });
+            const response = await ollama.chat({
+              model: "qwen3:14b",
+              messages: [{ role: "user", content: prompt }],
+              stream: true,
+            });
+            for await (const chunk of response) {
+              const text = chunk.message?.content;
+              if (text) send({ type: "chunk", data: text });
+            }
+            send({ type: "gemma_step", data: { stage: 5, status: "done" } });
+            send({ type: "done" });
+            controller.close();
+          } catch (error) {
+            send({ type: "error", data: { message: error instanceof Error ? error.message : "Gemma genereren mislukt." } });
+            controller.close();
+          }
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Transfer-Encoding": "chunked",
+          "Cache-Control": "no-cache",
+        },
+      });
     }
 
     // ── Actie: meerkeuzevraag genereren (Planner → Coder) ────────────────────
@@ -455,29 +617,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Geef eerst een instructie mee voor de aanpassing." }, { status: 400 });
     }
 
-    const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(sources);
-    if (!student.dateOfBirth && inferredDateOfBirth) {
-      await prisma.student.update({ where: { id: student.id }, data: { dateOfBirth: inferredDateOfBirth } });
-    }
-
-    const leeftijd = getStudentAge(inferredDateOfBirth);
-    const leeftijdLabel = leeftijd ? `${leeftijd} jaar` : "onbekend";
-    const interestSnippets = extractProfileInterestsFromSources(sources);
-    const interessesLabel = interestSnippets.length > 0
-      ? interestSnippets.map((s) => `"${s}"`).join("; ")
-      : "Niet expliciet benoemd in OPP-bronnen";
-    const beginsituatieBronnen = await zoekBeginsituatie(student.id);
-    const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) || "Geen OPP-informatie beschikbaar.";
-
-    const rejectedChunks = await prisma.oppChunk.findMany({
-      where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK - afgekeurde opdracht]" } },
-      select: { tekst: true },
-    });
-    const rejectedAssignments: RejectedAssignment[] = rejectedChunks.map(({ tekst }) => ({
-      title: tekst.match(/Opdrachttitel:\s*"([^"]+)"/)?.[1] ?? "onbekend",
-      reason: tekst.match(/Reden van afkeuring:\s*"([^"]+)"/)?.[1] ?? tekst,
-    }));
-
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -486,7 +625,48 @@ export async function POST(req: NextRequest) {
         };
 
         try {
-          send({ type: "sources", data: sources });
+          // Step 1: Feedback ophalen
+          send({ type: "step", data: 1 });
+          const feedbackChunks = await prisma.oppChunk.findMany({
+            where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
+            select: { tekst: true },
+            orderBy: { id: "desc" },
+            take: 5,
+          });
+
+          // Step 2: Reflectie ophalen
+          send({ type: "step", data: 2 });
+          const profileSources = await zoekVolledigProfiel(student.id, focusArea);
+          const genSources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
+
+          // Step 3: Eerdere opdrachten ophalen
+          send({ type: "step", data: 3 });
+          const [rejectedChunks, beginsituatieBronnen] = await Promise.all([
+            prisma.oppChunk.findMany({
+              where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK - afgekeurde opdracht]" } },
+              select: { tekst: true },
+            }),
+            zoekBeginsituatie(student.id),
+          ]);
+          const rejectedAssignments: RejectedAssignment[] = rejectedChunks.map(({ tekst }) => ({
+            title: tekst.match(/Opdrachttitel:\s*"([^"]+)"/)?.[1] ?? "onbekend",
+            reason: tekst.match(/Reden van afkeuring:\s*"([^"]+)"/)?.[1] ?? tekst,
+          }));
+          const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) || "Geen OPP-informatie beschikbaar.";
+
+          const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(genSources);
+          if (!student.dateOfBirth && inferredDateOfBirth) {
+            await prisma.student.update({ where: { id: student.id }, data: { dateOfBirth: inferredDateOfBirth } });
+          }
+          const leeftijdLabel = (() => { const a = getStudentAge(inferredDateOfBirth); return a ? `${a} jaar` : "onbekend"; })();
+          const interestSnippets = extractProfileInterestsFromSources(genSources);
+          const interessesLabel = interestSnippets.length > 0
+            ? interestSnippets.map((s) => `"${s}"`).join("; ")
+            : "Niet expliciet benoemd in OPP-bronnen";
+
+          // Step 4: Genereren
+          send({ type: "step", data: 4 });
+          send({ type: "sources", data: genSources });
 
           const MAX_POGINGEN = 2;
           let poging = 0;
