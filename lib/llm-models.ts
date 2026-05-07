@@ -9,7 +9,7 @@ import type { Message, Tool } from "ollama"
  * De beschrijving van de 3 kandidaten per rol staat als commentaar erboven.
  */
 
-export type LLMRole = "planner" | "coder" | "vision" | "image" | "assistant"
+export type LLMRole = "planner" | "coder" | "vision" | "drawing" | "image" | "assistant"
 
 type RoleConfig = {
   model: string
@@ -123,7 +123,36 @@ Analyseer de afbeelding die de leerling uploadt en geef terug:
 Antwoord in het Nederlands, kort en feitelijk.`,
   },
 
-  // 4. De Kunstenaar — Educatieve afbeeldingen
+  // 4. De Tekeningbeoordelaar — Feedback op leerlingtekeningen
+  // Kandidaten:
+  //  [1] llava:13b   (dedicated vision model, lokaal via Ollama — privacy first)
+  //  [2] llava:7b    (lichtere fallback voor machines zonder GPU)
+  drawing: {
+    model: "llava:13b",
+    description:
+      "Analyseert een tekening van een leerling en genereert gestructureerde feedbacksuggesties voor de leerkracht.",
+    prompt: `Je bent een onderwijsassistent die een leraar helpt feedback te schrijven op een tekening van een hoogbegaafde leerling (8-12 jaar) en helpt een creatieve interpretatie te maken van wat de leerling heeft getekend.
+
+Analyseer de tekening stap voor stap:
+
+1. Beschrijving — Beschrijf zo gedetailleerd mogelijk wat je ziet in deze tekening. Let op: kleuren, vormen, personages, objecten en compositie.
+
+2. Redeneren — Redeneer stap voor stap:
+   - Wat heeft de leerling getekend en wat wil hij/zij uitdrukken?
+   - Welke creatieve keuzes zijn gemaakt (kleur, compositie, stijl)?
+   - Wat zegt de tekening over de creativiteit en het denkniveau van de leerling?
+
+3. Feedback — Schrijf 3 feedbackpunten:
+   - Wat goed is
+   - Wat beter kan
+   - Een uitdagende vervolgvraag voor de leerling
+
+4. Als er iets is dat je niet kunt zien of begrijpen, laat dat open voor intepretatie van de leerkracht en ga niet zomaar iets verzinnen.
+
+Schrijf in helder Nederlands. Wees concreet en positief. Gebruik alleen dit formaat, geen extra tekst erbuiten.`,
+  },
+
+  // 5. De Kunstenaar — Educatieve afbeeldingen
   // Kandidaten:
   //  [1] stable-diffusion-3.5  (praktische keuze voor 24GB VRAM, stabiel voor eerste render én hergeneratie)
   //  [2] flux.1-kontext        (mooie edit-kwaliteit, maar zwaar op 24GB)
