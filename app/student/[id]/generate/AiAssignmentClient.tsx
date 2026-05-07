@@ -22,6 +22,7 @@ import {
   Sparkles,
   Target,
   ImageIcon,
+  User,
 } from "lucide-react";
 import type { PrototypeBloomLevel, PrototypeStudent } from "@/lib/prototype-runtime";
 
@@ -167,6 +168,7 @@ export function AiAssignmentClient({
   const [savingFeedback, setSavingFeedback] = useState(false);
   const [imageGenerating, setImageGenerating] = useState(false);
   const [mcStage, setMcStage] = useState<"idle" | "planner" | "coder" | "done">("idle");
+  const [generationStep, setGenerationStep] = useState(0);
   const [error, setError] = useState("");
   const [approvalMessage, setApprovalMessage] = useState("");
   const [imageError, setImageError] = useState("");
@@ -189,6 +191,19 @@ export function AiAssignmentClient({
   const [savedAssignmentId, setSavedAssignmentId] = useState<string | null>(null);
   const [teacherFeedback, setTeacherFeedback] = useState("");
   const [feedbackSaved, setFeedbackSaved] = useState(false);
+
+  // RAS sectie
+  const [rasText, setRasText] = useState("");
+  const [rasGenerating, setRasGenerating] = useState(false);
+  const [rasError, setRasError] = useState("");
+  const [rasSteps, setRasSteps] = useState<("idle" | "running" | "done")[]>(
+    ["idle", "idle", "idle", "idle", "idle"],
+  );
+  const [rasSaving, setRasSaving] = useState(false);
+  const [rasSavedId, setRasSavedId] = useState<string | null>(null);
+  const [rasFeedback, setRasFeedback] = useState("");
+  const [rasFeedbackSaving, setRasFeedbackSaving] = useState(false);
+  const [rasFeedbackSaved, setRasFeedbackSaved] = useState(false);
 
   // Leerkrachtsinteractie
   const [teacherPrompt, setTeacherPrompt] = useState("");
@@ -387,7 +402,9 @@ export function AiAssignmentClient({
           currentAssignment: action === "revise" ? assignment : undefined,
         },
         (event) => {
-          if (event.type === "sources") {
+          if (event.type === "step") {
+            setGenerationStep(event.data as number);
+          } else if (event.type === "sources") {
             setSources(event.data as string[]);
           } else if (event.type === "thinking") {
             setThinkingContent((event.data as { content: string }).content);
@@ -482,6 +499,107 @@ export function AiAssignmentClient({
       setMcStage("idle");
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function runRasStream() {
+    setRasGenerating(true);
+    setRasError("");
+    setRasText("");
+    setRasSteps(["idle", "idle", "idle", "idle", "idle"]);
+    setRasSavedId(null);
+    setRasFeedback("");
+    setRasFeedbackSaved(false);
+
+    try {
+      await streamApi(
+        {
+          action: "generate_ras",
+          studentId: student.id,
+          focusArea: resolvedFocusArea,
+          bloomLevel: selectedBloom,
+          vak: selectedVak,
+          estimatedTime,
+        },
+        (event) => {
+          if (event.type === "ras_step") {
+            const { stage, status } = event.data as { stage: number; status: "running" | "done" };
+            setRasSteps((prev) => {
+              const next = [...prev];
+              next[stage - 1] = status;
+              return next;
+            });
+          } else if (event.type === "chunk") {
+            setRasText((prev) => prev + (event.data as string));
+          } else if (event.type === "error") {
+            throw new Error((event.data as { message: string }).message);
+          }
+        },
+      );
+    } catch (err) {
+      setRasError(err instanceof Error ? err.message : "RAS genereren mislukt.");
+    } finally {
+      setRasGenerating(false);
+    }
+  }
+
+  async function saveRasAssignment() {
+    const text = rasText.trim();
+    if (!text) return;
+
+    const lines = text.split("\n");
+    const firstNonEmpty = lines.findIndex((l) => l.trim().length > 0);
+    const rawTitle = firstNonEmpty >= 0 ? lines[firstNonEmpty] : "RAS-opdracht";
+    const title = rawTitle.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim().slice(0, 200) || "RAS-opdracht";
+    const fullBody = lines.slice(firstNonEmpty + 1).join("\n").trim() || text;
+
+    const rationaleMatch = fullBody.match(/(^|\n)\s*\**\s*RATIONALE\s*\**\s*:?\s*\n?/i);
+    const rationaleIdx = rationaleMatch?.index ?? -1;
+    const studentBody = rationaleIdx >= 0 ? fullBody.slice(0, rationaleIdx).trim() : fullBody;
+    const rationaleText = rationaleIdx >= 0
+      ? fullBody.slice(rationaleIdx + (rationaleMatch?.[0].length ?? 0)).trim()
+      : "";
+
+    setRasSaving(true);
+    setRasError("");
+    try {
+      const data = await callApi({
+        action: "approve",
+        studentId: student.id,
+        focusArea: resolvedFocusArea,
+        bloomLevel: selectedBloom,
+        currentAssignment: {
+          title,
+          assignment: studentBody,
+          rationale: rationaleText || "Gegenereerd door RAS-pijplijn",
+          sources: [],
+        },
+      });
+      setRasSavedId((data as { savedAssignmentId?: string }).savedAssignmentId ?? null);
+      setRasFeedback("");
+      setRasFeedbackSaved(false);
+    } catch (err) {
+      setRasError(err instanceof Error ? err.message : "Opdracht opslaan mislukt.");
+    } finally {
+      setRasSaving(false);
+    }
+  }
+
+  async function saveRasFeedback() {
+    if (!rasSavedId || !rasFeedback.trim()) return;
+    setRasFeedbackSaving(true);
+    try {
+      await callApi({
+        action: "feedback",
+        studentId: student.id,
+        assignmentId: rasSavedId,
+        feedback: rasFeedback.trim(),
+      });
+      setRasFeedbackSaved(true);
+    } catch (err) {
+      setRasError(err instanceof Error ? err.message : "Feedback opslaan mislukt.");
+    } finally {
+      setRasFeedbackSaving(false);
     }
   }
 
@@ -777,8 +895,8 @@ export function AiAssignmentClient({
                 onClick={searchSources}
                 type="button"
               >
-                {searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}
-                Zoek Bronnen met AI
+                <span className="flex shrink-0">{searching ? <Loader2 className="size-5 animate-spin" /> : <Search className="size-5" />}</span>
+                <span>Zoek Bronnen met AI</span>
               </button>
               {rejectedAndReady ? (
                 <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4">
@@ -802,8 +920,8 @@ export function AiAssignmentClient({
                   onClick={() => runGenerateStream("generate")}
                   type="button"
                 >
-                  {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                  Genereer Opdracht met AI
+                  <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                  <span>Genereer Opdracht met AI</span>
                 </button>
               ) : (
                 <button
@@ -812,8 +930,8 @@ export function AiAssignmentClient({
                   onClick={runGenerateMcStream}
                   type="button"
                 >
-                  {generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
-                  Genereer Meerkeuzevraag met AI
+                  <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                  <span>Genereer Meerkeuzevraag met AI</span>
                 </button>
               )}
               {mode === "mc" && mcStage !== "idle" && mcStage !== "done" && (
@@ -1247,8 +1365,8 @@ export function AiAssignmentClient({
                       onClick={saveFeedback}
                       type="button"
                     >
-                      {savingFeedback ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                      Feedback opslaan
+                      <span className="flex shrink-0">{savingFeedback ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}</span>
+                      <span>Feedback opslaan</span>
                     </button>
                   </div>
                 )
@@ -1322,8 +1440,8 @@ export function AiAssignmentClient({
                     onClick={runGenerateMcStream}
                     type="button"
                   >
-                    {generating ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
-                    Opnieuw genereren
+                    <span className="flex shrink-0">{generating ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}</span>
+                    <span>Opnieuw genereren</span>
                   </button>
                 ) : (
                   <button
@@ -1332,8 +1450,8 @@ export function AiAssignmentClient({
                     onClick={() => runGenerateStream("revise")}
                     type="button"
                   >
-                    {revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}
-                    Aanpassen
+                    <span className="flex shrink-0">{revising ? <Loader2 className="size-4 animate-spin" /> : <PencilLine className="size-4" />}</span>
+                    <span>Aanpassen</span>
                   </button>
                 )}
                 <button
@@ -1351,8 +1469,8 @@ export function AiAssignmentClient({
                   onClick={approveAssignment}
                   type="button"
                 >
-                  {approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-                  Goedkeuren &amp; opslaan
+                  <span className="flex shrink-0">{approving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}</span>
+                  <span>Goedkeuren &amp; opslaan</span>
                 </button>
               </div>
             )}
@@ -1366,6 +1484,178 @@ export function AiAssignmentClient({
           </div>
         </SectionCard>
       )}
+
+      {/* RAS — uitgebreide opdracht */}
+      <SectionCard className="border-blue-200 bg-[linear-gradient(180deg,rgba(248,252,255,0.97),rgba(240,249,255,0.93))]">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]">
+              <Sparkles className="size-5" />
+            </div>
+            <div>
+              <h2 className="text-[1.15rem] font-semibold text-slate-950">RAS — Uitgebreide Opdracht</h2>
+              <p className="text-sm text-slate-500">Genereert een lange, gedetailleerde opdracht speciaal voor hoogbegaafde leerlingen</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <span className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800">
+              <BookOpen className="size-4" />
+              {selectedVak}
+            </span>
+            {resolvedFocusArea && resolvedFocusArea !== selectedVak && (
+              <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
+                <Target className="size-4" />
+                {resolvedFocusArea}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700">
+              {selectedBloom}
+            </span>
+          </div>
+
+          <button
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 text-[1.05rem] font-semibold text-white shadow-[0_12px_24px_rgba(59,130,246,0.22)] transition hover:from-blue-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={busy || rasGenerating}
+            onClick={runRasStream}
+            type="button"
+          >
+            <span className="flex shrink-0">{rasGenerating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+            <span>Genereer met RAS</span>
+          </button>
+
+          {rasError && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{rasError}</div>
+          )}
+
+          {(rasGenerating || rasSteps.some((s) => s !== "idle")) && (() => {
+            const GEMMA_STEPS = [
+              { label: "Studentprofiel", icon: User },
+              { label: "Leerkrachtfeedback", icon: MessageSquare },
+              { label: "Reflecties", icon: Lightbulb },
+              { label: "Eerdere opdrachten", icon: FileText },
+              { label: "Genereren", icon: Sparkles },
+            ] as const;
+            const doneCount = rasSteps.filter((s) => s === "done").length;
+            const runningCount = rasSteps.filter((s) => s === "running").length;
+            const progressPct = ((doneCount + runningCount * 0.5) / GEMMA_STEPS.length) * 100;
+            return (
+              <div className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/40 px-5 py-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-blue-900">RAS-pijplijn</p>
+                  <span className="text-xs font-medium text-blue-700">{doneCount}/{GEMMA_STEPS.length} stappen</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-blue-100">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-700 ease-out"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {GEMMA_STEPS.map((step, idx) => {
+                    const status = rasSteps[idx];
+                    const Icon = step.icon;
+                    return (
+                      <div className="flex flex-col items-center gap-1.5 text-center" key={step.label}>
+                        <div
+                          className={`flex size-10 items-center justify-center rounded-full ring-2 transition ${
+                            status === "done"
+                              ? "bg-emerald-500 text-white ring-emerald-200"
+                              : status === "running"
+                              ? "animate-pulse bg-blue-500 text-white ring-blue-200"
+                              : "bg-slate-100 text-slate-400 ring-slate-200"
+                          }`}
+                        >
+                          {status === "done" ? <Check className="size-4" />
+                            : status === "running" ? <Loader2 className="size-4 animate-spin" />
+                            : <Icon className="size-4" />}
+                        </div>
+                        <p
+                          className={`text-[0.7rem] leading-tight ${
+                            status === "done" ? "font-semibold text-emerald-700"
+                              : status === "running" ? "font-semibold text-blue-700"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          {step.label}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {(rasGenerating || rasText) && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-blue-600" />
+                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Gegenereerde opdracht</p>
+                {rasGenerating && <Loader2 className="size-3 animate-spin text-blue-500" />}
+              </div>
+              <div className="min-h-[120px] rounded-2xl border border-blue-100 bg-white px-6 py-5 text-[1.02rem] leading-8 text-slate-800 shadow-[0_4px_12px_rgba(15,23,42,0.04)] whitespace-pre-wrap">
+                {rasText || <span className="text-slate-400 italic">Opdracht wordt gegenereerd...</span>}
+              </div>
+
+              {rasText && !rasGenerating && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={rasSaving || Boolean(rasSavedId)}
+                    onClick={saveRasAssignment}
+                    type="button"
+                  >
+                    <span className="flex shrink-0">
+                      {rasSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                    </span>
+                    <span>{rasSavedId ? "Opgeslagen" : "Opslaan voor leerling"}</span>
+                  </button>
+                  {rasSavedId && (
+                    <span className="text-sm text-emerald-700">Opdracht opgeslagen voor {student.name}.</span>
+                  )}
+                </div>
+              )}
+
+              {rasSavedId && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <MessageSquare className="size-4 shrink-0" />
+                    <p className="text-sm font-semibold uppercase tracking-wide">Feedback van de leraar</p>
+                  </div>
+                  {rasFeedbackSaved ? (
+                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
+                      <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
+                      <span>Feedback opgeslagen en wordt meegenomen in toekomstige opdrachten.</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-5 py-5">
+                      <p className="text-sm text-emerald-800">
+                        Hoe is de opdracht verlopen? Deze feedback wordt opgeslagen en gebruikt bij het genereren van volgende opdrachten.
+                      </p>
+                      <textarea
+                        className="min-h-[100px] w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400"
+                        onChange={(e) => setRasFeedback(e.target.value)}
+                        placeholder="Bijv. de leerling werkte enthousiast maar had moeite met de planning. Volgende keer meer structuur bieden."
+                        value={rasFeedback}
+                      />
+                      <button
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={rasFeedbackSaving || !rasFeedback.trim()}
+                        onClick={saveRasFeedback}
+                        type="button"
+                      >
+                        <span className="flex shrink-0">{rasFeedbackSaving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}</span>
+                        <span>Feedback opslaan</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </SectionCard>
 
       {/* Verantwoorde AI */}
       <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(252,250,255,0.96),rgba(247,243,255,0.92))]">

@@ -20,7 +20,8 @@ export default async function StudentLayout({
   const userId = cookieStore.get("session_user_id")?.value;
 
   // Allow access for logged-in teachers/admins viewing a student profile
-  const isTeacher = !!userId && !!(await prisma.user.findUnique({ where: { id: userId } }));
+  const teacher = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+  const isTeacher = !!teacher;
 
   if (!isTeacher && !studentId) redirect("/login");
 
@@ -28,13 +29,14 @@ export default async function StudentLayout({
   if (!student) redirect("/login");
 
   const role = isTeacher ? "TEACHER" : "STUDENT";
+  const displayName = isTeacher ? (teacher!.name ?? teacher!.email) : student.fullName;
 
   return (
     <DashboardProvider role={role} profileHref={`/student/${id}`}>
       <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar footer={<LogoutButton />} />
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          <Header userName={student.fullName} />
+          <Header userName={displayName} />
           <main className="flex-1 overflow-auto">
             {children}
           </main>

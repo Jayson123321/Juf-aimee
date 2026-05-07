@@ -36,7 +36,7 @@ async function login(formData: FormData) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
-    redirect(`/student/${student.id}`);
+    redirect(`/student/${student.id}/profiel`);
   }
 
   redirect("/login?error=invalid");

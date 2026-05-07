@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, MapPin } from "lucide-react";
+import { User } from "lucide-react";
 import { updateStudent } from "./actions";
 
 export default async function EditStudentPage({
@@ -14,10 +14,6 @@ export default async function EditStudentPage({
 
   const student = await prisma.student.findUnique({ where: { id } });
   if (!student) notFound();
-
-  const dobValue = student.dateOfBirth
-    ? new Date(student.dateOfBirth).toISOString().split("T")[0]
-    : "";
 
   const action = updateStudent.bind(null, id);
 
@@ -43,7 +39,6 @@ export default async function EditStudentPage({
             </div>
             <div className="divide-y divide-slate-100">
               <FormRow label="Volledige naam *" name="fullName" defaultValue={student.fullName} required />
-              <FormRow label="Geboortedatum" name="dateOfBirth" type="date" defaultValue={dobValue} />
               <div className="flex items-center justify-between px-6 py-3.5">
                 <label htmlFor="gender" className="text-sm text-slate-500">Geslacht</label>
                 <select
@@ -59,20 +54,6 @@ export default async function EditStudentPage({
                 </select>
               </div>
               <FormRow label="E-mail" name="email" type="email" defaultValue={student.email ?? ""} />
-              <FormRow label="Telefoonnummer" name="phoneNumber" defaultValue={student.phoneNumber ?? ""} />
-            </div>
-          </section>
-
-          {/* Adres */}
-          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
-              <MapPin className="size-4 text-slate-500" />
-              <h2 className="text-sm font-semibold text-slate-800">Adres</h2>
-            </div>
-            <div className="divide-y divide-slate-100">
-              <FormRow label="Straat en huisnummer" name="addressLine" defaultValue={student.addressLine ?? ""} />
-              <FormRow label="Postcode" name="postalCode" defaultValue={student.postalCode ?? ""} />
-              <FormRow label="Stad" name="city" defaultValue={student.city ?? ""} />
             </div>
           </section>
 

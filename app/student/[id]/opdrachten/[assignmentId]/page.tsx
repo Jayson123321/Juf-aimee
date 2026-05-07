@@ -45,6 +45,7 @@ export default async function StudentAssignmentDetailPage({
         assignmentType: true,
         interactiveContent: true,
         teacherFeedback: { select: { content: true } },
+        reflection: { select: { content: true } },
       },
     }),
   ]);
@@ -171,6 +172,7 @@ export default async function StudentAssignmentDetailPage({
             bloomLevel={bloomLevel}
             firstName={firstName}
             initialWork={assignment.studentWork ?? ""}
+            initialReflection={assignment.reflection?.content ?? ""}
             isCompleted={assignment.status === "COMPLETED"}
             studentId={student.id}
             teacherFeedback={assignment.teacherFeedback?.content ?? null}
