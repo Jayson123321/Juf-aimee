@@ -37,7 +37,7 @@ type JudgeResult = {
   totaalScore: number;
   maxScore: number;
   genormaliseerdeScore: number;
-  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren" | "escaleren";
+  beslissing: "goedkeuren" | "flaggen" | "opnieuw_genereren";
 };
 
 const BLOOM_OPTIONS = [
@@ -575,9 +575,7 @@ export function AssignmentGenerateClient({ student }: { student: StudentProps })
                         ? "✓ Goedgekeurd"
                         : judgeResult.beslissing === "flaggen"
                           ? "⚠ Menselijke review nodig"
-                          : judgeResult.beslissing === "escaleren"
-                            ? "↑ Geëscaleerd"
-                            : "↺ Opnieuw genereren"}
+                          : "↺ Opnieuw genereren"}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">

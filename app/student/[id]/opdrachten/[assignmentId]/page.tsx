@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Sparkles, Target } from "lucide-react";
@@ -36,6 +37,7 @@ export default async function StudentAssignmentDetailPage({
         id: true,
         title: true,
         description: true,
+        illustrationUrl: true,
         studentTip: true,
         bloomLevel: true,
         status: true,
@@ -102,6 +104,25 @@ export default async function StudentAssignmentDetailPage({
           </div>
         </div>
 
+        {assignment.illustrationUrl && (
+          <div className="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
+            <div className="flex items-center gap-3 border-b border-blue-100 bg-blue-50/70 px-6 py-4">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-blue-100">
+                <Sparkles className="size-4 text-blue-600" />
+              </div>
+              <h2 className="font-semibold text-slate-950">Illustratie bij de opdracht</h2>
+            </div>
+            <Image
+              alt={`Illustratie bij ${assignment.title}`}
+              className="h-auto w-full object-cover"
+              src={assignment.illustrationUrl}
+              height={900}
+              unoptimized
+              width={1400}
+            />
+          </div>
+        )}
+
         {/* Assignment description — alleen voor tekst-opdrachten; MC toont de vraag in zijn eigen component */}
         {!isMc && (
           <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_36px_rgba(92,114,180,0.08)]">
@@ -133,6 +154,9 @@ export default async function StudentAssignmentDetailPage({
         {isMc && mcContent ? (
           <MultipleChoiceClient
             assignmentId={assignment.id}
+            assignmentTitle={assignment.title}
+            assignmentTip={assignment.studentTip ?? null}
+            bloomLevel={bloomLevel}
             firstName={firstName}
             initialWork={assignment.studentWork ?? ""}
             isCompleted={assignment.status === "COMPLETED"}
@@ -142,6 +166,10 @@ export default async function StudentAssignmentDetailPage({
         ) : (
           <AssignmentWorkspaceClient
             assignmentId={assignment.id}
+            assignmentDescription={assignment.description ?? ""}
+            assignmentTitle={assignment.title}
+            assignmentTip={assignment.studentTip ?? null}
+            bloomLevel={bloomLevel}
             firstName={firstName}
             initialWork={assignment.studentWork ?? ""}
             initialReflection={assignment.reflection?.content ?? ""}

@@ -97,6 +97,8 @@ model Assignment {
   id                 String           @id @default(uuid())
   title              String
   description        String?
+  illustrationUrl    String?
+  illustrationPrompt String?
   status             AssignmentStatus @default(PENDING)
   dueDate            DateTime?
   bloomLevel         String?

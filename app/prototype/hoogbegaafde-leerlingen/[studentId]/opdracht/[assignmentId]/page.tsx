@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -77,6 +78,23 @@ export default async function AssignmentDetailPage({
             </span>
           </div>
         </div>
+
+        {assignment.illustrationUrl && (
+          <section className="overflow-hidden rounded-[28px] border border-blue-100 bg-white/90 shadow-[0_18px_50px_rgba(92,114,180,0.08)]">
+            <div className="flex items-center gap-2 border-b border-blue-100 bg-blue-50/70 px-7 py-4 text-blue-700">
+              <Sparkles className="size-4 shrink-0" />
+              <p className="text-sm font-semibold uppercase tracking-wide">Illustratie bij de opdracht</p>
+            </div>
+            <Image
+              alt={`Illustratie bij ${assignment.title}`}
+              className="h-auto w-full object-cover"
+              src={assignment.illustrationUrl}
+              height={900}
+              unoptimized
+              width={1400}
+            />
+          </section>
+        )}
 
         {/* Assignment body */}
         <section className="rounded-[28px] border border-slate-200/80 bg-white/90 p-7 shadow-[0_18px_50px_rgba(92,114,180,0.08)]">

@@ -1,4 +1,4 @@
-# Advies: Beslislogica van de Judge
+# Beslislogica van de Judge
 
 ## 1. Inleiding
 > Kort beschrijven waarom een judge nodig is en wat het probleem is dat je oplost.

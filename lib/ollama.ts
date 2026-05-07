@@ -1,12 +1,19 @@
 import { Ollama } from "ollama"
+
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434"
 
-console.log(`🔌 Ollama host: ${OLLAMA_HOST}`)  // ← tijdelijk toevoegen
+console.log(`Ollama host: ${OLLAMA_HOST}`)
 
 export const ollama = new Ollama({ host: OLLAMA_HOST })
 export const EMBED_MODEL = process.env.EMBED_MODEL || "jeffh/intfloat-multilingual-e5-large:f16"
-export const GEN_MODEL = "qwen3:14b"
+export const GEN_MODEL = process.env.GEN_MODEL || "qwen3:14b"
+export const ASSISTANT_MODEL = process.env.ASSISTANT_MODEL || "mistral-nemo:12b"
+export const GEN_MODEL_LOCALE = "gemma4:31b-cloud"
 export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
+
+const UNLOAD_POLL_MS = 250
+const UNLOAD_TIMEOUT_MS = 10_000
+const MAX_EMBED_CHARS = 1000
 
 function sanitizeEmbeddingInput(text: string) {
   return text
@@ -25,7 +32,75 @@ function isValidEmbedding(embedding: number[]) {
   )
 }
 
-const MAX_EMBED_CHARS = 1000
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+type OllamaPsResponse = {
+  models?: Array<{ name?: string; model?: string }>
+}
+
+export async function getLoadedOllamaModelNames() {
+  try {
+    const response = (await ollama.ps()) as OllamaPsResponse
+    return (response.models ?? [])
+      .map((entry) => entry.name || entry.model || "")
+      .map((name) => name.trim())
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+async function waitUntilOllamaModelReleased(model: string, timeoutMs = UNLOAD_TIMEOUT_MS) {
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() < deadline) {
+    const loaded = await getLoadedOllamaModelNames()
+    if (!loaded.includes(model)) {
+      return
+    }
+
+    await sleep(UNLOAD_POLL_MS)
+  }
+}
+
+export async function releaseOllamaModel(model: string) {
+  const normalizedModel = model.trim()
+  if (!normalizedModel) return
+
+  const loaded = await getLoadedOllamaModelNames()
+  if (!loaded.includes(normalizedModel)) return
+
+  try {
+    await ollama.generate({
+      model: normalizedModel,
+      prompt: "",
+      keep_alive: 0,
+      options: { num_predict: 0 } as never,
+    })
+  } catch {
+    try {
+      await ollama.embed({
+        model: normalizedModel,
+        input: "release",
+        keep_alive: 0,
+      })
+    } catch {
+      // Ignore unload errors and fall back to polling the model list.
+    }
+  }
+
+  await waitUntilOllamaModelReleased(normalizedModel)
+}
+
+export async function releaseAllOllamaModels() {
+  const loadedModels = await getLoadedOllamaModelNames()
+
+  for (const model of loadedModels) {
+    await releaseOllamaModel(model)
+  }
+}
 
 export async function getEmbedding(text: string): Promise<number[]> {
   const base = sanitizeEmbeddingInput(text).slice(0, MAX_EMBED_CHARS)
@@ -39,7 +114,11 @@ export async function getEmbedding(text: string): Promise<number[]> {
 
   for (const variant of variants) {
     try {
-      const response = await ollama.embed({ model: EMBED_MODEL, input: `query: ${variant}` })
+      const response = await ollama.embed({
+        model: EMBED_MODEL,
+        input: `query: ${variant}`,
+        keep_alive: 0,
+      })
       const embedding = response.embeddings[0]
 
       if (!isValidEmbedding(embedding)) {
@@ -49,6 +128,8 @@ export async function getEmbedding(text: string): Promise<number[]> {
       return embedding
     } catch (error) {
       lastError = error
+    } finally {
+      await releaseOllamaModel(EMBED_MODEL)
     }
   }
 

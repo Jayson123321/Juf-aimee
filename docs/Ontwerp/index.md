@@ -11,6 +11,7 @@ In deze sectie vind je alle documenten rondom het ontwerp en de validatie van he
 | [Designverantwoording](designverantwoording.md) | Onderbouwing van de ontwerpkeuzes op basis van gebruikerstests |
 | [Advies prototype](advies-prototype.md) | Vroege prototypeschermen voor de adviesfunctionaliteit |
 | [Dashboard](dashboard.md) | Ontwerp en uitleg van het leraarsdashboard |
+| [Technische handleiding AI runtime](technische-handleiding-ai-runtime.md) | Uitleg van modellen, sidebar-chat, image-service en opstartprocedure |
 | [Linkdesign](Linkdesign.md) | Verkenning van designrichtingen |
 | [Testplan leraar](Testplan-leraar.md) | Plan voor gebruikerstesten met echte leraren |
 | [Testresultaat 1](testresultaten/Testresultaat1.md) | Resultaten van de eerste gebruikerstest |
