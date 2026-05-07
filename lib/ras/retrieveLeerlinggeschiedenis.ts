@@ -5,6 +5,7 @@ export type LeerlinggeschiedenisItem = {
   bloomLevel: string | null
   studentWork: string | null
   teacherFeedback: { content: string } | null
+  reflection: { content: string } | null
   submissions: { fileName: string }[]
 }
 
@@ -19,6 +20,7 @@ export async function retrieveLeerlinggeschiedenis(
       bloomLevel: true,
       studentWork: true,
       teacherFeedback: { select: { content: true } },
+      reflection: { select: { content: true } },
       submissions: { select: { fileName: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -43,6 +45,10 @@ export function formatLeerlinggeschiedenis(geschiedenis: LeerlinggeschiedenisIte
 
       if (a.teacherFeedback?.content) {
         lines.push(`  Feedback leraar: ${a.teacherFeedback.content}`)
+      }
+
+      if (a.reflection?.content) {
+        lines.push(`  Reflectie leerling: ${a.reflection.content}`)
       }
 
       return lines.join("\n")
