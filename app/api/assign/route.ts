@@ -389,17 +389,18 @@ ${rag}
 Maak nu het JSON-plan voor een meerkeuzevraag over ${focusArea}, volgens het schema in je instructie.`;
 }
 
-function buildGemmaPrompt(args: {
+function buildRasPrompt(args: {
   student: AssignmentApiStudent;
   resolvedBloom: string;
   focusArea: string;
   vak: string;
+  estimatedTime: string;
   profileSources: string[];
   feedbackTexts: string[];
   reflections: Array<{ assignmentTitle: string; content: string }>;
   previousAssignments: Array<{ title: string; status: string; bloomLevel: string | null }>;
 }) {
-  const { student, resolvedBloom, focusArea, vak, profileSources, feedbackTexts, reflections, previousAssignments } = args;
+  const { student, resolvedBloom, focusArea, vak, estimatedTime, profileSources, feedbackTexts, reflections, previousAssignments } = args;
   const subject = vak || focusArea || "Algemeen";
   const groep = student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend";
 
@@ -431,6 +432,7 @@ GROEP: ${groep}
 BLOOM-NIVEAU: ${resolvedBloom}
 SCHOOLVAK: ${subject}
 FOCUSGEBIED: ${focusArea || subject}
+GESCHATTE TIJD: ${estimatedTime || "niet opgegeven"}
 
 STUDENTPROFIEL (uit OPP)
 ${profileBlock}
@@ -446,7 +448,6 @@ ${previousBlock}
 
 EISEN AAN DE OPDRACHT:
 - Schrijf in helder, verzorgd Nederlands
-- De opdracht is minimaal 400 woorden lang
 - Begin met een duidelijke, pakkende titel
 - Geef een gedetailleerde taakomschrijving met concrete stappen
 - Sluit aan bij Bloom-niveau: ${resolvedBloom}
@@ -455,6 +456,9 @@ EISEN AAN DE OPDRACHT:
 - De opdracht is praktisch uitvoerbaar binnen een schoolsetting
 - De opdracht past bij een hoogbegaafde leerling die extra uitdaging nodig heeft
 - Bouw voort op wat goed werkte volgens feedback en reflecties; vermijd onderwerpen of formats van eerdere opdrachten
+- TIJDSDUUR: stem de scope, het aantal stappen, de diepgang en de lengte van het eindproduct STRIKT af op de geschatte tijd "${estimatedTime || "niet opgegeven"}". Een opdracht van 15-30 minuten heeft 1-2 stappen en een klein eindproduct; 45-60 minuten heeft 2-3 stappen; 1,5-2 uur heeft 3-4 stappen; een weekopdracht of meerdere lessen mag uitgebreider zijn met onderzoek en presentatie. Maak de opdracht NIET langer dan de tijd toelaat — kort en geconcentreerd is beter dan oppervlakkig en lang.${reflections.length ? `
+- REFLECTIES VERPLICHT GEBRUIKEN: sluit aan bij de reflecties van de leerling hierboven. Eindig de opdracht met een blok "RATIONALE:" waarin je MINSTENS ÉÉN regel letterlijk citeert tussen aanhalingstekens uit de bovenstaande reflecties, gevolgd door één of twee zinnen die uitleggen hoe deze opdracht inspeelt op dat citaat. Verzin GEEN reflecties die er niet staan.` : ""}${feedbackTexts.length ? `
+- LEERKRACHTFEEDBACK VERPLICHT GEBRUIKEN: in dezelfde RATIONALE-blok citeer je ook letterlijk minstens één regel uit de bovenstaande leerkrachtfeedback en leg je uit hoe deze opdracht daarop voortbouwt.` : ""}
 
 Geef een volledige, goed gestructureerde opdracht.`;
 }
@@ -705,8 +709,75 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // ── Actie: Gemma 4 — uitgebreide opdracht genereren (5-staps RAG) ────────
-    if (action === "generate_gemma") {
+    // ── Actie: antwoord van leerling analyseren ──────────────────────────────
+    if (action === "analyze_answer") {
+      const { assignmentId, work } = body ?? {};
+      if (!assignmentId || typeof work !== "string" || !work.trim()) {
+        return NextResponse.json({ error: "assignmentId en antwoord zijn verplicht." }, { status: 400 });
+      }
+
+      const assignment = await prisma.assignment.findUnique({
+        where: { id: assignmentId },
+        select: { title: true, description: true, bloomLevel: true },
+      });
+      if (!assignment) {
+        return NextResponse.json({ error: "Opdracht niet gevonden." }, { status: 404 });
+      }
+
+      const analysisPrompt = `Je bent Juf Aimee, een warme en aanmoedigende digitale leerkracht voor hoogbegaafde basisschoolleerlingen.
+
+Een leerling heeft net zijn antwoord opgeslagen op deze opdracht. Beoordeel het antwoord met een coachende toon — geen harde "fout/goed", maar bemoedigend en concreet. De leerling is jong, dus gebruik eenvoudige taal.
+
+OPDRACHT TITEL: ${assignment.title}
+OPDRACHT BESCHRIJVING:
+${assignment.description ?? "(geen beschrijving)"}
+${assignment.bloomLevel ? `BLOOM-NIVEAU: ${assignment.bloomLevel}\n` : ""}
+ANTWOORD VAN DE LEERLING:
+${work}
+
+Antwoord ALLEEN met geldige JSON in exact dit formaat:
+{
+  "verdict": "sterk" of "op weg" of "kan beter",
+  "verdictMessage": "<één korte aanmoedigende zin van max 15 woorden>",
+  "strengths": ["<sterk punt 1>", "<sterk punt 2>"],
+  "tips": ["<concrete verbetertip 1>", "<concrete verbetertip 2>"]
+}
+
+Regels:
+- Geef 1 tot 3 sterke punten (strengths) en 1 tot 3 verbetertips (tips).
+- Tips moeten concreet zijn ("voeg een voorbeeld toe over X") en niet vaag ("denk dieper na").
+- Spreek de leerling NIET aan met de tweede persoon in strengths/tips — gebruik korte feitelijke zinnen.
+- Verzin GEEN inhoud die niet in het antwoord staat.`;
+
+      await releaseAllOllamaModels();
+      try {
+        const response = await ollama.chat({
+          model: GEN_MODEL,
+          messages: [{ role: "user", content: analysisPrompt }],
+          format: "json",
+          keep_alive: 0,
+          options: { temperature: 0.2, think: false } as never,
+        });
+
+        const parsed = extractJson(response.message.content?.trim() ?? "");
+        if (!parsed || typeof parsed !== "object") {
+          return NextResponse.json({ error: "Analyse gaf geen geldig antwoord terug." }, { status: 502 });
+        }
+
+        const obj = parsed as Record<string, unknown>;
+        const verdict = typeof obj.verdict === "string" ? obj.verdict : "op weg";
+        const verdictMessage = typeof obj.verdictMessage === "string" ? obj.verdictMessage : "";
+        const strengths = Array.isArray(obj.strengths) ? obj.strengths.map(String).filter(Boolean).slice(0, 3) : [];
+        const tips = Array.isArray(obj.tips) ? obj.tips.map(String).filter(Boolean).slice(0, 3) : [];
+
+        return NextResponse.json({ verdict, verdictMessage, strengths, tips });
+      } finally {
+        await releaseOllamaModel(GEN_MODEL);
+      }
+    }
+
+    // ── Actie: RAS — uitgebreide opdracht genereren (5-staps RAG) ───────────
+    if (action === "generate_ras") {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
@@ -715,22 +786,22 @@ export async function POST(req: NextRequest) {
           };
           try {
             // Stap 1: Studentprofiel ophalen (RAG via OPP)
-            send({ type: "gemma_step", data: { stage: 1, status: "running" } });
+            send({ type: "ras_step", data: { stage: 1, status: "running" } });
             const profileSources = await zoekVolledigProfiel(student.id, focusArea);
-            send({ type: "gemma_step", data: { stage: 1, status: "done" } });
+            send({ type: "ras_step", data: { stage: 1, status: "done" } });
 
             // Stap 2: Leerkrachtfeedback verzamelen
-            send({ type: "gemma_step", data: { stage: 2, status: "running" } });
+            send({ type: "ras_step", data: { stage: 2, status: "running" } });
             const feedbackChunks = await prisma.oppChunk.findMany({
               where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
               select: { tekst: true },
               orderBy: { id: "desc" },
               take: 5,
             });
-            send({ type: "gemma_step", data: { stage: 2, status: "done" } });
+            send({ type: "ras_step", data: { stage: 2, status: "done" } });
 
             // Stap 3: Reflecties van de leerling ophalen
-            send({ type: "gemma_step", data: { stage: 3, status: "running" } });
+            send({ type: "ras_step", data: { stage: 3, status: "running" } });
             const reflectionRows = await prisma.reflection.findMany({
               where: { assignment: { studentId: student.id } },
               select: { content: true, assignment: { select: { title: true } } },
@@ -741,25 +812,26 @@ export async function POST(req: NextRequest) {
               assignmentTitle: r.assignment.title,
               content: r.content,
             }));
-            send({ type: "gemma_step", data: { stage: 3, status: "done" } });
+            send({ type: "ras_step", data: { stage: 3, status: "done" } });
 
             // Stap 4: Eerdere opdrachten ophalen
-            send({ type: "gemma_step", data: { stage: 4, status: "running" } });
+            send({ type: "ras_step", data: { stage: 4, status: "running" } });
             const previousAssignments = await prisma.assignment.findMany({
               where: { studentId: student.id },
               select: { title: true, status: true, bloomLevel: true },
               orderBy: { createdAt: "desc" },
               take: 5,
             });
-            send({ type: "gemma_step", data: { stage: 4, status: "done" } });
+            send({ type: "ras_step", data: { stage: 4, status: "done" } });
 
-            // Stap 5: Genereren met Gemma 4
-            send({ type: "gemma_step", data: { stage: 5, status: "running" } });
-            const prompt = buildGemmaPrompt({
+            // Stap 5: Genereren via RAS
+            send({ type: "ras_step", data: { stage: 5, status: "running" } });
+            const prompt = buildRasPrompt({
               student,
               resolvedBloom,
               focusArea,
               vak,
+              estimatedTime,
               profileSources,
               feedbackTexts: feedbackChunks.map((c) => c.tekst),
               reflections,
@@ -774,11 +846,11 @@ export async function POST(req: NextRequest) {
               const text = chunk.message?.content;
               if (text) send({ type: "chunk", data: text });
             }
-            send({ type: "gemma_step", data: { stage: 5, status: "done" } });
+            send({ type: "ras_step", data: { stage: 5, status: "done" } });
             send({ type: "done" });
             controller.close();
           } catch (error) {
-            send({ type: "error", data: { message: error instanceof Error ? error.message : "Gemma genereren mislukt." } });
+            send({ type: "error", data: { message: error instanceof Error ? error.message : "RAS genereren mislukt." } });
             controller.close();
           }
         },
