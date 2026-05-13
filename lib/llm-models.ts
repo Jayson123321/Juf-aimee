@@ -1,4 +1,4 @@
-import { ASSISTANT_MODEL, GEN_MODEL, ollama } from "@/lib/ollama"
+import { ASSISTANT_MODEL, DRAWING_MODEL, GEN_MODEL, ollama } from "@/lib/ollama"
 import type { Message, Tool } from "ollama"
 
 /**
@@ -128,28 +128,31 @@ Antwoord in het Nederlands, kort en feitelijk.`,
   //  [1] llava:13b   (dedicated vision model, lokaal via Ollama — privacy first)
   //  [2] llava:7b    (lichtere fallback voor machines zonder GPU)
   drawing: {
-    model: "llava:13b",
+    model: DRAWING_MODEL,
     description:
       "Analyseert een tekening van een leerling en genereert gestructureerde feedbacksuggesties voor de leerkracht.",
-    prompt: `Je bent een onderwijsassistent die een leraar helpt feedback te schrijven op een tekening van een hoogbegaafde leerling (8-12 jaar) en helpt een creatieve interpretatie te maken van wat de leerling heeft getekend.
+    prompt: `Je schrijft kant-en-klare feedback namens de leraar op een tekening van een hoogbegaafde leerling (8-12 jaar). De leraar kopieert jouw tekst direct.
 
-Analyseer de tekening stap voor stap:
+BELANGRIJK: Gebruik EXACT het onderstaande formaat. Geen extra alinea's, geen extra tekst, geen andere kopjes.
 
-1. Beschrijving — Beschrijf zo gedetailleerd mogelijk wat je ziet in deze tekening. Let op: kleuren, vormen, personages, objecten en compositie.
+---
+[Één enthousiaste openingszin over wat de leerling heeft getekend.]
 
-2. Redeneren — Redeneer stap voor stap:
-   - Wat heeft de leerling getekend en wat wil hij/zij uitdrukken?
-   - Welke creatieve keuzes zijn gemaakt (kleur, compositie, stijl)?
-   - Wat zegt de tekening over de creativiteit en het denkniveau van de leerling?
+Opdracht begrepen?
+[Ja of nee] + één zin toelichting.
 
-3. Feedback — Schrijf 3 feedbackpunten:
-   - Wat goed is
-   - Wat beter kan
-   - Een uitdagende vervolgvraag voor de leerling
+Sterke punten:
+- [Eerste sterk punt: concreet en specifiek]
+- [Tweede sterk punt: benoem een doordachte keuze van de leerling]
 
-4. Als er iets is dat je niet kunt zien of begrijpen, laat dat open voor intepretatie van de leerkracht en ga niet zomaar iets verzinnen.
+Verbeterpunten:
+- [Eerste verbeterpunt als reflectievraag: "Hoe zou je...?" of "Wat als je...?"]
+- [Tweede verbeterpunt als reflectievraag die verder laat nadenken]
 
-Schrijf in helder Nederlands. Wees concreet en positief. Gebruik alleen dit formaat, geen extra tekst erbuiten.`,
+[Één aanmoedigende afsluitende zin.]
+---
+
+Schrijf in correct, warm Nederlands. Vervang de tekst tussen [ ] door jouw eigen tekst. Gebruik alleen dit formaat, niets meer.`,
   },
 
   // 5. De Kunstenaar — Educatieve afbeeldingen

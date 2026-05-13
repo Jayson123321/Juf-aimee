@@ -25,17 +25,20 @@ export async function POST(req: NextRequest) {
 
   const drawingConfig = MODELS.drawing
   const opdrachtContext = submission.assignment.description
-    ? `De opdracht was: "${submission.assignment.description}"\n\n`
-    : ""
-  const prompt = opdrachtContext + drawingConfig.prompt
+    ? `De opdracht was: "${submission.assignment.description}"\n\nAnalyseer nu de tekening van de leerling.`
+    : "Analyseer de tekening van de leerling."
 
   try {
     const response = await ollama.chat({
       model: drawingConfig.model,
       messages: [
         {
+          role: "system",
+          content: drawingConfig.prompt,
+        },
+        {
           role: "user",
-          content: prompt,
+          content: opdrachtContext,
           images: [submission.filePath],
         },
       ],
@@ -46,6 +49,7 @@ export async function POST(req: NextRequest) {
     const analysis = response.message.content?.trim() ?? ""
     return NextResponse.json({ analysis })
   } catch (error) {
+    console.error("[analyze-drawing] Fout:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Analyse mislukt." },
       { status: 500 },
