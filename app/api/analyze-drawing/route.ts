@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
 import { MODELS } from "@/lib/llm-models"
 
 export async function POST(req: NextRequest) {
-  const { submissionId } = await req.json()
+  const { submissionId, existingFeedback } = await req.json()
 
   if (!submissionId) {
     return NextResponse.json({ error: "submissionId is verplicht." }, { status: 400 })
@@ -24,9 +24,18 @@ export async function POST(req: NextRequest) {
   }
 
   const drawingConfig = MODELS.drawing
-  const opdrachtContext = submission.assignment.description
-    ? `De opdracht was: "${submission.assignment.description}"\n\nAnalyseer nu de tekening van de leerling.`
-    : "Analyseer de tekening van de leerling."
+  const opdrachtContext = existingFeedback
+    ? `De opdracht was: "${submission.assignment.description ?? "onbekend"}"
+
+Er is al een eerdere analyse gedaan. Vul deze aan met ontbrekende of onvolledige onderdelen. Vervang geen goede informatie, voeg alleen toe wat mist of verbeter wat onduidelijk is.
+
+EERDERE ANALYSE:
+${existingFeedback}
+
+Geef de volledige verbeterde versie terug in hetzelfde formaat.`
+    : submission.assignment.description
+      ? `De opdracht was: "${submission.assignment.description}"\n\nAnalyseer nu de tekening van de leerling.`
+      : "Analyseer de tekening van de leerling."
 
   try {
     const response = await ollama.chat({
