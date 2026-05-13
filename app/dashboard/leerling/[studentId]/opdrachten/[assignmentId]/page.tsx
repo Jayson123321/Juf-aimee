@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, Clock, FileText, Target } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { TeacherFeedbackForm } from "./TeacherFeedbackForm";
 import { SubmissionDownload } from "./SubmissionDownload";
+import { SubmissionImagePreview } from "./SubmissionImagePreview";
 
 async function getAssignment(assignmentId: string, studentId: string) {
   return prisma.assignment.findFirst({
@@ -144,32 +145,45 @@ export default async function TeacherAssignmentDetailPage({
               </h2>
             </div>
             <ul className="space-y-3">
-              {assignment.submissions.map((sub) => (
-                <li
-                  key={sub.id}
-                  className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
-                >
-                  <FileText className="size-5 shrink-0 text-blue-500" />
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-800">{sub.fileName}</p>
-                    <p className="text-xs text-gray-400">
-                      {formatBytes(sub.fileSize)} · Ingestuurd op{" "}
-                      {new Date(sub.uploadedAt).toLocaleDateString("nl-NL", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  <SubmissionDownload
-                    fileName={sub.fileName}
-                    mimeType={sub.mimeType}
-                    base64={sub.filePath}
-                  />
-                </li>
-              ))}
+              {assignment.submissions.map((sub) => {
+                const isImage = /^image\//.test(sub.mimeType);
+                return (
+                  <li
+                    key={sub.id}
+                    className="rounded-lg border border-gray-100 bg-gray-50 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <FileText className="size-5 shrink-0 text-blue-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium text-gray-800">{sub.fileName}</p>
+                        <p className="text-xs text-gray-400">
+                          {formatBytes(sub.fileSize)} · Ingestuurd op{" "}
+                          {new Date(sub.uploadedAt).toLocaleDateString("nl-NL", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isImage && (
+                          <SubmissionImagePreview
+                            src={`data:${sub.mimeType};base64,${sub.filePath}`}
+                            alt={sub.fileName}
+                          />
+                        )}
+                        <SubmissionDownload
+                          fileName={sub.fileName}
+                          mimeType={sub.mimeType}
+                          base64={sub.filePath}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
