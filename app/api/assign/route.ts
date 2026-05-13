@@ -709,6 +709,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // ── Actie: opdracht terugzetten naar bezig ───────────────────────────────
+    if (action === "reset") {
+      const { assignmentId } = body ?? {};
+      if (!assignmentId) {
+        return NextResponse.json({ error: "assignmentId is verplicht." }, { status: 400 });
+      }
+      await prisma.assignment.update({
+        where: { id: assignmentId },
+        data: { status: "IN_PROGRESS", submittedAt: null },
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     // ── Actie: antwoord van leerling analyseren ──────────────────────────────
     if (action === "analyze_answer") {
       const { assignmentId, work } = body ?? {};
