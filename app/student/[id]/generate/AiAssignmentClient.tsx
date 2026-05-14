@@ -53,7 +53,7 @@ type GeneratedAssignmentImage = {
   modelLabelUsed?: string;
 };
 
-type AssignmentMode = "text" | "mc";
+type AssignmentMode = "text" | "mc" | "game";
 
 type CriteriumScore = {
   criterium: number;
@@ -153,6 +153,7 @@ export function AiAssignmentClient({
   const [customFocusArea, setCustomFocusArea] = useState("");
   const [estimatedTime, setEstimatedTime] = useState("45 minuten");
   const [mode, setMode] = useState<AssignmentMode>("text");
+  
   const [includeIllustration, setIncludeIllustration] = useState(false);
 
   const isOpenFocus = (OPEN_FOCUS_OPTIONS as readonly string[]).includes(focusArea);
@@ -375,6 +376,7 @@ export function AiAssignmentClient({
     const previousImageUrlForRevision = action === "revise" ? assignmentImage?.imageUrl ?? null : null;
     let latestAssignment: GeneratedAssignment | null = null;
 
+    runGenerateGame();
     setLoading(true);
     setError("");
     setApprovalMessage("");
@@ -442,6 +444,16 @@ export function AiAssignmentClient({
       setLoading(false);
     }
   }
+
+  async function runGenerateGame() {
+  if (mode === "game") {
+    
+  } else {
+    console.log("Onbekende modus:", mode);
+  }
+  }
+
+  runGenerateGame();
 
   // ── Meerkeuzevraag genereren (streaming Planner → Coder) ─────────────────────
 
@@ -855,11 +867,11 @@ export function AiAssignmentClient({
                 </button>
                 <button
                   className={`flex h-14 items-center justify-center gap-2 rounded-2xl border-2 text-[1rem] font-semibold transition ${
-                    mode === "mc"
+                    mode === "game"
                       ? "border-violet-500 bg-violet-50 text-violet-900 shadow-[0_8px_20px_rgba(109,77,200,0.15)]"
                       : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                   }`}
-                  onClick={() => setMode("mc")}
+                  onClick={() => setMode("game")}
                   type="button"
                 >
                   <Check className="size-4" />
@@ -935,6 +947,16 @@ export function AiAssignmentClient({
                   <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
                   <span>Genereer Opdracht met AI</span>
                 </button>
+              ) : mode === "game" ? (
+                <button
+                  className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={busy}
+                  onClick={() => runGenerateStream("generate")}
+                  type="button"
+                >
+                  <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                  <span>Genereer Spel met AI</span>
+                </button>
               ) : (
                 <button
                   className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
@@ -945,7 +967,8 @@ export function AiAssignmentClient({
                   <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
                   <span>Genereer Meerkeuzevraag met AI</span>
                 </button>
-              )}
+               ) 
+                }
               {mode === "mc" && mcStage !== "idle" && mcStage !== "done" && (
                 <div className="flex items-center gap-3 rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-800">
                   <Loader2 className="size-4 animate-spin" />
