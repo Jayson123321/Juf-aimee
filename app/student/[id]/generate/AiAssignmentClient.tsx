@@ -55,6 +55,12 @@ type GeneratedAssignmentImage = {
 
 type AssignmentMode = "text" | "mc" | "game";
 
+type GameResult = {
+  title: string;
+  gameHtml: string;
+  rationale: string;
+};
+
 type CriteriumScore = {
   criterium: number;
   naam: string;
@@ -193,6 +199,12 @@ export function AiAssignmentClient({
   const [teacherFeedback, setTeacherFeedback] = useState("");
   const [feedbackSaved, setFeedbackSaved] = useState(false);
 
+  // Game
+  const [gameGenerating, setGameGenerating] = useState(false);
+  const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  const [gamePhase, setGamePhase] = useState<"idle" | "building" | "playing">("idle");
+  const [gameCodeDisplay, setGameCodeDisplay] = useState("");
+
   // RAS sectie
   const [rasText, setRasText] = useState("");
   const [rasGenerating, setRasGenerating] = useState(false);
@@ -213,7 +225,7 @@ export function AiAssignmentClient({
   const [rejectedAndReady, setRejectedAndReady] = useState(false);
   const [thinkingContent, setThinkingContent] = useState<string | null>(null);
   const [thinkingOpen, setThinkingOpen] = useState(false);
-  const [suggestedNextBloom, setSuggestedNextBloom] = useState<string | null>(null);
+  const [suggestedNextBloom] = useState<string | null>(null);
 
   useEffect(() => {
     if (!imageGenerating) {
@@ -376,7 +388,6 @@ export function AiAssignmentClient({
     const previousImageUrlForRevision = action === "revise" ? assignmentImage?.imageUrl ?? null : null;
     let latestAssignment: GeneratedAssignment | null = null;
 
-    runGenerateGame();
     setLoading(true);
     setError("");
     setApprovalMessage("");
@@ -445,15 +456,52 @@ export function AiAssignmentClient({
     }
   }
 
-  async function runGenerateGame() {
-  if (mode === "game") {
-    
-  } else {
-    console.log("Onbekende modus:", mode);
-  }
-  }
+  useEffect(() => {
+    if (gamePhase !== "building" || !gameResult) return;
 
-  runGenerateGame();
+    let index = 0;
+    const fullCode = gameResult.gameHtml;
+    const CHUNK = 40;
+
+    const timer = window.setInterval(() => {
+      index += CHUNK;
+      setGameCodeDisplay(fullCode.slice(0, index));
+      if (index >= fullCode.length) {
+        clearInterval(timer);
+        setGameCodeDisplay(fullCode);
+        setGamePhase("playing");
+      }
+    }, 25);
+
+    return () => clearInterval(timer);
+  }, [gamePhase, gameResult]);
+
+  async function runGenerateGame() {
+    setGameGenerating(true);
+    setGameResult(null);
+    setGamePhase("idle");
+    setGameCodeDisplay("");
+    setError("");
+
+    try {
+      const data = await callApi({
+        action: "generate_game",
+        studentId: student.id,
+        focusArea: resolvedFocusArea,
+        bloomLevel: selectedBloom,
+        estimatedTime,
+        teacherPrompt,
+      });
+
+      const result = data as GameResult;
+      setGameResult(result);
+      setGamePhase("building");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Spel genereren mislukt.");
+    } finally {
+      setGameGenerating(false);
+    }
+  }
 
   // ── Meerkeuzevraag genereren (streaming Planner → Coder) ─────────────────────
 
@@ -950,12 +998,12 @@ export function AiAssignmentClient({
               ) : mode === "game" ? (
                 <button
                   className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(98,101,255,0.22)] transition hover:from-violet-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
-                  disabled={busy}
-                  onClick={() => runGenerateStream("generate")}
+                  disabled={busy || gameGenerating}
+                  onClick={runGenerateGame}
                   type="button"
                 >
-                  <span className="flex shrink-0">{generating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
-                  <span>Genereer Spel met AI</span>
+                  <span className="flex shrink-0">{gameGenerating ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}</span>
+                  <span>{gameGenerating ? "Spel wordt gebouwd..." : "Genereer Spel met AI"}</span>
                 </button>
               ) : (
                 <button
@@ -1691,6 +1739,89 @@ export function AiAssignmentClient({
           )}
         </div>
       </SectionCard>
+
+      {/* Game builder */}
+      {mode === "game" && (gameGenerating || gameResult) && (
+        <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(252,250,255,0.96),rgba(247,243,255,0.92))]">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_8px_20px_rgba(98,101,255,0.25)]">
+                <Sparkles className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-violet-500">AI Game Builder</p>
+                <h2 className="text-[1.15rem] font-semibold text-slate-950">
+                  {gameGenerating ? "AI programmeert het spel..." : gameResult?.title}
+                </h2>
+              </div>
+            </div>
+
+            {/* Fase 1: code stroomt binnen */}
+            {(gameGenerating || gamePhase === "building") && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-violet-700">
+                  <Loader2 className="size-4 animate-spin" />
+                  <p className="text-sm font-semibold">
+                    {gameGenerating ? "HTML, CSS en JavaScript worden gegenereerd..." : "Code laden..."}
+                  </p>
+                </div>
+                <pre className="max-h-[420px] overflow-auto rounded-2xl bg-slate-950 p-5 text-xs leading-6 text-emerald-400 shadow-inner">
+                  {gameCodeDisplay || " "}
+                  <span className="animate-pulse">▌</span>
+                </pre>
+              </div>
+            )}
+
+            {/* Fase 2: spel speelbaar */}
+            {gamePhase === "playing" && gameResult && (
+              <div className="space-y-4">
+                <div className="overflow-hidden rounded-2xl border border-violet-200 shadow-[0_12px_30px_rgba(98,101,255,0.12)]">
+                  <iframe
+                    className="h-[600px] w-full"
+                    sandbox="allow-scripts"
+                    srcDoc={gameResult.gameHtml}
+                    title={gameResult.title}
+                  />
+                </div>
+
+                {gameResult.rationale && (
+                  <details className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+                      Pedagogische onderbouwing
+                    </summary>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 whitespace-pre-wrap">
+                      {gameResult.rationale}
+                    </p>
+                  </details>
+                )}
+
+                <button
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-[1.05rem] font-semibold text-white shadow-md transition hover:from-emerald-600 hover:to-teal-600"
+                  onClick={async () => {
+                    await callApi({
+                      action: "approve",
+                      studentId: student.id,
+                      currentAssignment: {
+                        title: gameResult.title,
+                        assignment: gameResult.gameHtml,
+                        rationale: gameResult.rationale,
+                      },
+                      bloomLevel: selectedBloom,
+                      focusArea: resolvedFocusArea,
+                      estimatedTime,
+                      assignmentType: "game",
+                    });
+                  }}
+                  type="button"
+                >
+                  <Check className="size-5" />
+                  Spel goedkeuren voor leerling
+                </button>
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      )}
 
       {/* Verantwoorde AI */}
       <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(252,250,255,0.96),rgba(247,243,255,0.92))]">
