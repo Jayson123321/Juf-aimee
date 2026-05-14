@@ -853,6 +853,18 @@ export function AiAssignmentClient({
                   <Check className="size-4" />
                   Interactieve meerkeuze
                 </button>
+                <button
+                  className={`flex h-14 items-center justify-center gap-2 rounded-2xl border-2 text-[1rem] font-semibold transition ${
+                    mode === "mc"
+                      ? "border-violet-500 bg-violet-50 text-violet-900 shadow-[0_8px_20px_rgba(109,77,200,0.15)]"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                  onClick={() => setMode("mc")}
+                  type="button"
+                >
+                  <Check className="size-4" />
+                  Interactieve spel 
+                </button>
               </div>
               <p className="text-[0.95rem] text-slate-500">
                 {mode === "text"
