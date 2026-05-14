@@ -10,7 +10,7 @@ export const GEN_MODEL = process.env.GEN_MODEL || "qwen2.5:14b-instruct-q4_K_M"
 export const ASSISTANT_MODEL = process.env.ASSISTANT_MODEL || "mistral-nemo:12b"
 export const GEN_MODEL_LOCALE = "gemma4:31b-cloud"
 export const JUDGE_MODEL = "vicgalle/prometheus-7b-v2.0:latest"
-
+export const GAME_CODER_MODEL = process.env.GAME_CODER_MODEL || "qwen3-coder:480b-cloud"
 const UNLOAD_POLL_MS = 250
 const UNLOAD_TIMEOUT_MS = 10_000
 const MAX_EMBED_CHARS = 1000
