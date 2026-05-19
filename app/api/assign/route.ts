@@ -6,6 +6,8 @@ import { GEN_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaM
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
 import { callModel, getModelForRole } from "@/lib/llm-models";
+import { retrieveLeerlinggeschiedenis, formatLeerlinggeschiedenis } from "@/lib/ras/retrieveLeerlinggeschiedenis";
+import { analyzePortfolio, type PortfolioInsights } from "@/lib/portfolio-analysis";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -284,8 +286,10 @@ function buildGenerationPrompt(args: {
   currentAssignment?: { title?: string; assignment?: string; rationale?: string } | null;
   rejectedAssignments?: RejectedAssignment[];
   judgeFeedback?: string;
+  geschiedenis?: string;
+  portfolioInsights?: PortfolioInsights;
 }) {
-  const { student, resolvedBloom, focusArea, estimatedTime, sources, teacherPrompt, currentAssignment, rejectedAssignments, judgeFeedback } = args;
+  const { student, resolvedBloom, focusArea, estimatedTime, sources, teacherPrompt, currentAssignment, rejectedAssignments, judgeFeedback, geschiedenis, portfolioInsights } = args;
   const oppBronnen = sources.length > 0
     ? sources.join("\n\n---\n\n")
     : "Geen OPP-informatie beschikbaar.";
@@ -330,6 +334,14 @@ ${currentAssignment
 
 INSTRUCTIE VAN DE LEERKRACHT
 ${teacherPrompt || "Maak de best passende eerste versie."}
+
+LEERLINGGESCHIEDENIS (gebruik dit om de nieuwe opdracht beter te laten aansluiten op wat de leerling eerder heeft gedaan)
+${geschiedenis ?? "Geen eerdere opdrachten beschikbaar."}
+
+PORTFOLIO ANALYSE (gebruik dit om rekening te houden met de ontwikkeling van de leerling)
+${portfolioInsights?.portfolioSummary
+  ? `${portfolioInsights.portfolioSummary}${portfolioInsights.suggestedNextBloom ? `\nAanbevolen Bloom-niveau voor nieuwe opdracht: ${portfolioInsights.suggestedNextBloom}` : ""}`
+  : "Geen eerdere opdrachten beschikbaar."}
 
 VERBODEN ONDERWERPEN EN FORMATS (uit afgekeurde opdrachten)
 ${rejectedAssignments?.length
@@ -377,6 +389,80 @@ ${rag}
 Maak nu het JSON-plan voor een meerkeuzevraag over ${focusArea}, volgens het schema in je instructie.`;
 }
 
+function buildRasPrompt(args: {
+  student: AssignmentApiStudent;
+  resolvedBloom: string;
+  focusArea: string;
+  vak: string;
+  estimatedTime: string;
+  profileSources: string[];
+  feedbackTexts: string[];
+  reflections: Array<{ assignmentTitle: string; content: string }>;
+  previousAssignments: Array<{ title: string; status: string; bloomLevel: string | null }>;
+}) {
+  const { student, resolvedBloom, focusArea, vak, estimatedTime, profileSources, feedbackTexts, reflections, previousAssignments } = args;
+  const subject = vak || focusArea || "Algemeen";
+  const groep = student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend";
+
+  const profileBlock = profileSources.length
+    ? profileSources.slice(0, 5).join("\n\n---\n\n")
+    : "Geen aanvullende OPP-informatie beschikbaar.";
+
+  const feedbackBlock = feedbackTexts.length
+    ? feedbackTexts.slice(0, 5).map((t, i) => `${i + 1}. ${t}`).join("\n\n")
+    : "Geen eerdere leerkrachtfeedback beschikbaar.";
+
+  const reflectionBlock = reflections.length
+    ? reflections.map((r, i) => `${i + 1}. Bij "${r.assignmentTitle}": ${r.content}`).join("\n\n")
+    : "Geen eerdere reflecties van de leerling beschikbaar.";
+
+  const previousBlock = previousAssignments.length
+    ? previousAssignments.map((a, i) => `${i + 1}. "${a.title}" (status: ${a.status}, niveau: ${a.bloomLevel ?? "onbekend"})`).join("\n")
+    : "Geen eerdere opdrachten beschikbaar.";
+
+  return `Je bent een onderwijsdeskundige gespecialiseerd in hoogbegaafdheidsonderwijs op de basisschool.
+
+Maak een uitgebreide, concrete en uitdagende verrijkingsopdracht voor de volgende leerling.
+Gebruik de hieronder verzamelde context (profiel, leerkrachtfeedback, reflecties en eerdere
+opdrachten) om de opdracht echt persoonlijk te maken — vermijd herhaling van eerdere opdrachten
+en sluit aan op wat eerder werkte of juist niet.
+
+LEERLING: ${student.fullName}
+GROEP: ${groep}
+BLOOM-NIVEAU: ${resolvedBloom}
+SCHOOLVAK: ${subject}
+FOCUSGEBIED: ${focusArea || subject}
+GESCHATTE TIJD: ${estimatedTime || "niet opgegeven"}
+
+STUDENTPROFIEL (uit OPP)
+${profileBlock}
+
+EERDERE LEERKRACHTFEEDBACK
+${feedbackBlock}
+
+REFLECTIES VAN DE LEERLING OP EERDERE OPDRACHTEN
+${reflectionBlock}
+
+EERDERE OPDRACHTEN (vermijd herhaling van onderwerp en format)
+${previousBlock}
+
+EISEN AAN DE OPDRACHT:
+- Schrijf in helder, verzorgd Nederlands
+- Begin met een duidelijke, pakkende titel
+- Geef een gedetailleerde taakomschrijving met concrete stappen
+- Sluit aan bij Bloom-niveau: ${resolvedBloom}
+- Voeg beoordelingscriteria toe (wat wordt er beoordeeld?)
+- Eindig met 3 uitdagende verdiepingsvragen die verder denken stimuleren
+- De opdracht is praktisch uitvoerbaar binnen een schoolsetting
+- De opdracht past bij een hoogbegaafde leerling die extra uitdaging nodig heeft
+- Bouw voort op wat goed werkte volgens feedback en reflecties; vermijd onderwerpen of formats van eerdere opdrachten
+- TIJDSDUUR: stem de scope, het aantal stappen, de diepgang en de lengte van het eindproduct STRIKT af op de geschatte tijd "${estimatedTime || "niet opgegeven"}". Een opdracht van 15-30 minuten heeft 1-2 stappen en een klein eindproduct; 45-60 minuten heeft 2-3 stappen; 1,5-2 uur heeft 3-4 stappen; een weekopdracht of meerdere lessen mag uitgebreider zijn met onderzoek en presentatie. Maak de opdracht NIET langer dan de tijd toelaat — kort en geconcentreerd is beter dan oppervlakkig en lang.${reflections.length ? `
+- REFLECTIES VERPLICHT GEBRUIKEN: sluit aan bij de reflecties van de leerling hierboven. Eindig de opdracht met een blok "RATIONALE:" waarin je MINSTENS ÉÉN regel letterlijk citeert tussen aanhalingstekens uit de bovenstaande reflecties, gevolgd door één of twee zinnen die uitleggen hoe deze opdracht inspeelt op dat citaat. Verzin GEEN reflecties die er niet staan.` : ""}${feedbackTexts.length ? `
+- LEERKRACHTFEEDBACK VERPLICHT GEBRUIKEN: in dezelfde RATIONALE-blok citeer je ook letterlijk minstens één regel uit de bovenstaande leerkrachtfeedback en leg je uit hoe deze opdracht daarop voortbouwt.` : ""}
+
+Geef een volledige, goed gestructureerde opdracht.`;
+}
+
 function buildJudgeFeedback(scores: import("@/lib/judge").CriteriumScore[], bloomNiveau: string): string {
   const criteriumInstructie: Record<number, string> = {
     1: "De opdracht bevat verzonnen informatie die niet traceerbaar is naar het OPP. Gebruik ALLEEN informatie die letterlijk in de bronnen staat.",
@@ -409,6 +495,7 @@ export async function POST(req: NextRequest) {
     imagePrompt = "",
     previousImageUrl = null,
     estimatedTime = "",
+    vak = "",
   } = body ?? {};
 
   if (!studentId || !action) {
@@ -420,9 +507,15 @@ export async function POST(req: NextRequest) {
     include: {
       profile: { select: { currentSchoolYearGroup: true, schoolHistory: true } },
       assignments: {
-        select: { title: true, status: true, bloomLevel: true },
-        orderBy: { createdAt: "desc" },
-        take: 5,
+        select: {
+          title: true,
+          status: true,
+          bloomLevel: true,
+          teacherFeedback: { select: { content: true } },
+        },
+        where: { status: "COMPLETED" },
+        orderBy: { updatedAt: "desc" },
+        take: 10,
       },
     },
   });
@@ -431,11 +524,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Student niet gevonden." }, { status: 404 });
   }
 
+  const portfolioInsights = analyzePortfolio(student.assignments);
   const resolvedBloom = normalizeBloomLabel(bloomLevel || getBloomLevelLabel(student.bloomNiveau));
 
   try {
-    // Haal OPP-bronnen + leerkrachtfeedback op
-    const [profileSources, feedbackChunks] = await Promise.all([
+    // Haal OPP-bronnen + leerkrachtfeedback + leerlinggeschiedenis op
+    const needsSourcesUpfront = action !== "generate" && action !== "revise";
+    const [profileSources, feedbackChunks, geschiedenisItems] = await Promise.all([
       zoekVolledigProfiel(student.id, focusArea),
       prisma.oppChunk.findMany({
         where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
@@ -443,7 +538,9 @@ export async function POST(req: NextRequest) {
         orderBy: { id: "desc" },
         take: 5,
       }),
+      retrieveLeerlinggeschiedenis(student.id),
     ]);
+    const geschiedenis = formatLeerlinggeschiedenis(geschiedenisItems);
     const sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
 
     // ── Actie: bronnen zoeken ─────────────────────────────────────────────────
@@ -589,6 +686,13 @@ export async function POST(req: NextRequest) {
       if (!feedback?.trim()) {
         return NextResponse.json({ error: "Feedback is verplicht." }, { status: 400 });
       }
+      if (assignmentId) {
+        await prisma.teacherFeedback.upsert({
+          where: { assignmentId },
+          create: { assignmentId, content: feedback.trim() },
+          update: { content: feedback.trim() },
+        });
+      }
       const feedbackText = `[LEERKRACHT FEEDBACK - goedgekeurde opdracht]\nOpdracht ID: "${assignmentId ?? "onbekend"}"\nFeedback: "${feedback.trim()}"`;
       try {
         const embedding = await getEmbedding(feedbackText);
@@ -603,6 +707,161 @@ export async function POST(req: NextRequest) {
         );
       }
       return NextResponse.json({ ok: true });
+    }
+
+    // ── Actie: antwoord van leerling analyseren ──────────────────────────────
+    if (action === "analyze_answer") {
+      const { assignmentId, work } = body ?? {};
+      if (!assignmentId || typeof work !== "string" || !work.trim()) {
+        return NextResponse.json({ error: "assignmentId en antwoord zijn verplicht." }, { status: 400 });
+      }
+
+      const assignment = await prisma.assignment.findUnique({
+        where: { id: assignmentId },
+        select: { title: true, description: true, bloomLevel: true },
+      });
+      if (!assignment) {
+        return NextResponse.json({ error: "Opdracht niet gevonden." }, { status: 404 });
+      }
+
+      const analysisPrompt = `Je bent Juf Aimee, een warme en aanmoedigende digitale leerkracht voor hoogbegaafde basisschoolleerlingen.
+
+Een leerling heeft net zijn antwoord opgeslagen op deze opdracht. Beoordeel het antwoord met een coachende toon — geen harde "fout/goed", maar bemoedigend en concreet. De leerling is jong, dus gebruik eenvoudige taal.
+
+OPDRACHT TITEL: ${assignment.title}
+OPDRACHT BESCHRIJVING:
+${assignment.description ?? "(geen beschrijving)"}
+${assignment.bloomLevel ? `BLOOM-NIVEAU: ${assignment.bloomLevel}\n` : ""}
+ANTWOORD VAN DE LEERLING:
+${work}
+
+Antwoord ALLEEN met geldige JSON in exact dit formaat:
+{
+  "verdict": "sterk" of "op weg" of "kan beter",
+  "verdictMessage": "<één korte aanmoedigende zin van max 15 woorden>",
+  "strengths": ["<sterk punt 1>", "<sterk punt 2>"],
+  "tips": ["<concrete verbetertip 1>", "<concrete verbetertip 2>"]
+}
+
+Regels:
+- Geef 1 tot 3 sterke punten (strengths) en 1 tot 3 verbetertips (tips).
+- Tips moeten concreet zijn ("voeg een voorbeeld toe over X") en niet vaag ("denk dieper na").
+- Spreek de leerling NIET aan met de tweede persoon in strengths/tips — gebruik korte feitelijke zinnen.
+- Verzin GEEN inhoud die niet in het antwoord staat.`;
+
+      await releaseAllOllamaModels();
+      try {
+        const response = await ollama.chat({
+          model: GEN_MODEL,
+          messages: [{ role: "user", content: analysisPrompt }],
+          format: "json",
+          keep_alive: 0,
+          options: { temperature: 0.2, think: false } as never,
+        });
+
+        const parsed = extractJson(response.message.content?.trim() ?? "");
+        if (!parsed || typeof parsed !== "object") {
+          return NextResponse.json({ error: "Analyse gaf geen geldig antwoord terug." }, { status: 502 });
+        }
+
+        const obj = parsed as Record<string, unknown>;
+        const verdict = typeof obj.verdict === "string" ? obj.verdict : "op weg";
+        const verdictMessage = typeof obj.verdictMessage === "string" ? obj.verdictMessage : "";
+        const strengths = Array.isArray(obj.strengths) ? obj.strengths.map(String).filter(Boolean).slice(0, 3) : [];
+        const tips = Array.isArray(obj.tips) ? obj.tips.map(String).filter(Boolean).slice(0, 3) : [];
+
+        return NextResponse.json({ verdict, verdictMessage, strengths, tips });
+      } finally {
+        await releaseOllamaModel(GEN_MODEL);
+      }
+    }
+
+    // ── Actie: RAS — uitgebreide opdracht genereren (5-staps RAG) ───────────
+    if (action === "generate_ras") {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const send = (event: Record<string, unknown>) => {
+            controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+          };
+          try {
+            // Stap 1: Studentprofiel ophalen (RAG via OPP)
+            send({ type: "ras_step", data: { stage: 1, status: "running" } });
+            const profileSources = await zoekVolledigProfiel(student.id, focusArea);
+            send({ type: "ras_step", data: { stage: 1, status: "done" } });
+
+            // Stap 2: Leerkrachtfeedback verzamelen
+            send({ type: "ras_step", data: { stage: 2, status: "running" } });
+            const feedbackChunks = await prisma.oppChunk.findMany({
+              where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
+              select: { tekst: true },
+              orderBy: { id: "desc" },
+              take: 5,
+            });
+            send({ type: "ras_step", data: { stage: 2, status: "done" } });
+
+            // Stap 3: Reflecties van de leerling ophalen
+            send({ type: "ras_step", data: { stage: 3, status: "running" } });
+            const reflectionRows = await prisma.reflection.findMany({
+              where: { assignment: { studentId: student.id } },
+              select: { content: true, assignment: { select: { title: true } } },
+              orderBy: { createdAt: "desc" },
+              take: 5,
+            });
+            const reflections = reflectionRows.map((r) => ({
+              assignmentTitle: r.assignment.title,
+              content: r.content,
+            }));
+            send({ type: "ras_step", data: { stage: 3, status: "done" } });
+
+            // Stap 4: Eerdere opdrachten ophalen
+            send({ type: "ras_step", data: { stage: 4, status: "running" } });
+            const previousAssignments = await prisma.assignment.findMany({
+              where: { studentId: student.id },
+              select: { title: true, status: true, bloomLevel: true },
+              orderBy: { createdAt: "desc" },
+              take: 5,
+            });
+            send({ type: "ras_step", data: { stage: 4, status: "done" } });
+
+            // Stap 5: Genereren via RAS
+            send({ type: "ras_step", data: { stage: 5, status: "running" } });
+            const prompt = buildRasPrompt({
+              student,
+              resolvedBloom,
+              focusArea,
+              vak,
+              estimatedTime,
+              profileSources,
+              feedbackTexts: feedbackChunks.map((c) => c.tekst),
+              reflections,
+              previousAssignments,
+            });
+            const response = await ollama.chat({
+              model: "qwen3:14b",
+              messages: [{ role: "user", content: prompt }],
+              stream: true,
+            });
+            for await (const chunk of response) {
+              const text = chunk.message?.content;
+              if (text) send({ type: "chunk", data: text });
+            }
+            send({ type: "ras_step", data: { stage: 5, status: "done" } });
+            send({ type: "done" });
+            controller.close();
+          } catch (error) {
+            send({ type: "error", data: { message: error instanceof Error ? error.message : "RAS genereren mislukt." } });
+            controller.close();
+          }
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Transfer-Encoding": "chunked",
+          "Cache-Control": "no-cache",
+        },
+      });
     }
 
     // ── Actie: meerkeuzevraag genereren (Planner → Coder) ────────────────────
@@ -757,7 +1016,48 @@ ${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
         };
 
         try {
-          send({ type: "sources", data: sources });
+          // Step 1: Feedback ophalen
+          send({ type: "step", data: 1 });
+          const feedbackChunks = await prisma.oppChunk.findMany({
+            where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
+            select: { tekst: true },
+            orderBy: { id: "desc" },
+            take: 5,
+          });
+
+          // Step 2: Reflectie ophalen
+          send({ type: "step", data: 2 });
+          const profileSources = await zoekVolledigProfiel(student.id, focusArea);
+          const genSources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
+
+          // Step 3: Eerdere opdrachten ophalen
+          send({ type: "step", data: 3 });
+          const [rejectedChunks, beginsituatieBronnen] = await Promise.all([
+            prisma.oppChunk.findMany({
+              where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK - afgekeurde opdracht]" } },
+              select: { tekst: true },
+            }),
+            zoekBeginsituatie(student.id),
+          ]);
+          const rejectedAssignments: RejectedAssignment[] = rejectedChunks.map(({ tekst }) => ({
+            title: tekst.match(/Opdrachttitel:\s*"([^"]+)"/)?.[1] ?? "onbekend",
+            reason: tekst.match(/Reden van afkeuring:\s*"([^"]+)"/)?.[1] ?? tekst,
+          }));
+          const beginsituatie = beginsituatieBronnen.join("\n\n").slice(0, 800) || "Geen OPP-informatie beschikbaar.";
+
+          const inferredDateOfBirth = student.dateOfBirth ?? inferDateOfBirthFromSources(genSources);
+          if (!student.dateOfBirth && inferredDateOfBirth) {
+            await prisma.student.update({ where: { id: student.id }, data: { dateOfBirth: inferredDateOfBirth } });
+          }
+          const leeftijdLabel = (() => { const a = getStudentAge(inferredDateOfBirth); return a ? `${a} jaar` : "onbekend"; })();
+          const interestSnippets = extractProfileInterestsFromSources(genSources);
+          const interessesLabel = interestSnippets.length > 0
+            ? interestSnippets.map((s) => `"${s}"`).join("; ")
+            : "Niet expliciet benoemd in OPP-bronnen";
+
+          // Step 4: Genereren
+          send({ type: "step", data: 4 });
+          send({ type: "sources", data: genSources });
 
           const MAX_POGINGEN = 2;
           let poging = 0;
@@ -779,6 +1079,8 @@ ${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
               currentAssignment: currentAssignmentForGen,
               rejectedAssignments,
               judgeFeedback,
+              geschiedenis,
+              portfolioInsights,
             });
 
             await releaseAllOllamaModels();

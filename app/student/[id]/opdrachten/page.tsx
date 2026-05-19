@@ -133,8 +133,6 @@ export default async function StudentAssignmentsPage({
                       </span>
                     </div>
 
-                    <p className="mt-4 text-sm leading-7 text-slate-600">{assignment.description}</p>
-
                     <Link
                       className="mt-4 flex h-10 w-full items-center justify-center rounded-lg bg-gradient-to-r from-violet-600 to-blue-500 text-sm font-medium text-white transition hover:from-violet-700 hover:to-blue-600"
                       href={`/student/${student.id}/opdrachten/${assignment.id}`}
@@ -145,6 +143,8 @@ export default async function StudentAssignmentsPage({
                           ? "Ga verder"
                           : "Start Opdracht"}
                     </Link>
+
+                    <p className="mt-4 text-sm leading-7 text-slate-600">{assignment.description}</p>
 
                     {assignment.status === "in_progress" && (
                       <AssignmentCardActions

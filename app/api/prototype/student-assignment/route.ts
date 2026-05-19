@@ -130,20 +130,22 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "submit") {
-    // Gebruik meegegeven werk, of val terug op al opgeslagen werk
     const workToSubmit = work.trim() || assignment.studentWork?.trim() || "";
 
     if (!workToSubmit) {
-      return NextResponse.json(
-        { error: "Je moet eerst een antwoord schrijven voordat je kunt inleveren." },
-        { status: 400 },
-      );
+      const submissionCount = await prisma.assignmentSubmission.count({ where: { assignmentId } });
+      if (submissionCount === 0) {
+        return NextResponse.json(
+          { error: "Je moet eerst een antwoord schrijven of een bestand uploaden voordat je kunt inleveren." },
+          { status: 400 },
+        );
+      }
     }
 
     const updated = await prisma.assignment.update({
       where: { id: assignment.id },
       data: {
-        studentWork: workToSubmit,
+        studentWork: workToSubmit || null,
         savedAt: new Date(),
         submittedAt: new Date(),
         status: "COMPLETED",
@@ -231,6 +233,19 @@ ${oppResults.join("\n")}`;
         ],
       });
     }
+  }
+
+  if (action === "reflect") {
+    const { reflection = "" } = body ?? {};
+    if (!reflection.trim()) {
+      return NextResponse.json({ error: "Reflectie mag niet leeg zijn." }, { status: 400 });
+    }
+    await prisma.reflection.upsert({
+      where: { assignmentId: assignment.id },
+      create: { assignmentId: assignment.id, content: reflection.trim() },
+      update: { content: reflection.trim() },
+    });
+    return NextResponse.json({ ok: true });
   }
 
   return NextResponse.json({ error: "Onbekende actie." }, { status: 400 });

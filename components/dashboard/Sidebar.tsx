@@ -1,14 +1,16 @@
 "use client"
 import type { ElementType } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Users, BookOpen,
-  GraduationCap, Settings, User, ChevronLeft, ChevronRight, School, Sparkles, MessageSquare,
+  GraduationCap, Settings, User, ChevronLeft, ChevronRight, Sparkles, MessageSquare,
 } from "lucide-react"
 import { useDashboard, UserRole } from "./role-context"
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
+import aimeePortrait from "@/app/Images/Aimee.png"
 
 
 
@@ -62,14 +64,11 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-          <School className="w-5 h-5 text-white" />
+        <div className="w-12 h-14 rounded-lg overflow-hidden shrink-0">
+          <Image src={aimeePortrait} alt="Juf Aimée" width={60} height={70} className="object-cover w-full h-full" />
         </div>
         {!sidebarCollapsed && (
-          <div className="overflow-hidden">
-            <p className="text-white font-semibold text-sm leading-tight">Juf Aimée</p>
-            <p className="text-white/50 text-xs">{roleLabels[role]}</p>
-          </div>
+          <p className="text-white font-semibold text-sm leading-tight overflow-hidden">Juf Aimée</p>
         )}
       </div>
 
