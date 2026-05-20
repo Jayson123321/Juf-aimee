@@ -88,6 +88,14 @@ De template vormt daarmee de basis voor verdere uitwerking richting het eindvers
 
 ---
 
+## Bewijs
+
+Onderstaande screenshot laat zien dat de template voor het onderzoeksverslag is uitgewerkt:
+
+![Screenshot van de template voor het onderzoeksverslag](images/templateonderzoek.png)
+
+---
+
 ## Conclusie
 
 De template is een noodzakelijke stap om:
