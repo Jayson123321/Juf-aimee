@@ -756,19 +756,21 @@ export function AiAssignmentClient({
     <div className="space-y-8">
 
       {/* Instellingen + knoppen */}
-      <SectionCard className="border-slate-200/80">
+      <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(253,252,255,0.97),rgba(248,246,255,0.93))]">
         <div className="space-y-8">
-          <div className="flex items-start gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_14px_24px_rgba(98,101,255,0.2)]">
-              <Sparkles className="size-7" />
+          <div className="relative -mx-8 -mt-8 flex items-center gap-4 overflow-hidden rounded-t-[28px] bg-gradient-to-br from-violet-600 via-blue-600 to-blue-500 px-8 py-7 text-white">
+            <div className="pointer-events-none absolute -right-6 -top-8 size-28 rounded-full bg-white/15 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-10 left-1/3 size-24 rounded-full bg-fuchsia-400/25 blur-2xl" />
+            <div className="relative flex size-14 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/20">
+              <Sparkles className="size-8" />
             </div>
-            <div>
-              <h1 className="text-[2.2rem] font-semibold tracking-tight text-slate-950">AI Opdracht Genereren</h1>
-              <p className="text-[1.2rem] text-slate-500">Voor {student.name}</p>
+            <div className="relative">
+              <h1 className="text-[2rem] font-bold tracking-tight">AI Opdracht Genereren</h1>
+              <p className="text-[1.1rem] text-white/85">Voor {student.name}</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-3xl bg-slate-100 px-8 py-7">
+          <div className="flex items-center justify-between rounded-3xl bg-gradient-to-r from-violet-100 to-blue-100 px-8 py-7 ring-1 ring-violet-200/70">
             <div className="flex items-center gap-5">
               <div className="text-5xl">{student.emoji}</div>
               <div>

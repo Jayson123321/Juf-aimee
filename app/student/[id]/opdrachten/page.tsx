@@ -144,8 +144,6 @@ export default async function StudentAssignmentsPage({
                           : "Start Opdracht"}
                     </Link>
 
-                    <p className="mt-4 text-sm leading-7 text-slate-600">{assignment.description}</p>
-
                     {assignment.status === "in_progress" && (
                       <AssignmentCardActions
                         assignmentId={assignment.id}

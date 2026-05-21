@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import { updateStudent } from "./actions";
 
 export default async function EditStudentPage({
@@ -20,6 +21,8 @@ export default async function EditStudentPage({
   return (
     <div className="min-h-full bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-2xl space-y-6">
+
+        <BackLink />
 
         {/* Top actions */}
         <div className="flex items-center justify-between">

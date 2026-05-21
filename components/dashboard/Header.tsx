@@ -2,6 +2,8 @@
 import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useDashboard, UserRole } from "./role-context"
+import { ResourcesMenu } from "./ResourcesMenu"
+import { StudentResourcesMenu } from "./StudentResourcesMenu"
 
 const roleLabels: Record<UserRole, string> = {
   STUDENT: "Leerling",
@@ -21,9 +23,16 @@ export function Header({ userName }: { userName?: string }) {
     .toUpperCase()
 
   return (
-    <header className="h-20 flex items-center justify-between px-6 border-b border-white/10 shrink-0" style={{ backgroundColor: "oklch(0.18 0.07 255)" }}>
+    <header className="relative z-10 h-14 flex items-center justify-between px-6 shrink-0" style={{ backgroundColor: "oklch(0.18 0.07 255)" }}>
       {/* Left */}
-      <p className="text-xl font-large text-white/60"></p>
+      {role === "TEACHER" || role === "ADMIN" ? (
+        <div className="flex items-center gap-1">
+          <ResourcesMenu />
+          <StudentResourcesMenu />
+        </div>
+      ) : (
+        <StudentResourcesMenu />
+      )}
 
       {/* Right */}
       <div className="flex items-center gap-3">
@@ -47,6 +56,20 @@ export function Header({ userName }: { userName?: string }) {
           </div>
         </div>
       </div>
+
+      {/* Wavy edge — lets the header flow into the page body instead of a hard line */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute left-0 top-full h-7 w-full"
+        viewBox="0 0 1440 48"
+        preserveAspectRatio="none"
+        style={{
+          fill: "oklch(0.18 0.07 255)",
+          filter: "drop-shadow(0 6px 7px rgba(0,0,0,0.12))",
+        }}
+      >
+        <path d="M0,0 H1440 V18 C1190,46 1030,4 720,22 C430,39 250,6 0,24 Z" />
+      </svg>
     </header>
   )
 }

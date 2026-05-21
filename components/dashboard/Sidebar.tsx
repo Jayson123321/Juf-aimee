@@ -45,10 +45,11 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
     { href: `/student/${studentId}`,                                    icon: Settings, label: "Instellingen" },
   ]
 
+  // "Opdrachten" is intentionally student-only — teachers reach a student's
+  // assignments via the "Opdrachten" button on the dashboard student cards.
   const teacherItems: NavItem[] = [
     { href: "/dashboard",                      icon: LayoutDashboard, label: "Dashboard" },
     { href: "/students",                       icon: Users,           label: "Studenten" },
-    { href: opdrachtenHref,                    icon: BookOpen,        label: "Opdrachten" },
     { href: `/student/${studentId}/generate`,  icon: Sparkles,        label: "Genereer" },
   ]
 

@@ -840,7 +840,7 @@ Regels:
               previousAssignments,
             });
             const response = await ollama.chat({
-              model: "qwen3:14b",
+              model: RAS_GEN_MODEL,
               messages: [{ role: "user", content: prompt }],
               stream: true,
             });
