@@ -1,5 +1,30 @@
 import { prisma } from "@/lib/db"
 
+export async function retrieveChatSamenvatting(studentId: string, maxMessages = 10): Promise<string> {
+  const session = await prisma.studentChatSession.findUnique({
+    where: { studentId },
+    select: {
+      messages: {
+        select: { role: true, content: true },
+        orderBy: { createdAt: "desc" },
+        take: maxMessages,
+      },
+    },
+  })
+
+  if (!session || session.messages.length === 0) return ""
+
+  const messages = session.messages.reverse()
+
+  const lines = messages.map((m) => {
+    const prefix = m.role === "USER" ? "Leerling" : "Juf Aimee"
+    const snippet = m.content.trim().slice(0, 180)
+    return `${prefix}: "${snippet}${m.content.length > 180 ? "…" : ""}"`
+  })
+
+  return lines.join("\n")
+}
+
 export type LeerlinggeschiedenisItem = {
   title: string
   bloomLevel: string | null

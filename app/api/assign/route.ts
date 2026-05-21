@@ -7,7 +7,7 @@ import { GEN_MODEL, GAME_CODER_MODEL, getEmbedding, ollama, releaseAllOllamaMode
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
 import { callModel, getModelForRole } from "@/lib/llm-models";
-import { retrieveLeerlinggeschiedenis, formatLeerlinggeschiedenis } from "@/lib/ras/retrieveLeerlinggeschiedenis";
+import { retrieveLeerlinggeschiedenis, formatLeerlinggeschiedenis, retrieveChatSamenvatting } from "@/lib/ras/retrieveLeerlinggeschiedenis";
 import { analyzePortfolio, type PortfolioInsights } from "@/lib/portfolio-analysis";
 import { generateGamePrompt } from "@/lib/prompts/game_prompt";
 
@@ -290,8 +290,9 @@ function buildGenerationPrompt(args: {
   judgeFeedback?: string;
   geschiedenis?: string;
   portfolioInsights?: PortfolioInsights;
+  chatSamenvatting?: string;
 }) {
-  const { student, resolvedBloom, focusArea, estimatedTime, sources, teacherPrompt, currentAssignment, rejectedAssignments, judgeFeedback, geschiedenis, portfolioInsights } = args;
+  const { student, resolvedBloom, focusArea, estimatedTime, sources, teacherPrompt, currentAssignment, rejectedAssignments, judgeFeedback, geschiedenis, portfolioInsights, chatSamenvatting } = args;
   const oppBronnen = sources.length > 0
     ? sources.join("\n\n---\n\n")
     : "Geen OPP-informatie beschikbaar.";
@@ -344,6 +345,10 @@ PORTFOLIO ANALYSE (gebruik dit om rekening te houden met de ontwikkeling van de 
 ${portfolioInsights?.portfolioSummary
   ? `${portfolioInsights.portfolioSummary}${portfolioInsights.suggestedNextBloom ? `\nAanbevolen Bloom-niveau voor nieuwe opdracht: ${portfolioInsights.suggestedNextBloom}` : ""}`
   : "Geen eerdere opdrachten beschikbaar."}
+
+RECENTE CHATINTERACTIE MET JUF AIMEE (gebruik dit om te zien waar de leerling hulp bij vroeg, vastliep of extra uitleg nodig had)
+${chatSamenvatting?.trim() || "Geen chatinteracties beschikbaar."}
+${chatSamenvatting?.trim() ? "→ Vermeld in de RATIONALE expliciet welke chatpatronen (vragen, hints, struikelblokken) zijn meegenomen bij de keuze voor deze opdracht." : ""}
 
 VERBODEN ONDERWERPEN EN FORMATS (uit afgekeurde opdrachten)
 ${rejectedAssignments?.length
@@ -401,8 +406,9 @@ function buildRasPrompt(args: {
   feedbackTexts: string[];
   reflections: Array<{ assignmentTitle: string; content: string }>;
   previousAssignments: Array<{ title: string; status: string; bloomLevel: string | null }>;
+  chatSamenvatting?: string;
 }) {
-  const { student, resolvedBloom, focusArea, vak, estimatedTime, profileSources, feedbackTexts, reflections, previousAssignments } = args;
+  const { student, resolvedBloom, focusArea, vak, estimatedTime, profileSources, feedbackTexts, reflections, previousAssignments, chatSamenvatting } = args;
   const subject = vak || focusArea || "Algemeen";
   const groep = student.profile?.currentSchoolYearGroup ?? student.groep ?? "onbekend";
 
@@ -448,6 +454,9 @@ ${reflectionBlock}
 EERDERE OPDRACHTEN (vermijd herhaling van onderwerp en format)
 ${previousBlock}
 
+RECENTE CHATINTERACTIE MET JUF AIMEE (signalen over waar de leerling vastliep of hulp bij vroeg)
+${chatSamenvatting?.trim() || "Geen chatinteracties beschikbaar."}
+
 EISEN AAN DE OPDRACHT:
 - Schrijf in helder, verzorgd Nederlands
 - Begin met een duidelijke, pakkende titel
@@ -460,7 +469,8 @@ EISEN AAN DE OPDRACHT:
 - Bouw voort op wat goed werkte volgens feedback en reflecties; vermijd onderwerpen of formats van eerdere opdrachten
 - TIJDSDUUR: stem de scope, het aantal stappen, de diepgang en de lengte van het eindproduct STRIKT af op de geschatte tijd "${estimatedTime || "niet opgegeven"}". Een opdracht van 15-30 minuten heeft 1-2 stappen en een klein eindproduct; 45-60 minuten heeft 2-3 stappen; 1,5-2 uur heeft 3-4 stappen; een weekopdracht of meerdere lessen mag uitgebreider zijn met onderzoek en presentatie. Maak de opdracht NIET langer dan de tijd toelaat — kort en geconcentreerd is beter dan oppervlakkig en lang.${reflections.length ? `
 - REFLECTIES VERPLICHT GEBRUIKEN: sluit aan bij de reflecties van de leerling hierboven. Eindig de opdracht met een blok "RATIONALE:" waarin je MINSTENS ÉÉN regel letterlijk citeert tussen aanhalingstekens uit de bovenstaande reflecties, gevolgd door één of twee zinnen die uitleggen hoe deze opdracht inspeelt op dat citaat. Verzin GEEN reflecties die er niet staan.` : ""}${feedbackTexts.length ? `
-- LEERKRACHTFEEDBACK VERPLICHT GEBRUIKEN: in dezelfde RATIONALE-blok citeer je ook letterlijk minstens één regel uit de bovenstaande leerkrachtfeedback en leg je uit hoe deze opdracht daarop voortbouwt.` : ""}
+- LEERKRACHTFEEDBACK VERPLICHT GEBRUIKEN: in dezelfde RATIONALE-blok citeer je ook letterlijk minstens één regel uit de bovenstaande leerkrachtfeedback en leg je uit hoe deze opdracht daarop voortbouwt.` : ""}${chatSamenvatting?.trim() ? `
+- CHATINTERACTIE VERPLICHT GEBRUIKEN: in de RATIONALE-blok benoem je expliciet welke vragen of struikelblokken uit de chatinteractie zijn meegewogen bij de keuze voor deze opdracht.` : ""}
 
 Geef een volledige, goed gestructureerde opdracht.`;
 }
@@ -532,7 +542,7 @@ export async function POST(req: NextRequest) {
   try {
     // Haal OPP-bronnen + leerkrachtfeedback + leerlinggeschiedenis op
     const needsSourcesUpfront = action !== "generate" && action !== "revise";
-    const [profileSources, feedbackChunks, geschiedenisItems] = await Promise.all([
+    const [profileSources, feedbackChunks, geschiedenisItems, chatSamenvatting] = await Promise.all([
       zoekVolledigProfiel(student.id, focusArea),
       prisma.oppChunk.findMany({
         where: { studentId: student.id, tekst: { contains: "[LEERKRACHT FEEDBACK" } },
@@ -541,6 +551,7 @@ export async function POST(req: NextRequest) {
         take: 5,
       }),
       retrieveLeerlinggeschiedenis(student.id),
+      retrieveChatSamenvatting(student.id),
     ]);
     const geschiedenis = formatLeerlinggeschiedenis(geschiedenisItems);
     const sources = [...new Set([...profileSources, ...feedbackChunks.map((c) => c.tekst)])];
@@ -829,14 +840,17 @@ Regels:
             }));
             send({ type: "ras_step", data: { stage: 3, status: "done" } });
 
-            // Stap 4: Eerdere opdrachten ophalen
+            // Stap 4: Eerdere opdrachten + chatgeschiedenis ophalen
             send({ type: "ras_step", data: { stage: 4, status: "running" } });
-            const previousAssignments = await prisma.assignment.findMany({
-              where: { studentId: student.id },
-              select: { title: true, status: true, bloomLevel: true },
-              orderBy: { createdAt: "desc" },
-              take: 5,
-            });
+            const [previousAssignments, rasChatSamenvatting] = await Promise.all([
+              prisma.assignment.findMany({
+                where: { studentId: student.id },
+                select: { title: true, status: true, bloomLevel: true },
+                orderBy: { createdAt: "desc" },
+                take: 5,
+              }),
+              retrieveChatSamenvatting(student.id),
+            ]);
             send({ type: "ras_step", data: { stage: 4, status: "done" } });
 
             // Stap 5: Genereren via RAS
@@ -851,9 +865,10 @@ Regels:
               feedbackTexts: feedbackChunks.map((c) => c.tekst),
               reflections,
               previousAssignments,
+              chatSamenvatting: rasChatSamenvatting,
             });
             const response = await ollama.chat({
-              model: "qwen3:14b",
+              model: GEN_MODEL,
               messages: [{ role: "user", content: prompt }],
               stream: true,
             });
@@ -888,6 +903,7 @@ Regels:
         teacherPrompt,
         geschiedenis,
         portfolioInsights,
+        chatSamenvatting,
       });
 
       /* const response = await ollama.chat({
@@ -1145,6 +1161,7 @@ ${repairFeedback ? `\n\nHERSTEL FEEDBACK:\n${repairFeedback}` : ""}`;
               judgeFeedback,
               geschiedenis,
               portfolioInsights,
+              chatSamenvatting,
             });
 
             await releaseAllOllamaModels();
