@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import { prisma } from "@/lib/db";
 import { generateAssignmentImage } from "@/lib/assignment-image";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
-import { GEN_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaModel } from "@/lib/ollama";
+import { GEN_MODEL, GAME_CODER_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaModel } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
 import { callModel, getModelForRole } from "@/lib/llm-models";
 import { retrieveLeerlinggeschiedenis, formatLeerlinggeschiedenis } from "@/lib/ras/retrieveLeerlinggeschiedenis";
 import { analyzePortfolio, type PortfolioInsights } from "@/lib/portfolio-analysis";
+import { generateGamePrompt } from "@/lib/prompts/game_prompt";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -875,6 +877,55 @@ Regels:
           "Cache-Control": "no-cache",
         },
       });
+    }
+    if (action === "generate_game") {
+      const prompt = generateGamePrompt({
+        student,
+        resolvedBloom,
+        focusArea,
+        estimatedTime,
+        sources,
+        teacherPrompt,
+        geschiedenis,
+        portfolioInsights,
+      });
+
+      /* const response = await ollama.chat({
+        model: GAME_CODER_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        options: { temperature: 0.7 },
+        keep_alive: 0,
+      });
+      */
+      const apiKey = process.env.GOOGLE_STUDIO_API_KEY;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: "GOOGLE_STUDIO_API_KEY is niet ingesteld in de omgevingsvariabelen." },
+          { status: 500 },
+        );
+      }
+
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt,
+        });
+        const raw = response.text ?? "";
+
+        const title = raw.match(/TITLE:\s*(.+)/)?.[1]?.trim() ?? "Spel";
+        const gameHtml =
+          raw.match(/GAME_HTML:\s*([\s\S]*?)(?=RATIONALE:|$)/)?.[1]?.trim() ?? "";
+        const rationale = raw.match(/RATIONALE:\s*([\s\S]*)/)?.[1]?.trim() ?? "";
+
+        return NextResponse.json({ title, gameHtml, rationale });
+      } catch (err) {
+        console.error("[generate_game] Google AI fout:", err);
+        const message = err instanceof Error
+          ? `${err.message}${(err as NodeJS.ErrnoException).cause ? ` — oorzaak: ${(err as NodeJS.ErrnoException).cause}` : ""}`
+          : "Game genereren mislukt.";
+        return NextResponse.json({ error: message }, { status: 500 });
+      }
     }
 
     // ── Actie: meerkeuzevraag genereren (Planner → Coder) ────────────────────
