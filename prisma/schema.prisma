@@ -40,8 +40,10 @@ model Student {
   familyDetails  String?
   custodyDetails String?
 
-  groep       String?
-  bloomNiveau Int?
+  groep            String?
+  bloomNiveau      Int?
+  teacherNotes     String?
+  llmSignalAdvice  String?
 
   primaryTeacherId String?
   primaryTeacher   User?   @relation("StudentPrimaryTeacher", fields: [primaryTeacherId], references: [id], onDelete: SetNull)
