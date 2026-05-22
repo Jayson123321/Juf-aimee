@@ -20,7 +20,7 @@ import {
   getBloomLevelLabel,
   getStudentAge,
 } from "@/lib/student-profile";
-import { computeSignals, Signal } from "@/lib/signals";
+import { computeSignals, generateSignalAdvice } from "@/lib/signals";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +79,7 @@ async function getDashboardStudents() {
     },
   });
 
-  return students.map((student) => {
+  return Promise.all(students.map(async (student) => {
     const presentation = deriveStudentPresentation({
       fullName: student.fullName,
       schoolHistory: student.profile?.schoolHistory,
@@ -90,6 +90,9 @@ async function getDashboardStudents() {
     const completedAssignments = student.assignments.filter(
       (assignment) => assignment.status === "COMPLETED",
     ).length;
+    const signals = computeSignals(student.assignments, student, student.teacherNotes ?? undefined);
+
+    const signalsWithAdvice = await generateSignalAdvice(student, signals);
 
     return {
       id: student.id,
@@ -102,8 +105,17 @@ async function getDashboardStudents() {
       completedAssignments,
       totalAssignments: student.assignments.length,
       badge: getBloomAppearance(bloomLabel),
-      signals: computeSignals(student.assignments, student)
+      teacherNotes: student.teacherNotes ?? "",
+      signals: signalsWithAdvice,
     };
+  }));
+}
+
+async function saveTeacherNotes(studentId: string, notes: string) {
+  "use server";
+  await prisma.student.update({
+    where: { id: studentId },
+    data: { teacherNotes: notes },
   });
 }
 
@@ -237,24 +249,64 @@ function StudentCard({
         </div>
 
         {student.signals.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {student.signals.map((signal) => (
-              <div
-                key={signal.type}
-                className={`flex items-start gap-2 rounded-lg px-3 py-2 text-xs ${
-                  signal.variant === "positive"
-                    ? "bg-green-100 text-green-700"
-                    : signal.variant === "warning"
-                      ? "bg-orange-100 text-orange-700"
-                      : "bg-blue-100 text-blue-700"
-                }`}
-              >
-                <span className="mt-0.5 shrink-0">
-                  {signal.variant === "positive" ? "✓" : signal.variant === "warning" ? "⚠" : "💡"}
-                </span>
-                <span>{signal.message}</span>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-xs">
+            <div className="flex flex-col gap-1.5">
+              {student.signals.map((signal) => {
+                const isWarning = signal.variant === "warning";
+                const isPositive = signal.variant === "positive";
+                const dotClass = isWarning
+                  ? "bg-orange-400"
+                  : isPositive
+                    ? "bg-green-400"
+                    : "bg-blue-400";
+                const textClass = isWarning
+                  ? "text-orange-800"
+                  : isPositive
+                    ? "text-green-800"
+                    : "text-blue-800";
+                return (
+                  <div key={signal.type} className="flex items-start gap-2">
+                    <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${dotClass}`} />
+                    <span className={textClass}>{signal.teacher_message}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {student.signals[0]?.llm_feedback_advice && (
+              <div className="mt-2.5 border-t border-gray-200 pt-2.5 text-gray-600">
+                <span className="font-semibold text-purple-700">Juf Aimee: </span>
+                {student.signals[0].llm_feedback_advice}
               </div>
-            ))}
+            )}
+
+            <details className="group mt-2.5 border-t border-gray-200 pt-2.5">
+              <summary className="cursor-pointer list-none text-xs font-medium text-gray-500 hover:text-gray-700">
+                <span className="group-open:hidden">💬 Wat denk jij?</span>
+                <span className="hidden group-open:inline">💬 Verberg</span>
+              </summary>
+              <form
+                action={async (formData: FormData) => {
+                  "use server";
+                  await saveTeacherNotes(student.id, formData.get("notes") as string);
+                }}
+                className="mt-2 flex flex-col gap-1"
+              >
+                <textarea
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  defaultValue={student.teacherNotes}
+                  name="notes"
+                  placeholder="Wat denkt u ? Heeft u aanvullende informatie of context die Juf Aimee moet weten? Voeg hier uw eigen notities toe. Deze kunnen helpen voor juf Aimee"
+                  rows={2}
+                />
+                <button
+                  className="self-end rounded-lg bg-gray-700 px-3 py-1 text-xs font-medium text-white hover:bg-gray-800"
+                  type="submit"
+                >
+                  Opslaan
+                </button>
+              </form>
+            </details>
           </div>
         )}
 
