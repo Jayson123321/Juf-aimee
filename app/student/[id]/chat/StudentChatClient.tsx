@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Loader2, Send, Sparkles } from "lucide-react";
 
 type ChatMessage = {
   role: "assistant" | "user";
@@ -20,6 +20,19 @@ type StudentChatClientProps = {
   draftWork?: string;
   compact?: boolean;
 };
+
+function AssistantBubble({ children }: { children: ReactNode }) {
+  return (
+    <div className="max-w-[620px] rounded-2xl rounded-tl-sm border border-violet-100 bg-violet-50/80 px-4 py-3.5 shadow-sm">
+      <div className="flex items-center gap-1.5">
+        <Sparkles className="size-3.5 text-violet-500" />
+        <span className="text-sm font-bold text-violet-600">Juf Aimee</span>
+        <span className="text-[11px] text-violet-400">· AI-onderwijsassistent</span>
+      </div>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
 
 export function StudentChatClient({
   studentId,
@@ -143,70 +156,74 @@ export function StudentChatClient({
   }
 
   const wrapperClassName = compact
-    ? "flex min-h-[540px] flex-col rounded-[22px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
-    : "flex min-h-[480px] flex-col rounded-[18px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.04)]";
+    ? "flex min-h-[540px] flex-col overflow-hidden rounded-[22px] border border-violet-200 bg-white shadow-[0_14px_36px_rgba(99,102,241,0.12)]"
+    : "flex min-h-[480px] flex-col overflow-hidden rounded-3xl border border-violet-200 bg-white shadow-[0_14px_36px_rgba(99,102,241,0.12)]";
 
   return (
     <section className={wrapperClassName}>
-      <div className={`flex-1 space-y-4 overflow-y-auto ${compact ? "px-4 py-4" : "px-5 py-5"}`}>
+      <div
+        className={`flex-1 space-y-4 overflow-y-auto bg-gradient-to-b from-violet-50/50 to-white ${
+          compact ? "px-4 py-4" : "px-5 py-5"
+        }`}
+      >
         {compact && (
           <div className="rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-900">
             <p className="font-semibold">Juf Aimee kijkt mee met deze opdracht.</p>
             <p className="mt-1 text-violet-800">
-              Ze gebruikt de opdracht, je profiel en de tekst die nu in je werkvak staat. Na opslaan onthoudt ze ook je laatste versie beter.
+              Ze gebruikt de opdracht, je profiel en de tekst die nu in je werkvak
+              staat. Na opslaan onthoudt ze ook je laatste versie beter.
             </p>
           </div>
         )}
 
         {loadingState === "booting" ? (
-          <div className="max-w-[560px] rounded-[18px] border border-slate-200 bg-[#f6f4f2] px-4 py-4">
-            <p className="text-lg font-semibold text-[#5b42ff]">Juf Aimee</p>
-            <p className="mt-1 text-xs text-slate-400">AI Onderwijsassistent</p>
-            <div className="mt-4 flex items-center gap-3 text-sm text-slate-600">
-              <Loader2 className="size-4 animate-spin" />
+          <AssistantBubble>
+            <div className="flex items-center gap-3 text-sm text-slate-600">
+              <Loader2 className="size-4 animate-spin text-violet-500" />
               Ik haal eerst jouw profiel, opdracht en OPP-context op...
             </div>
-          </div>
+          </AssistantBubble>
         ) : null}
 
-        {messages.map((message, index) => (
-          <div
-            className={
-              message.role === "assistant"
-                ? "max-w-[620px] rounded-[18px] border border-slate-200 bg-[#f6f4f2] px-4 py-4"
-                : "ml-auto max-w-[520px] rounded-[18px] bg-[#474747] px-4 py-4 text-white"
-            }
-            key={`${message.role}-${index}-${message.content.slice(0, 24)}`}
-          >
-            {message.role === "assistant" ? (
-              <>
-                <p className="text-lg font-semibold text-[#5b42ff]">Juf Aimee</p>
-                <p className="mt-1 text-xs text-slate-400">AI Onderwijsassistent</p>
-              </>
-            ) : null}
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-7">{message.content}</p>
-          </div>
-        ))}
+        {messages.map((message, index) =>
+          message.role === "assistant" ? (
+            <AssistantBubble
+              key={`${message.role}-${index}-${message.content.slice(0, 24)}`}
+            >
+              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-800">
+                {message.content}
+              </p>
+            </AssistantBubble>
+          ) : (
+            <div
+              className="ml-auto max-w-[520px] rounded-2xl rounded-tr-sm bg-gradient-to-br from-violet-600 to-blue-500 px-4 py-3 text-white shadow-sm"
+              key={`${message.role}-${index}-${message.content.slice(0, 24)}`}
+            >
+              <p className="whitespace-pre-wrap text-sm leading-7">
+                {message.content}
+              </p>
+            </div>
+          ),
+        )}
 
         {loadingState === "sending" ? (
-          <div className="max-w-[560px] rounded-[18px] border border-slate-200 bg-[#f6f4f2] px-4 py-4">
-            <p className="text-lg font-semibold text-[#5b42ff]">Juf Aimee</p>
-            <p className="mt-1 text-xs text-slate-400">AI Onderwijsassistent</p>
-            <div className="mt-4 flex items-center gap-3 text-sm text-slate-600">
-              <Loader2 className="size-4 animate-spin" />
-              Ik denk even na over een antwoord dat bij {firstName} en deze opdracht past...
+          <AssistantBubble>
+            <div className="flex items-center gap-3 text-sm text-slate-600">
+              <Loader2 className="size-4 animate-spin text-violet-500" />
+              Ik denk even na over een antwoord dat bij {firstName} en deze
+              opdracht past...
             </div>
-          </div>
+          </AssistantBubble>
         ) : null}
 
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-slate-200 px-3 py-3">
+      <div className="border-t border-violet-100 bg-white px-3 py-3">
         <div className="mb-3 flex flex-wrap gap-2">
           {quickPrompts.map((prompt) => (
             <button
-              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 transition hover:bg-slate-50"
+              className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 transition hover:bg-violet-100"
               key={prompt}
               onClick={() => void sendMessage(prompt)}
               type="button"
@@ -216,9 +233,9 @@ export function StudentChatClient({
           ))}
         </div>
 
-        <div className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-white p-2 shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+        <div className="flex items-center gap-3 rounded-2xl border border-violet-200 bg-white p-2 shadow-sm">
           <input
-            className="h-11 flex-1 rounded-[14px] border border-slate-200 bg-[#f8f8f8] px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+            className="h-11 flex-1 rounded-xl border border-violet-200 bg-violet-50/60 px-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
             disabled={loadingState !== "idle"}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
@@ -231,7 +248,7 @@ export function StudentChatClient({
             value={input}
           />
           <button
-            className="inline-flex size-12 items-center justify-center rounded-[14px] bg-[#a8a39d] text-white transition hover:bg-[#96918b] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 text-white shadow-md shadow-violet-200 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={loadingState !== "idle" || !input.trim()}
             onClick={() => void sendMessage()}
             type="button"
