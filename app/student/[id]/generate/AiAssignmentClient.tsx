@@ -756,19 +756,21 @@ export function AiAssignmentClient({
     <div className="space-y-8">
 
       {/* Instellingen + knoppen */}
-      <SectionCard className="border-slate-200/80">
+      <SectionCard className="border-violet-200 bg-[linear-gradient(180deg,rgba(253,252,255,0.97),rgba(248,246,255,0.93))]">
         <div className="space-y-8">
-          <div className="flex items-start gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white shadow-[0_14px_24px_rgba(98,101,255,0.2)]">
-              <Sparkles className="size-7" />
+          <div className="relative -mx-8 -mt-8 flex items-center gap-4 overflow-hidden rounded-t-[28px] bg-gradient-to-br from-violet-600 via-blue-600 to-blue-500 px-8 py-7 text-white">
+            <div className="pointer-events-none absolute -right-6 -top-8 size-28 rounded-full bg-white/15 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-10 left-1/3 size-24 rounded-full bg-fuchsia-400/25 blur-2xl" />
+            <div className="relative flex size-14 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/20">
+              <Sparkles className="size-8" />
             </div>
-            <div>
-              <h1 className="text-[2.2rem] font-semibold tracking-tight text-slate-950">AI Opdracht Genereren</h1>
-              <p className="text-[1.2rem] text-slate-500">Voor {student.name}</p>
+            <div className="relative">
+              <h1 className="text-[2rem] font-bold tracking-tight">AI Opdracht Genereren</h1>
+              <p className="text-[1.1rem] text-white/85">Voor {student.name}</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-3xl bg-slate-100 px-8 py-7">
+          <div className="flex items-center justify-between rounded-3xl bg-gradient-to-r from-violet-100 to-blue-100 px-8 py-7 ring-1 ring-violet-200/70">
             <div className="flex items-center gap-5">
               <div className="text-5xl">{student.emoji}</div>
               <div>
@@ -791,7 +793,7 @@ export function AiAssignmentClient({
               </label>
               <div className="relative">
                 <select
-                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                  className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                   onChange={(event) => setSelectedBloom(event.target.value)}
                   value={selectedBloom}
                 >
@@ -824,7 +826,7 @@ export function AiAssignmentClient({
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="vak-select">Schoolvak</label>
               <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 id="vak-select"
                 onChange={(e) => setSelectedVak(e.target.value)}
                 value={selectedVak}
@@ -840,7 +842,7 @@ export function AiAssignmentClient({
                 Focusgebied <span className="font-normal text-slate-400">(optioneel)</span>
               </label>
               <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 id="focus-select"
                 onChange={(e) => { setFocusArea(e.target.value); setCustomFocusArea(""); }}
                 value={focusArea}
@@ -874,7 +876,7 @@ export function AiAssignmentClient({
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="tijd-select">Geschatte tijd</label>
               <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 id="tijd-select"
                 onChange={(e) => setEstimatedTime(e.target.value)}
                 value={estimatedTime}
@@ -935,7 +937,7 @@ export function AiAssignmentClient({
 
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950">Visuele ondersteuning</label>
-              <label className="flex items-start gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <label className="flex items-start gap-4 rounded-3xl border border-violet-200 bg-violet-50/60 px-5 py-4">
                 <input
                   checked={includeIllustration}
                   className="mt-1 size-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
@@ -962,7 +964,7 @@ export function AiAssignmentClient({
 
             <div className="space-y-4">
               <button
-                className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-slate-600 to-slate-700 text-[1.15rem] font-semibold text-white shadow-md transition hover:from-slate-700 hover:to-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(14,165,233,0.22)] transition hover:from-sky-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-70"
                 disabled={busy}
                 onClick={searchSources}
                 type="button"
