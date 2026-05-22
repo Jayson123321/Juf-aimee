@@ -793,7 +793,7 @@ export function AiAssignmentClient({
               </label>
               <div className="relative">
                 <select
-                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                  className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                   onChange={(event) => setSelectedBloom(event.target.value)}
                   value={selectedBloom}
                 >
@@ -826,7 +826,7 @@ export function AiAssignmentClient({
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="vak-select">Schoolvak</label>
               <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 id="vak-select"
                 onChange={(e) => setSelectedVak(e.target.value)}
                 value={selectedVak}
@@ -842,7 +842,7 @@ export function AiAssignmentClient({
                 Focusgebied <span className="font-normal text-slate-400">(optioneel)</span>
               </label>
               <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 id="focus-select"
                 onChange={(e) => { setFocusArea(e.target.value); setCustomFocusArea(""); }}
                 value={focusArea}
@@ -876,7 +876,7 @@ export function AiAssignmentClient({
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950" htmlFor="tijd-select">Geschatte tijd</label>
               <select
-                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 text-[1.05rem] text-slate-950 outline-none"
+                className="h-12 w-full appearance-none rounded-2xl border border-violet-200 bg-violet-50/70 px-4 text-[1.05rem] text-slate-950 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                 id="tijd-select"
                 onChange={(e) => setEstimatedTime(e.target.value)}
                 value={estimatedTime}
@@ -937,7 +937,7 @@ export function AiAssignmentClient({
 
             <div className="space-y-3">
               <label className="block text-[1.05rem] font-semibold text-slate-950">Visuele ondersteuning</label>
-              <label className="flex items-start gap-4 rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <label className="flex items-start gap-4 rounded-3xl border border-violet-200 bg-violet-50/60 px-5 py-4">
                 <input
                   checked={includeIllustration}
                   className="mt-1 size-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
@@ -964,7 +964,7 @@ export function AiAssignmentClient({
 
             <div className="space-y-4">
               <button
-                className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-slate-600 to-slate-700 text-[1.15rem] font-semibold text-white shadow-md transition hover:from-slate-700 hover:to-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex h-[60px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[1.15rem] font-semibold text-white shadow-[0_16px_28px_rgba(14,165,233,0.22)] transition hover:from-sky-600 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-70"
                 disabled={busy}
                 onClick={searchSources}
                 type="button"

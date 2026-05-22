@@ -1,9 +1,8 @@
 "use client"
-import { Bell } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { useDashboard, UserRole } from "./role-context"
 import { ResourcesMenu } from "./ResourcesMenu"
 import { StudentResourcesMenu } from "./StudentResourcesMenu"
+import { NotificationsMenu } from "./NotificationsMenu"
 
 const roleLabels: Record<UserRole, string> = {
   STUDENT: "Leerling",
@@ -37,10 +36,7 @@ export function Header({ userName }: { userName?: string }) {
       {/* Right */}
       <div className="flex items-center gap-3">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-10 w-10 text-white/60 hover:text-white hover:bg-white/10" aria-label="Meldingen">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full" />
-        </Button>
+        <NotificationsMenu />
 
         {/* User avatar */}
         <div className="flex items-center gap-2 pl-2 border-l border-white/10">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  ArrowRight,
   Award,
   BookOpen,
   CheckCircle2,
@@ -265,6 +266,15 @@ export default async function StudentProfielPage({
     (a) => !!a.reflection?.content,
   ).length;
 
+  // Profile shows a look-back: the most recent completed assignments.
+  // The full do-the-work list lives on the Opdrachten page.
+  const recentCompleted = [...completedAssignments]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+    .slice(0, 5);
+
   return (
     <div className="min-h-full bg-[radial-gradient(circle_at_top,rgba(167,139,250,0.28),transparent_34%),linear-gradient(180deg,#f3f1ff_0%,#e7e3fb_100%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
@@ -475,21 +485,21 @@ export default async function StudentProfielPage({
           </div>
         </PageCard>
 
-        {/* Opdrachten + reflecties */}
+        {/* Afgeronde opdrachten — terugblik */}
         <PageCard tone="violet">
           <CardHeaderBlock
             tone="violet"
             icon={<Sparkles className="size-5" />}
-            title="Mijn opdrachten & reflecties"
-            description="Jouw opdrachten met je eigen reflecties erop"
+            title="Afgeronde opdrachten"
+            description="Een terugblik op je laatste opdrachten, met je eigen reflecties"
           />
           <div className="space-y-4 px-6 py-6">
-            {assignments.length === 0 ? (
-              <p className="py-8 text-center text-slate-500">
-                Nog geen opdrachten voor deze leerling.
+            {recentCompleted.length === 0 ? (
+              <p className="py-6 text-center text-slate-500">
+                Je hebt nog geen opdrachten afgerond.
               </p>
             ) : (
-              assignments.map((assignment) => (
+              recentCompleted.map((assignment) => (
                 <AssignmentItem
                   assignment={assignment}
                   key={assignment.id}
@@ -497,6 +507,13 @@ export default async function StudentProfielPage({
                 />
               ))
             )}
+            <Link
+              href={`/student/${id}/opdrachten`}
+              className="flex items-center justify-center gap-1.5 rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold text-violet-700 transition hover:bg-violet-50"
+            >
+              Bekijk al je opdrachten
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
         </PageCard>
       </div>

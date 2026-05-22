@@ -155,7 +155,7 @@ function Hero({ name }: { name: string }) {
             {timeGreeting()}
           </p>
           <h1 className="mt-1 text-3xl font-extrabold leading-tight text-white md:text-4xl">
-            Welkom terug, leeraar {name}! <span className="inline-block"></span>
+            Welkom terug  {name}! <span className="inline-block"></span>
           </h1>
           <p className="mt-2 text-sm text-white/90 md:text-base">
             Hier groeien je hoogbegaafde leerlingen. Bekijk hun voortgang en laat
@@ -297,18 +297,71 @@ function InsightCard({
   );
 }
 
+/** Rotating accent palette so the student grid feels colourful and mixed. */
+const STUDENT_ACCENTS = [
+  {
+    strip: "from-orange-500 via-orange-400 to-amber-300",
+    tile: "bg-orange-100",
+    text: "text-orange-600",
+    track: "bg-orange-100",
+    fill: "from-orange-500 to-amber-400",
+    pill: "border-orange-100 bg-orange-50 text-orange-700",
+    btn: "from-orange-500 to-amber-400",
+  },
+  {
+    strip: "from-violet-500 via-violet-400 to-purple-300",
+    tile: "bg-violet-100",
+    text: "text-violet-600",
+    track: "bg-violet-100",
+    fill: "from-violet-500 to-purple-400",
+    pill: "border-violet-100 bg-violet-50 text-violet-700",
+    btn: "from-violet-500 to-purple-400",
+  },
+  {
+    strip: "from-sky-500 via-sky-400 to-blue-300",
+    tile: "bg-sky-100",
+    text: "text-sky-600",
+    track: "bg-sky-100",
+    fill: "from-sky-500 to-blue-400",
+    pill: "border-sky-100 bg-sky-50 text-sky-700",
+    btn: "from-sky-500 to-blue-400",
+  },
+  {
+    strip: "from-emerald-500 via-emerald-400 to-teal-300",
+    tile: "bg-emerald-100",
+    text: "text-emerald-600",
+    track: "bg-emerald-100",
+    fill: "from-emerald-500 to-teal-400",
+    pill: "border-emerald-100 bg-emerald-50 text-emerald-700",
+    btn: "from-emerald-500 to-teal-400",
+  },
+  {
+    strip: "from-pink-500 via-pink-400 to-rose-300",
+    tile: "bg-pink-100",
+    text: "text-pink-600",
+    track: "bg-pink-100",
+    fill: "from-pink-500 to-rose-400",
+    pill: "border-pink-100 bg-pink-50 text-pink-700",
+    btn: "from-pink-500 to-rose-400",
+  },
+] as const;
+
 function StudentCard({
   student,
+  accent,
 }: {
   student: Awaited<ReturnType<typeof getDashboardStudents>>[number];
+  accent: (typeof STUDENT_ACCENTS)[number];
 }) {
   return (
     <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <div className="h-1.5 bg-gradient-to-r from-orange-500 via-orange-400 to-amber-300" />
+      <div className={`h-1.5 bg-gradient-to-r ${accent.strip}`} />
       <div className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-orange-50 text-3xl">
+            <div
+              className={`flex size-12 items-center justify-center rounded-2xl text-3xl ${accent.tile}`}
+            >
               {student.emoji}
             </div>
             <div>
@@ -330,11 +383,13 @@ function StudentCard({
           <div>
             <div className="mb-1.5 flex justify-between text-sm">
               <span className="font-medium text-gray-600">Voortgang</span>
-              <span className="font-bold text-orange-600">{student.progress}%</span>
+              <span className={`font-bold ${accent.text}`}>{student.progress}%</span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-orange-100">
+            <div
+              className={`h-2.5 overflow-hidden rounded-full ${accent.track}`}
+            >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all"
+                className={`h-full rounded-full bg-gradient-to-r ${accent.fill} transition-all`}
                 style={{ width: `${student.progress}%` }}
               />
             </div>
@@ -346,7 +401,7 @@ function StudentCard({
               {student.interests.map((interest) => (
                 <span
                   key={interest}
-                  className="rounded-full border border-orange-100 bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700"
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium ${accent.pill}`}
                 >
                   {interest}
                 </span>
@@ -370,14 +425,14 @@ function StudentCard({
                 Profiel
               </Link>
               <Link
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 px-3 py-2 text-center text-sm font-semibold text-white transition hover:opacity-90"
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r ${accent.btn} px-3 py-2 text-center text-sm font-semibold text-white transition hover:opacity-90`}
                 href={`/student/${student.id}/generate`}
               >
                 <Sparkles className="size-4" />
                 AI Opdracht
               </Link>
               <Link
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-center text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                 href={`/dashboard/leerling/${student.id}/opdrachten`}
               >
                 <ClipboardList className="size-4" />
@@ -440,10 +495,11 @@ export default async function DashboardPage() {
         </section>
 
         {/* Quick actions */}
-        <section className="space-y-4">
+        <section className="space-y-4 rounded-3xl border border-sky-100 bg-sky-50/70 p-6 md:p-7">
           <SectionTitle
             title="Snel aan de slag"
             subtitle="De belangrijkste tools van Juf Aimee, één tik weg."
+            accent="bg-sky-400"
           />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <ActionTile
@@ -475,7 +531,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Insights */}
-        <section className="space-y-4">
+        <section className="space-y-4 rounded-3xl border border-violet-100 bg-violet-50/60 p-6 md:p-7">
           <SectionTitle
             title="Overzicht & Inzichten"
             subtitle="Een blik op de groei van je groep."
@@ -570,11 +626,11 @@ export default async function DashboardPage() {
         </section>
 
         {/* Students */}
-        <section className="space-y-4">
+        <section className="space-y-4 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-6 md:p-7">
           <SectionTitle
             title="Hoogbegaafde Leerlingen"
             subtitle="Voortgang en AI-gegenereerde opdrachten per leerling."
-            accent="bg-sky-400"
+            accent="bg-emerald-400"
           />
 
           {students.length === 0 ? (
@@ -604,8 +660,12 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              {students.map((student) => (
-                <StudentCard key={student.id} student={student} />
+              {students.map((student, i) => (
+                <StudentCard
+                  key={student.id}
+                  student={student}
+                  accent={STUDENT_ACCENTS[i % STUDENT_ACCENTS.length]}
+                />
               ))}
             </div>
           )}

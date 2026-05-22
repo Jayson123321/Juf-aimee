@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Users, BookOpen,
+  LayoutDashboard, Users, BookOpen, Info,
   GraduationCap, Settings, User, ChevronLeft, ChevronRight, Sparkles, MessageSquare,
 } from "lucide-react"
 import { useDashboard, UserRole } from "./role-context"
@@ -23,6 +23,7 @@ const adminItems: NavItem[] = [
   { href: "/admin/students", icon: Users,           label: "Studenten" },
   { href: "/admin/teachers", icon: GraduationCap,   label: "Leraren" },
   { href: "/admin/settings", icon: Settings,        label: "Instellingen" },
+  { href: "/about",          icon: Info,            label: "Over ons" },
 ]
 
 const roleLabels: Record<UserRole, string> = {
@@ -43,6 +44,7 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
     { href: opdrachtenHref,                                             icon: BookOpen, label: "Opdrachten" },
     { href: `/student/${studentId}/chat`,                               icon: MessageSquare, label: "Chat" },
     { href: `/student/${studentId}`,                                    icon: Settings, label: "Instellingen" },
+    { href: "/about",                                                   icon: Info,     label: "Over ons" },
   ]
 
   // "Opdrachten" is intentionally student-only — teachers reach a student's
@@ -51,6 +53,7 @@ export function Sidebar({ footer }: { footer?: ReactNode }) {
     { href: "/dashboard",                      icon: LayoutDashboard, label: "Dashboard" },
     { href: "/students",                       icon: Users,           label: "Studenten" },
     { href: `/student/${studentId}/generate`,  icon: Sparkles,        label: "Genereer" },
+    { href: "/about",                          icon: Info,            label: "Over ons" },
   ]
 
   const items = role === "STUDENT" ? studentItems : role === "TEACHER" ? teacherItems : adminItems

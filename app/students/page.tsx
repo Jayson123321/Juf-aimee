@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import emptyImage from "@/app/Images/resources-2.png";
 import { BackLink } from "@/components/BackLink";
+import { AddStudentButton } from "./AddStudentButton";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,13 @@ const ACCENTS = [
   },
 ] as const;
 
-export default async function StudentsPage() {
+export default async function StudentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   const students = await prisma.student.findMany({
     include: { profile: true },
     orderBy: { fullName: "asc" },
@@ -66,22 +73,33 @@ export default async function StudentsPage() {
         <BackLink />
 
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 shadow-lg shadow-orange-200">
-            <Users className="size-7 text-white" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-800 md:text-3xl">
-              Studenten
-            </h1>
-            <p className="mt-0.5 text-sm text-gray-500">
-              <span className="font-semibold text-orange-600">
-                {students.length}
-              </span>{" "}
-              leerling{students.length !== 1 ? "en" : ""} geregistreerd
-            </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 shadow-lg shadow-orange-200">
+              <Users className="size-7 text-white" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-extrabold text-gray-800 md:text-3xl">
+                Studenten
+              </h1>
+              <p className="mt-0.5 text-sm text-gray-500">
+                <span className="font-semibold text-orange-600">
+                  {students.length}
+                </span>{" "}
+                leerling{students.length !== 1 ? "en" : ""} geregistreerd
+              </p>
+            </div>
           </div>
+          <AddStudentButton />
         </div>
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {error === "naam"
+              ? "Vul een naam in voor de student."
+              : "Er ging iets mis bij het opslaan. Mogelijk is het e-mailadres al in gebruik."}
+          </div>
+        )}
 
         {students.length === 0 ? (
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-orange-200 bg-white p-12 text-center">
