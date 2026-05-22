@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { prisma } from "@/lib/db";
 import { generateAssignmentImage } from "@/lib/assignment-image";
 import { executeSearchOpp, searchOppTool, zoekBeginsituatie, zoekVolledigProfiel } from "@/app/ai/tools/search_opp";
-import { GEN_MODEL, GAME_CODER_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaModel } from "@/lib/ollama";
+import { GEN_MODEL, GAME_CODER_MODEL, RAS_GEN_MODEL, getEmbedding, ollama, releaseAllOllamaModels, releaseOllamaModel } from "@/lib/ollama";
 import { getBloomLevelLabel, getStudentAge } from "@/lib/student-profile";
 import { evalueerOpdrachtStreaming } from "@/lib/judge";
 import { callModel, getModelForRole } from "@/lib/llm-models";
@@ -840,7 +840,7 @@ Regels:
               previousAssignments,
             });
             const response = await ollama.chat({
-              model: "qwen3:14b",
+              model: RAS_GEN_MODEL,
               messages: [{ role: "user", content: prompt }],
               stream: true,
             });
