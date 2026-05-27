@@ -60,6 +60,14 @@ export async function zoekInteresses(studentId: string) {
   return executeSearchOpp(studentId, "interesses hobby's passies van de leerling", 3)
 }
 
+export async function zoekConcreteInteresses(studentId: string) {
+  return executeSearchOpp(studentId, "interesse vakken activiteiten hobby gemotiveerd sterk in", 3)
+}
+
+export async function zoekIntegratieBeeld(studentId: string) {
+  return executeSearchOpp(studentId, "integratief beeld interesse nieuwsgierig passie karakter leerling", 2)
+}
+
 export async function zoekBeginsituatie(studentId: string) {
   return executeSearchOpp(studentId, "beginsituatie leerniveau didactische ontwikkeling van de leerling", 3)
 }

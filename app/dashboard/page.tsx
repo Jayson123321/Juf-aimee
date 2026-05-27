@@ -28,6 +28,7 @@ import {
   getBloomLevelLabel,
   getStudentAge,
 } from "@/lib/student-profile";
+import { computeSignals, generateSignalAdvice } from "@/lib/signals";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,9 @@ async function getDashboardStudents() {
           uitleg: true,
           bloomLevel: true,
           status: true,
+          createdAt: true,
+          submittedAt: true,
+          bloomNiveau: true,
         },
       },
     },
@@ -82,7 +86,7 @@ async function getDashboardStudents() {
     },
   });
 
-  return students.map((student) => {
+  return Promise.all(students.map(async (student) => {
     const presentation = deriveStudentPresentation({
       fullName: student.fullName,
       schoolHistory: student.profile?.schoolHistory,
@@ -93,6 +97,9 @@ async function getDashboardStudents() {
     const completedAssignments = student.assignments.filter(
       (assignment) => assignment.status === "COMPLETED",
     ).length;
+    const signals = computeSignals(student.assignments, student, student.teacherNotes ?? undefined);
+
+    const signalsWithAdvice = await generateSignalAdvice(student, signals);
 
     return {
       id: student.id,
@@ -105,9 +112,21 @@ async function getDashboardStudents() {
       completedAssignments,
       totalAssignments: student.assignments.length,
       badge: getBloomAppearance(bloomLabel),
+      teacherNotes: student.teacherNotes ?? "",
+      signals: signalsWithAdvice,
     };
+  }));
+}
+
+
+async function saveTeacherNotes(studentId: string, notes: string) {
+  "use server";
+  await prisma.student.update({
+    where: { id: studentId },
+    data: { teacherNotes: notes },
   });
 }
+
 
 async function getTeacherName() {
   const cookieStore = await cookies();
@@ -379,35 +398,99 @@ function StudentCard({
           </span>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <div className="mb-1.5 flex justify-between text-sm">
-              <span className="font-medium text-gray-600">Voortgang</span>
-              <span className={`font-bold ${accent.text}`}>{student.progress}%</span>
-            </div>
-            <div
-              className={`h-2.5 overflow-hidden rounded-full ${accent.track}`}
-            >
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${accent.fill} transition-all`}
-                style={{ width: `${student.progress}%` }}
-              />
-            </div>
+      <div className="space-y-3">
+        <div>
+          <div className="mb-1 flex justify-between text-sm">
+            <span className="text-gray-600">Voortgang</span>
+            <span className="font-medium text-gray-800">{student.progress}%</span>
           </div>
 
-          <div>
-            <p className="mb-2 text-sm font-medium text-gray-600">Interesses</p>
-            <div className="flex flex-wrap gap-2">
-              {student.interests.map((interest) => (
-                <span
-                  key={interest}
-                  className={`rounded-full border px-2.5 py-1 text-xs font-medium ${accent.pill}`}
-                >
-                  {interest}
-                </span>
-              ))}
-            </div>
+          <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+            <div
+              className="h-full rounded-full bg-gray-800 transition-all"
+              style={{ width: `${student.progress}%` }}
+            />
           </div>
+          <div className="mt-1 text-xs text-gray-500">
+            
+            </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-sm text-gray-600">Interesses:</p>
+          <div className="flex flex-wrap gap-2">
+            {student.interests.map((interest) => (
+              <span
+                key={interest}
+                className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {student.signals.length > 0 && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-xs">
+            <div className="flex flex-col gap-1.5">
+              {student.signals.map((signal) => {
+                const isWarning = signal.variant === "warning";
+                const isPositive = signal.variant === "positive";
+                const dotClass = isWarning
+                  ? "bg-orange-400"
+                  : isPositive
+                    ? "bg-green-400"
+                    : "bg-blue-400";
+                const textClass = isWarning
+                  ? "text-orange-800"
+                  : isPositive
+                    ? "text-green-800"
+                    : "text-blue-800";
+                return (
+                  <div key={signal.type} className="flex items-start gap-2">
+                    <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${dotClass}`} />
+                    <span className={textClass}>{signal.teacher_message}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {student.signals[0]?.llm_feedback_advice && (
+              <div className="mt-2.5 border-t border-gray-200 pt-2.5 text-gray-600">
+                <span className="font-semibold text-purple-700">Juf Aimee: </span>
+                {student.signals[0].llm_feedback_advice}
+              </div>
+            )}
+
+            <details className="group mt-2.5 border-t border-gray-200 pt-2.5">
+              <summary className="cursor-pointer list-none text-xs font-medium text-gray-500 hover:text-gray-700">
+                <span className="group-open:hidden">💬 Wat denk jij?</span>
+                <span className="hidden group-open:inline">💬 Verberg</span>
+              </summary>
+              <form
+                action={async (formData: FormData) => {
+                  "use server";
+                  await saveTeacherNotes(student.id, formData.get("notes") as string);
+                }}
+                className="mt-2 flex flex-col gap-1"
+              >
+                <textarea
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  defaultValue={student.teacherNotes}
+                  name="notes"
+                  placeholder="Wat denkt u ? Heeft u aanvullende informatie of context die Juf Aimee moet weten? Voeg hier uw eigen notities toe. Deze kunnen helpen voor juf Aimee"
+                  rows={2}
+                />
+                <button
+                  className="self-end rounded-lg bg-gray-700 px-3 py-1 text-xs font-medium text-white hover:bg-gray-800"
+                  type="submit"
+                >
+                  Opslaan
+                </button>
+              </form>
+            </details>
+          </div>
+        )}
 
           <div className="border-t border-gray-100 pt-4">
             <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-600">
