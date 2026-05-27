@@ -41,6 +41,7 @@ export function generateGamePrompt(args: {
   judgeFeedback?: string;
   geschiedenis?: string;
   portfolioInsights?: PortfolioInsights;
+  chatSamenvatting?: string;
 }) {
   const {
     student,
@@ -53,6 +54,7 @@ export function generateGamePrompt(args: {
     judgeFeedback,
     geschiedenis,
     portfolioInsights,
+    chatSamenvatting,
   } = args;
 
   const oppBronnen = sources.length > 0
@@ -79,6 +81,9 @@ ${geschiedenis ?? "Geen eerdere opdrachten beschikbaar."}
 
 PORTFOLIO:
 ${portfolioInsights?.portfolioSummary ?? "Geen eerdere opdrachten beschikbaar."}
+
+RECENTE CHATINTERACTIE MET JUF AIMEE (gebruik dit om te zien waar de leerling hulp bij vroeg of vastliep):
+${chatSamenvatting?.trim() || "Geen chatinteracties beschikbaar."}
 
 INSTRUCTIE LEERKRACHT:
 ${teacherPrompt || "Maak het spel zo uitdagend en motiverend dat de leerling het écht wil uitspelen."}

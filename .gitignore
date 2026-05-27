@@ -14,14 +14,19 @@
 !.yarn/releases
 !.yarn/versions
 OPP_bestanden
+/package-lock.json
+/package.json
+
 # testing
 /coverage
+
 
 # next.js
 /.next/
 /node_modules/
 /out/
 /public/
+
 
 # Prisma generated client
 generated/

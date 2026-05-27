@@ -1,4 +1,4 @@
-import { ASSISTANT_MODEL, GEN_MODEL, ollama } from "@/lib/ollama"
+import { ASSISTANT_MODEL, DRAWING_MODEL, GEN_MODEL, ollama } from "@/lib/ollama"
 import type { Message, Tool } from "ollama"
 
 /**
@@ -9,7 +9,7 @@ import type { Message, Tool } from "ollama"
  * De beschrijving van de 3 kandidaten per rol staat als commentaar erboven.
  */
 
-export type LLMRole = "planner" | "coder" | "vision" | "image" | "assistant"
+export type LLMRole = "planner" | "coder" | "vision" | "drawing" | "image" | "assistant"
 
 type RoleConfig = {
   model: string
@@ -123,7 +123,39 @@ Analyseer de afbeelding die de leerling uploadt en geef terug:
 Antwoord in het Nederlands, kort en feitelijk.`,
   },
 
-  // 4. De Kunstenaar — Educatieve afbeeldingen
+  // 4. De Tekeningbeoordelaar — Feedback op leerlingtekeningen
+  // Kandidaten:
+  //  [1] llava:13b   (dedicated vision model, lokaal via Ollama — privacy first)
+  //  [2] llava:7b    (lichtere fallback voor machines zonder GPU)
+  drawing: {
+    model: DRAWING_MODEL,
+    description:
+      "Analyseert een tekening van een leerling en genereert gestructureerde feedbacksuggesties voor de leerkracht.",
+    prompt: `Je schrijft kant-en-klare feedback namens de leraar op een tekening van een hoogbegaafde leerling (8-12 jaar). De leraar kopieert jouw tekst direct.
+
+BELANGRIJK: Gebruik EXACT het onderstaande formaat. Geen extra alinea's, geen extra tekst, geen andere kopjes.
+
+---
+[Één enthousiaste openingszin over wat de leerling heeft getekend.]
+
+Opdracht begrepen?
+[Ja of nee] + één zin toelichting.
+
+Sterke punten:
+- [Eerste sterk punt: concreet en specifiek]
+- [Tweede sterk punt: benoem een doordachte keuze van de leerling]
+
+Verbeterpunten:
+- [Eerste verbeterpunt als reflectievraag: "Hoe zou je...?" of "Wat als je...?"]
+- [Tweede verbeterpunt als reflectievraag die verder laat nadenken]
+
+[Één aanmoedigende afsluitende zin.]
+---
+
+Schrijf in correct, warm Nederlands. Vervang de tekst tussen [ ] door jouw eigen tekst. Gebruik alleen dit formaat, niets meer.`,
+  },
+
+  // 5. De Kunstenaar — Educatieve afbeeldingen
   // Kandidaten:
   //  [1] stable-diffusion-3.5  (praktische keuze voor 24GB VRAM, stabiel voor eerste render én hergeneratie)
   //  [2] flux.1-kontext        (mooie edit-kwaliteit, maar zwaar op 24GB)
