@@ -86,7 +86,9 @@ async function getDashboardStudents() {
     },
   });
 
-  return Promise.all(students.map(async (student) => {
+  // Sequentieel verwerken om Ollama niet te overbelasten met gelijktijdige requests
+  const results = [];
+  for (const student of students) {
     const presentation = deriveStudentPresentation({
       fullName: student.fullName,
       schoolHistory: student.profile?.schoolHistory,
@@ -101,7 +103,7 @@ async function getDashboardStudents() {
 
     const signalsWithAdvice = await generateSignalAdvice(student, signals);
 
-    return {
+    results.push({
       id: student.id,
       name: student.fullName,
       age: getStudentAge(student.dateOfBirth),
@@ -114,8 +116,9 @@ async function getDashboardStudents() {
       badge: getBloomAppearance(bloomLabel),
       teacherNotes: student.teacherNotes ?? "",
       signals: signalsWithAdvice,
-    };
-  }));
+    });
+  }
+  return results;
 }
 
 
