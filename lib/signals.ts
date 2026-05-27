@@ -32,13 +32,14 @@ export function computeSignals(assignments: SignalsForDashboard[], student: Stud
         .sort((a, b) => (b.submittedAt?.getTime() ?? 0) - (a.submittedAt?.getTime() ?? 0))
         .slice(0, 2);
 
-    const hasAssignmentToday = assignments.some(a => a.createdAt.toDateString() === today.toDateString());
     const hasCompletedToday = assignments.some(a =>
         a.status === "COMPLETED" && a.submittedAt?.toDateString() === today.toDateString()
     );
     const assignmentsCompletedToday = assignments.filter(a =>
         a.status === "COMPLETED" && a.submittedAt?.toDateString() === today.toDateString()
     );
+    const hasPendingAssignment = assignments.some(a => a.status !== "COMPLETED");
+    const hasEverCompleted = assignments.some(a => a.status === "COMPLETED");
 
     if (lastTwoDoneAssignments.length === 2 && lastTwoDoneAssignments[0].bloomNiveau === lastTwoDoneAssignments[1].bloomNiveau) {
         signals.push({
@@ -51,14 +52,19 @@ export function computeSignals(assignments: SignalsForDashboard[], student: Stud
         });
     }
 
-    if (hasAssignmentToday && !hasCompletedToday) {
+    if (hasPendingAssignment && !hasCompletedToday) {
+        const teacher_message = hasEverCompleted
+            ? `${student.fullName} heeft vandaag nog geen opdracht afgerond.`
+            : `${student.fullName} heeft nog geen enkele opdracht afgerond.`;
         signals.push({
             type: "taakbetrokkenheid",
             variant: "warning",
-            teacher_message: `${student.fullName} heeft vandaag nog geen opdracht afgerond.`,
+            teacher_message,
             teacher_feedback_advice,
-            llm_instruction: `De leerling heeft vandaag nog geen opdracht afgerond.${teacher_feedback_advice ? ` Docent advies: ${teacher_feedback_advice}` : ""} Adviseer de docent om te achterhalen waarom, en stel voor een laagdrempelige opdracht aan te bieden.`,
-            adviceJufAimee: `Vraag de docent te achterhalen waarom ${student.fullName} vandaag niets heeft afgerond, en stel voor een korte laagdrempelige opdracht aan te bieden.`,
+            llm_instruction: `De leerling heeft openstaande opdrachten maar heeft${hasEverCompleted ? " vandaag" : ""} nog niets afgerond.${teacher_feedback_advice ? ` Docent advies: ${teacher_feedback_advice}` : ""} Adviseer de docent om te achterhalen waarom, en stel voor een laagdrempelige opdracht aan te bieden.`,
+            adviceJufAimee: hasEverCompleted
+                ? `Vraag de docent te achterhalen waarom ${student.fullName} vandaag niets heeft afgerond, en stel voor een korte laagdrempelige opdracht aan te bieden.`
+                : `${student.fullName} heeft nog niets afgerond — vraag de docent of hij/zij even polshoogte kan nemen en misschien een laagdrempelige startopdracht kan aanbieden.`,
         });
     }
 
