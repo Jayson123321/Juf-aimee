@@ -31,7 +31,10 @@ export function TeacherFeedbackForm({
       const response = await fetch("/api/analyze-drawing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId: imageSubmissionId }),
+        body: JSON.stringify({
+          submissionId: imageSubmissionId,
+          existingFeedback: feedback.trim() || null,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Analyse mislukt.");

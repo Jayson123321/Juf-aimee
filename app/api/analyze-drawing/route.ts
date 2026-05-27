@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ollama } from "@/lib/ollama"
 import { prisma } from "@/lib/db"
-
-const VISION_MODEL = "llava:7b"
+import { MODELS } from "@/lib/llm-models"
 
 export async function POST(req: NextRequest) {
-  const { submissionId } = await req.json()
+  const { submissionId, existingFeedback } = await req.json()
 
   if (!submissionId) {
     return NextResponse.json({ error: "submissionId is verplicht." }, { status: 400 })
@@ -24,35 +23,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Submission niet gevonden." }, { status: 404 })
   }
 
-  const prompt = `Je bent een leerkracht die een tekening van een leerling beoordeelt.
-${submission.assignment.description ? `De opdracht was: "${submission.assignment.description}"` : ""}
+  const drawingConfig = MODELS.drawing
+  const opdrachtContext = existingFeedback
+    ? `De opdracht was: "${submission.assignment.description ?? "onbekend"}"
 
-Geef feedback in precies dit formaat (gebruik lege regels tussen de secties):
+Er is al een eerdere analyse gedaan. Vul deze aan met ontbrekende of onvolledige onderdelen. Vervang geen goede informatie, voeg alleen toe wat mist of verbeter wat onduidelijk is.
 
-Wat is er te zien?
-[Beschrijf kort en concreet wat er op de tekening staat.]
+EERDERE ANALYSE:
+${existingFeedback}
 
-Opdracht begrepen?
-[Heeft de leerling de opdracht begrepen en uitgevoerd? Leg kort uit waarom.]
-
-Sterke punten:
-- [sterk punt 1]
-- [sterk punt 2]
-- [sterk punt 3]
-
-Verbeterpunten:
-- [verbeterpunt 1]
-- [verbeterpunt 2]
-
-Schrijf in helder Nederlands. Wees concreet en positief. Gebruik alleen dit formaat, geen extra tekst erbuiten.`
+Geef de volledige verbeterde versie terug in hetzelfde formaat.`
+    : submission.assignment.description
+      ? `De opdracht was: "${submission.assignment.description}"\n\nAnalyseer nu de tekening van de leerling.`
+      : "Analyseer de tekening van de leerling."
 
   try {
     const response = await ollama.chat({
-      model: VISION_MODEL,
+      model: drawingConfig.model,
       messages: [
         {
+          role: "system",
+          content: drawingConfig.prompt,
+        },
+        {
           role: "user",
-          content: prompt,
+          content: opdrachtContext,
           images: [submission.filePath],
         },
       ],
@@ -63,6 +58,7 @@ Schrijf in helder Nederlands. Wees concreet en positief. Gebruik alleen dit form
     const analysis = response.message.content?.trim() ?? ""
     return NextResponse.json({ analysis })
   } catch (error) {
+    console.error("[analyze-drawing] Fout:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Analyse mislukt." },
       { status: 500 },
