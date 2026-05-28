@@ -17,13 +17,14 @@ import {
   X,
 } from "lucide-react";
 import aimeePortrait from "@/app/Images/Aimee.png";
+import resourcesImage from "@/app/Images/resources-2.png";
 
 type AudienceKey = "leerlingen" | "leerkrachten" | "scholen";
 
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeAudience, setActiveAudience] = useState<AudienceKey>("leerlingen");
-  const [demoTopic, setDemoTopic] = useState("fotosynthese");
+  const [demoTopic, setDemoTopic] = useState("Fotosynthese bij planten");
 
   const features = [
     {
@@ -111,7 +112,7 @@ export default function LandingPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#FFF8E7] text-stone-900 overflow-x-hidden"
+      className="min-h-screen bg-[#FFF8E7] text-[#030213] overflow-x-hidden"
       style={{ fontFamily: '"Nunito", "Quicksand", system-ui, sans-serif' }}
     >
       <style>{`
@@ -120,16 +121,39 @@ export default function LandingPage() {
         .squiggle { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='8' viewBox='0 0 100 8'%3E%3Cpath d='M0 4 Q 12.5 0, 25 4 T 50 4 T 75 4 T 100 4' stroke='%23FB923C' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: repeat-x; background-position: bottom; padding-bottom: 8px; }
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .animate-marquee { animation: marquee 25s linear infinite; }
+        @keyframes glassShine {
+          0% { background-position: 200% center; }
+          100% { background-position: -200% center; }
+        }
+        .glass-shine {
+          background-image: linear-gradient(
+            110deg,
+            #030213 0%,
+            #030213 35%,
+            rgba(251, 146, 60, 0.9) 46%,
+            #ffffff 50%,
+            rgba(251, 146, 60, 0.9) 54%,
+            #030213 65%,
+            #030213 100%
+          );
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+          animation: glassShine 5.5s linear infinite;
+          padding: 0 0.05em;
+        }
       `}</style>
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-[#FFF8E7]/80 border-b-4 border-stone-900">
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-[#FFF8E7]/80 border-b-4 border-[#030213]">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative w-11 h-11 overflow-hidden rounded-2xl border-2 border-stone-900 -rotate-6">
-              <Image alt="Juf Aimee" src={aimeePortrait} fill sizes="44px" className="object-cover" />
+            <div className="relative w-16 h-16 overflow-hidden rounded-2xl border-2 border-[#030213] -rotate-6">
+              <Image alt="Juf Aimee" src={aimeePortrait} fill sizes="64px" className="object-cover" />
             </div>
-            <span className="display-font text-2xl font-black">Juf Aimee</span>
+            <span className="display-font text-4xl font-black">Juf Aimee</span>
           </div>
           <div className="hidden md:flex items-center gap-8 font-bold">
             <a href="#features" className="hover:text-orange-500">Functies</a>
@@ -141,7 +165,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/register"
-              className="px-5 py-3 bg-stone-900 text-amber-300 rounded-full font-bold border-2 border-stone-900 hover:bg-orange-500 hover:text-stone-900 transition"
+              className="px-5 py-3 bg-[#030213] text-white rounded-full font-bold border-2 border-[#030213] hover:bg-orange-500 hover:text-[#030213] transition"
             >
               Registreren →
             </Link>
@@ -151,7 +175,7 @@ export default function LandingPage() {
           </button>
         </div>
         {mobileOpen && (
-          <div className="md:hidden border-t-2 border-stone-900 bg-[#FFF8E7] px-6 py-4 flex flex-col gap-3 font-bold">
+          <div className="md:hidden border-t-2 border-[#030213] bg-[#FFF8E7] px-6 py-4 flex flex-col gap-3 font-bold">
             <a href="#features">Functies</a>
             <a href="#how">Hoe het werkt</a>
             <a href="#audiences">Voor wie</a>
@@ -159,7 +183,7 @@ export default function LandingPage() {
             <Link href="/login">Inloggen</Link>
             <Link
               href="/register"
-              className="px-5 py-3 bg-stone-900 text-amber-300 rounded-full font-bold w-fit"
+              className="px-5 py-3 bg-[#030213] text-white rounded-full font-bold w-fit"
             >
               Registreren →
             </Link>
@@ -172,12 +196,49 @@ export default function LandingPage() {
         <motion.div
           animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
           transition={{ duration: 6, repeat: Infinity }}
-          className="absolute top-10 right-10 w-20 h-20 bg-pink-300 rounded-full border-4 border-stone-900 hidden md:block"
+          className="absolute top-10 right-10 w-20 h-20 rounded-full border-4 border-[#030213] shadow-[4px_4px_0px_0px_rgba(3,2,19,1)] hidden md:block"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 30%, #fb923c 0%, #ea580c 45%, #1c1917 100%)",
+          }}
         />
+
+        {/* Floating "polaroid" with resources image, tucked under the ball */}
+        <motion.div
+          initial={{ opacity: 0, y: -10, rotate: 8 }}
+          animate={{
+            opacity: 1,
+            y: [0, -6, 0],
+            rotate: [8, 11, 8],
+          }}
+          transition={{
+            opacity: { delay: 0.5, duration: 0.4 },
+            y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+            rotate: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+          }}
+          whileHover={{ rotate: 0, scale: 1.05 }}
+          className="absolute top-36 right-0 w-36 h-36 lg:w-40 lg:h-40 z-20 hidden md:block"
+        >
+          <div className="relative w-full h-full bg-white border-4 border-[#030213] rounded-2xl p-2 shadow-[6px_6px_0px_0px_rgba(3,2,19,1)]">
+            <div className="relative w-full h-full overflow-hidden rounded-lg bg-amber-50">
+              <Image
+                src={resourcesImage}
+                alt="Bronnen en lesmateriaal"
+                fill
+                sizes="(min-width: 1024px) 192px, 176px"
+                className="object-contain p-1"
+              />
+            </div>
+            <div
+              className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3.5 bg-amber-300 border-2 border-[#030213] rounded-sm rotate-2"
+              aria-hidden
+            />
+          </div>
+        </motion.div>
         <motion.div
           animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
           transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-          className="absolute top-40 left-4 w-12 h-12 bg-sky-400 border-4 border-stone-900 hidden md:block"
+          className="absolute top-14 left-4 w-12 h-12 bg-sky-400 border-4 border-[#030213] hidden md:block"
           style={{ borderRadius: "30% 70% 70% 30% / 30% 30% 70% 70%" }}
         />
         <motion.div
@@ -193,7 +254,7 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-lime-300 border-2 border-stone-900 rounded-full font-bold text-sm mb-6 -rotate-1"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-lime-300 border-2 border-[#030213] rounded-full font-bold text-sm mb-6 ml-10 -rotate-1"
             >
               <Sparkles className="w-4 h-4" /> Gemaakt met leerkrachten, voor iedereen
             </motion.div>
@@ -201,13 +262,9 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="display-font text-5xl md:text-7xl font-black leading-[1.05] mb-6"
+              className="display-font text-5xl md:text-[4rem] font-black leading-[0.9] mb-6"
             >
-              Leren dat <span className="squiggle">echt</span>
-              <br />
-              <span className="bg-amber-300 px-3 inline-block -rotate-1 border-4 border-stone-900 rounded-2xl">
-                bij je past.
-              </span>
+              <span className="glass-shine">Leren dat echt bij jij past.</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -215,9 +272,18 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               className="text-xl text-stone-700 mb-8 max-w-lg leading-relaxed"
             >
-              Een AI-leerbuddy voor leerlingen, een co-pilot voor leerkrachten en een
-              dashboard voor scholen. Eén platform. Uren terug in je week. Nieuwsgierigheid,
-              op aanvraag.
+              Een{" "}
+              <span className="font-black text-orange-500">leerbuddy</span>{" "}
+              voor leerlingen, een{" "}
+              <span className="font-black text-orange-500">copilot</span>{" "}
+              voor leerkrachten en een{" "}
+              <span className="font-black text-orange-500 squiggle">dashboard</span>{" "}
+              voor scholen. Drie rollen, één platform.{" "}
+              <span className="font-black bg-amber-300 px-1.5 rounded border-2 border-[#030213] inline-block -rotate-1 translate-y-2">
+                Uren terug
+              </span>{" "}
+              in je week. Nieuwsgierigheid,{" "}
+              <span className="italic font-extrabold text-orange-500">op aanvraag</span>.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -227,13 +293,13 @@ export default function LandingPage() {
             >
               <Link
                 href="/register"
-                className="px-7 py-4 bg-orange-500 text-white rounded-full font-bold text-lg border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(28,25,23,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(28,25,23,1)] transition-all"
+                className="px-7 py-4 bg-orange-500 text-white rounded-full font-bold text-lg border-4 border-[#030213] shadow-[6px_6px_0px_0px_rgba(3,2,19,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(3,2,19,1)] transition-all"
               >
                 Registreren →
               </Link>
               <Link
                 href="/login"
-                className="px-7 py-4 bg-white rounded-full font-bold text-lg border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(28,25,23,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(28,25,23,1)] transition-all"
+                className="px-7 py-4 bg-white rounded-full font-bold text-lg border-4 border-[#030213] shadow-[6px_6px_0px_0px_rgba(3,2,19,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(3,2,19,1)] transition-all"
               >
                 Inloggen
               </Link>
@@ -241,7 +307,7 @@ export default function LandingPage() {
             <div className="mt-8 flex items-center gap-3 text-sm font-bold text-stone-600">
               <div className="flex -space-x-2">
                 {["bg-pink-400", "bg-sky-400", "bg-amber-400", "bg-lime-400"].map((c, i) => (
-                  <div key={i} className={`w-8 h-8 ${c} rounded-full border-2 border-stone-900`} />
+                  <div key={i} className={`w-8 h-8 ${c} rounded-full border-2 border-[#030213]`} />
                 ))}
               </div>
               <span>Gebruikt door 12.000+ leerlingen & 400+ leerkrachten</span>
@@ -255,11 +321,18 @@ export default function LandingPage() {
             transition={{ delay: 0.4 }}
             className="relative"
           >
-            <div className="absolute -top-4 -left-4 w-full h-full bg-pink-300 rounded-3xl border-4 border-stone-900" />
-            <div className="relative bg-white rounded-3xl border-4 border-stone-900 p-6 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)]">
+            <div className="absolute -top-4 -left-4 w-full h-full bg-orange-300 rounded-3xl border-4 border-[#030213]" />
+            <div className="relative bg-white rounded-3xl border-4 border-[#030213] p-6 shadow-[8px_8px_0px_0px_rgba(3,2,19,1)]">
               <div className="flex items-center gap-3 mb-4">
-                <div className="relative w-12 h-12 overflow-hidden rounded-2xl border-2 border-stone-900 -rotate-6">
-                  <Image alt="Juf Aimee" src={aimeePortrait} fill sizes="48px" className="object-cover" />
+                <div className="relative w-24 h-24 overflow-hidden rounded-2xl border-2 border-[#030213] -rotate-6 bg-amber-100">
+                  <Image
+                    alt="Juf Aimee"
+                    src={aimeePortrait}
+                    fill
+                    sizes="96px"
+                    className="object-contain"
+                    style={{ objectPosition: "center 80%" }}
+                  />
                 </div>
                 <div>
                   <div className="font-black display-font text-lg">Probeer me!</div>
@@ -269,13 +342,13 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mb-3">
-                {["fotosynthese", "breuken", "de waterkringloop", "WO II"].map((t) => (
+                {["Fotosynthese bij planten", "Breuken vermenigvuldigen", "De waterkringloop", "Tweede Wereldoorlog"].map((t) => (
                   <button
                     key={t}
                     onClick={() => setDemoTopic(t)}
-                    className={`px-3 py-1 rounded-full border-2 border-stone-900 text-sm font-bold ${
+                    className={`px-3 py-1 rounded-full border-2 border-[#030213] text-sm font-bold ${
                       demoTopic === t
-                        ? "bg-stone-900 text-amber-300"
+                        ? "bg-[#030213] text-white"
                         : "bg-white hover:bg-amber-100"
                     }`}
                   >
@@ -290,22 +363,26 @@ export default function LandingPage() {
                   className="bg-amber-50 rounded-2xl border-2 border-dashed border-stone-400 p-5 text-sm text-stone-600 text-center font-semibold leading-relaxed"
                 >
                   <Sparkles className="w-5 h-5 mx-auto mb-2 text-orange-500" />
-                  Demo komt binnenkort. Log in als{" "}
-                  <span className="font-black text-stone-900">leerling</span> of{" "}
-                  <span className="font-black text-stone-900">leerkracht</span> voor een
-                  persoonlijke ervaring.
+                  Laat Juf Aimee een opdracht voor je maken — kies groep, vak en
+                  onderwerp en zie de magie.
+                  <Link
+                    href="/probeer-me"
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-full border-2 border-[#030213] font-bold text-sm hover:bg-[#030213] hover:text-white transition"
+                  >
+                    Probeer de demo →
+                  </Link>
                 </motion.div>
               </AnimatePresence>
               <div className="mt-4 flex gap-2">
                 <Link
                   href="/login"
-                  className="flex-1 px-4 py-3 bg-stone-900 text-amber-300 rounded-2xl border-2 border-stone-900 font-bold text-center hover:bg-orange-500 hover:text-stone-900 transition text-sm"
+                  className="flex-1 px-4 py-3 bg-[#030213] text-white rounded-2xl border-2 border-[#030213] font-bold text-center hover:bg-orange-500 hover:text-[#030213] transition text-sm"
                 >
                   Inloggen
                 </Link>
                 <Link
                   href="/register"
-                  className="flex-1 px-4 py-3 bg-white rounded-2xl border-2 border-stone-900 font-bold text-center hover:bg-amber-100 transition text-sm"
+                  className="flex-1 px-4 py-3 bg-white rounded-2xl border-2 border-[#030213] font-bold text-center hover:bg-amber-100 transition text-sm"
                 >
                   Account maken
                 </Link>
@@ -316,20 +393,20 @@ export default function LandingPage() {
       </section>
 
       {/* TRUST STRIP */}
-      <section className="bg-stone-900 text-amber-300 py-6 border-y-4 border-stone-900 overflow-hidden">
+      <section className="bg-[#030213] text-white py-6 border-y-4 border-[#030213] overflow-hidden">
         <div className="flex gap-12 animate-marquee whitespace-nowrap font-black display-font text-2xl">
           {Array(2)
             .fill(0)
             .map((_, i) => (
               <div key={i} className="flex gap-12 items-center shrink-0">
                 <span>★ VERTROUWD DOOR 400+ SCHOLEN</span>
-                <span className="text-pink-300">✦</span>
+                <span className="text-orange-400">✦</span>
                 <span>★ AVG-BEWUST</span>
-                <span className="text-pink-300">✦</span>
+                <span className="text-orange-400">✦</span>
                 <span>★ LEERKRACHTEN ZIJN FAN</span>
-                <span className="text-pink-300">✦</span>
+                <span className="text-orange-400">✦</span>
                 <span>★ KINDEREN GEBRUIKEN HET ECHT</span>
-                <span className="text-pink-300">✦</span>
+                <span className="text-orange-400">✦</span>
               </div>
             ))}
         </div>
@@ -338,7 +415,7 @@ export default function LandingPage() {
       {/* FEATURES */}
       <section id="features" className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
-          <div className="inline-block px-4 py-2 bg-violet-300 border-2 border-stone-900 rounded-full font-bold text-sm mb-4 rotate-1">
+          <div className="inline-block px-4 py-2 bg-violet-300 border-2 border-[#030213] rounded-full font-bold text-sm mb-4 rotate-1">
             Wat zit erin
           </div>
           <h2 className="display-font text-5xl md:text-6xl font-black mb-4">
@@ -359,9 +436,9 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
               whileHover={{ y: -6 }}
-              className={`${f.color} ${f.rotate} hover:rotate-0 transition-all duration-300 rounded-3xl border-4 border-stone-900 p-7 shadow-[6px_6px_0px_0px_rgba(28,25,23,1)]`}
+              className={`${f.color} ${f.rotate} hover:rotate-0 transition-all duration-300 rounded-3xl border-4 border-[#030213] p-7 shadow-[6px_6px_0px_0px_rgba(3,2,19,1)]`}
             >
-              <div className="w-14 h-14 bg-white rounded-2xl border-2 border-stone-900 flex items-center justify-center mb-5">
+              <div className="w-14 h-14 bg-white rounded-2xl border-2 border-[#030213] flex items-center justify-center mb-5">
                 <f.icon className="w-7 h-7" />
               </div>
               <h3 className="display-font text-2xl font-black mb-2">{f.title}</h3>
@@ -374,7 +451,7 @@ export default function LandingPage() {
       {/* HOW IT WORKS */}
       <section
         id="how"
-        className="bg-stone-900 text-[#FFF8E7] py-24 border-y-4 border-stone-900 relative overflow-hidden"
+        className="bg-[#030213] text-[#FFF8E7] py-24 border-y-4 border-[#030213] relative overflow-hidden"
       >
         <div
           className="absolute inset-0 opacity-10"
@@ -385,11 +462,11 @@ export default function LandingPage() {
         />
         <div className="max-w-7xl mx-auto px-6 relative">
           <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 bg-amber-300 text-stone-900 border-2 border-amber-300 rounded-full font-bold text-sm mb-4 -rotate-1">
+            <div className="inline-block px-4 py-2 bg-white text-[#030213] border-2 border-white rounded-full font-bold text-sm mb-4 -rotate-1">
               Hoe het werkt
             </div>
             <h2 className="display-font text-5xl md:text-6xl font-black">
-              Van aanmelden tot "wow"
+              Van aanmelden tot <span className="text-orange-400">"WoW"</span>
               <br />
               in drie stappen.
             </h2>
@@ -423,7 +500,7 @@ export default function LandingPage() {
                 transition={{ delay: i * 0.15 }}
                 className="relative"
               >
-                <div className={`${s.c} text-stone-900 rounded-3xl border-4 border-[#FFF8E7] p-7 h-full`}>
+                <div className={`${s.c} text-[#030213] rounded-3xl border-4 border-[#FFF8E7] p-7 h-full`}>
                   <div className="display-font text-6xl font-black mb-3 opacity-20">{s.n}</div>
                   <h3 className="display-font text-2xl font-black mb-3">{s.t}</h3>
                   <p className="font-semibold leading-relaxed">{s.d}</p>
@@ -437,7 +514,7 @@ export default function LandingPage() {
       {/* AUDIENCE TABS */}
       <section id="audiences" className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-2 bg-pink-300 border-2 border-stone-900 rounded-full font-bold text-sm mb-4 rotate-1">
+          <div className="inline-block px-4 py-2 bg-pink-300 border-2 border-[#030213] rounded-full font-bold text-sm mb-4 rotate-1">
             Voor wie je ook bent
           </div>
           <h2 className="display-font text-5xl md:text-6xl font-black">
@@ -449,9 +526,9 @@ export default function LandingPage() {
             <button
               key={k}
               onClick={() => setActiveAudience(k)}
-              className={`px-6 py-3 rounded-full border-4 border-stone-900 font-bold transition ${
+              className={`px-6 py-3 rounded-full border-4 border-[#030213] font-bold transition ${
                 activeAudience === k
-                  ? "bg-stone-900 text-amber-300 shadow-[4px_4px_0px_0px_rgba(28,25,23,1)]"
+                  ? "bg-[#030213] text-white shadow-[4px_4px_0px_0px_rgba(3,2,19,1)]"
                   : "bg-white hover:bg-amber-100"
               }`}
             >
@@ -463,7 +540,7 @@ export default function LandingPage() {
           key={activeAudience}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-200 rounded-3xl border-4 border-stone-900 p-10 md:p-14 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)]"
+          className="bg-amber-200 rounded-3xl border-4 border-[#030213] p-10 md:p-14 shadow-[8px_8px_0px_0px_rgba(3,2,19,1)]"
         >
           <div className="grid md:grid-cols-2 gap-10 items-center">
             <div>
@@ -474,7 +551,7 @@ export default function LandingPage() {
               <p className="text-xl font-semibold mb-6">{audiences[activeAudience].sub}</p>
               <Link
                 href="/register"
-                className="px-6 py-3 bg-stone-900 text-amber-300 rounded-full font-bold border-2 border-stone-900 hover:bg-orange-500 hover:text-stone-900 transition inline-flex items-center gap-2"
+                className="px-6 py-3 bg-[#030213] text-white rounded-full font-bold border-2 border-[#030213] hover:bg-orange-500 hover:text-[#030213] transition inline-flex items-center gap-2"
               >
                 Aan de slag <ArrowRight className="w-4 h-4" />
               </Link>
@@ -486,9 +563,9 @@ export default function LandingPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="flex items-start gap-3 bg-white rounded-2xl border-2 border-stone-900 p-4 font-semibold"
+                  className="flex items-start gap-3 bg-white rounded-2xl border-2 border-[#030213] p-4 font-semibold"
                 >
-                  <div className="w-6 h-6 bg-lime-400 rounded-full border-2 border-stone-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-6 h-6 bg-lime-400 rounded-full border-2 border-[#030213] flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="w-3 h-3" strokeWidth={3} />
                   </div>
                   {b}
@@ -513,7 +590,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className={`${s.c} rounded-3xl border-4 border-stone-900 p-8 text-center shadow-[6px_6px_0px_0px_rgba(28,25,23,1)]`}
+              className={`${s.c} rounded-3xl border-4 border-[#030213] p-8 text-center shadow-[6px_6px_0px_0px_rgba(3,2,19,1)]`}
             >
               <div className="display-font text-6xl md:text-7xl font-black mb-2">{s.n}</div>
               <div className="font-bold">{s.l}</div>
@@ -528,7 +605,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-white rounded-3xl border-4 border-stone-900 p-10 md:p-14 shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] relative"
+          className="bg-white rounded-3xl border-4 border-[#030213] p-10 md:p-14 shadow-[8px_8px_0px_0px_rgba(3,2,19,1)] relative"
         >
           <div className="display-font text-8xl absolute top-2 left-6 text-amber-300">"</div>
           <p className="display-font text-2xl md:text-3xl font-black leading-snug mb-6 relative">
@@ -539,7 +616,7 @@ export default function LandingPage() {
             tot het kwartje valt. Voor het eerst zie ik kinderen vrijwillig verder werken.
           </p>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-pink-300 rounded-full border-2 border-stone-900" />
+            <div className="w-12 h-12 bg-pink-300 rounded-full border-2 border-[#030213]" />
             <div>
               <div className="font-black">Juf Sanne</div>
               <div className="text-sm text-stone-600 font-semibold">
@@ -552,7 +629,7 @@ export default function LandingPage() {
 
       {/* FINAL CTA */}
       <section className="max-w-7xl mx-auto px-6 pb-24">
-        <div className="bg-orange-400 rounded-[40px] border-4 border-stone-900 p-12 md:p-20 text-center relative overflow-hidden shadow-[10px_10px_0px_0px_rgba(28,25,23,1)]">
+        <div className="bg-orange-400 rounded-[40px] border-4 border-[#030213] p-12 md:p-20 text-center relative overflow-hidden shadow-[10px_10px_0px_0px_rgba(3,2,19,1)]">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
@@ -579,13 +656,13 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-4 relative">
             <Link
               href="/register"
-              className="px-8 py-4 bg-stone-900 text-amber-300 rounded-full font-bold text-lg border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.6)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="px-8 py-4 bg-[#030213] text-white rounded-full font-bold text-lg border-4 border-[#030213] shadow-[6px_6px_0px_0px_rgba(255,255,255,0.6)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
             >
               Registreren →
             </Link>
             <Link
               href="/login"
-              className="px-8 py-4 bg-white rounded-full font-bold text-lg border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.6)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="px-8 py-4 bg-white rounded-full font-bold text-lg border-4 border-[#030213] shadow-[6px_6px_0px_0px_rgba(255,255,255,0.6)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
             >
               Inloggen
             </Link>
@@ -594,12 +671,12 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-stone-900 text-[#FFF8E7] py-12 border-t-4 border-stone-900">
+      <footer className="bg-[#030213] text-[#FFF8E7] py-12 border-t-4 border-[#030213]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="relative w-10 h-10 overflow-hidden rounded-2xl border-2 border-amber-300 -rotate-6">
+                <div className="relative w-10 h-10 overflow-hidden rounded-2xl border-2 border-white -rotate-6">
                   <Image alt="Juf Aimee" src={aimeePortrait} fill sizes="40px" className="object-cover" />
                 </div>
                 <span className="display-font text-2xl font-black">Juf Aimee</span>
@@ -619,7 +696,7 @@ export default function LandingPage() {
                 <ul className="space-y-2 text-sm font-semibold opacity-70">
                   {s.l.map((li) => (
                     <li key={li}>
-                      <a href="#" className="hover:text-amber-300">
+                      <a href="#" className="hover:text-white">
                         {li}
                       </a>
                     </li>
