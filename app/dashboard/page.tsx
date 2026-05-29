@@ -29,6 +29,7 @@ import {
   getStudentAge,
 } from "@/lib/student-profile";
 import { computeSignals, generateSignalAdvice } from "@/lib/signals";
+import { getEmbedding } from "@/lib/ollama";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,24 @@ async function saveTeacherNotes(studentId: string, notes: string) {
     where: { id: studentId },
     data: { teacherNotes: notes },
   });
+
+  if (!notes.trim()) return;
+
+  const date = new Date().toLocaleDateString("nl-NL");
+  const chunkText = `[DOCENT NOTITIE - ${date}]: ${notes.trim()}`;
+
+  try {
+    const embedding = await getEmbedding(chunkText);
+    await prisma.$executeRaw`
+      INSERT INTO "OppChunk" ("studentId", "tekst", "embedding")
+      VALUES (${studentId}, ${chunkText}, ${`[${embedding.join(",")}]`}::vector)
+    `;
+  } catch {
+    await prisma.$executeRaw`
+      INSERT INTO "OppChunk" ("studentId", "tekst")
+      VALUES (${studentId}, ${chunkText})
+    `;
+  }
 }
 
 
