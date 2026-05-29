@@ -2,16 +2,29 @@ import { Student } from "@/generated/prisma/client";
 import { ollama, GEN_MODEL } from "@/lib/ollama";
 import { zoekConcreteInteresses, zoekIntegratieBeeld, zoekMotivatieEnWerkstijl } from "@/app/ai/tools/search_opp";
 
-export type SignalType = "capaciteit" | "taakbetrokkenheid" | "intellectueel" | "Psychomotorisch";
+export type SignalType = "capaciteit" | "taakbetrokkenheid" | "intellectueel" | "Psychomotorisch" | "voltooiingstijd";
 
 export type SignalVariant = "positive" | "warning" | "advice";
 
 export type SignalsForDashboard = {
     status: string;
     bloomNiveau: number | null;
+    estimatedTime: string | null;
     submittedAt: Date | null;
+    startedAt: Date | null;
     createdAt: Date;
 };
+
+function estimatedTimeToMinutes(estimatedTime: string): number {
+    if (estimatedTime.includes("Weekopdracht")) return 60 * 5 * 5;
+    if (estimatedTime.includes("Meerdere lessen")) return 60 * 3;
+    if (estimatedTime.includes("1,5 uur")) return 90;
+    if (estimatedTime.includes("2 uur")) return 120;
+    if (estimatedTime.includes("1 uur")) return 60;
+    const match = estimatedTime.match(/(\d+)\s*min/);
+    if (match) return parseInt(match[1]);
+    return 30;
+}
 
 export type Signal = {
     type: SignalType;
@@ -88,6 +101,58 @@ export function computeSignals(assignments: SignalsForDashboard[], student: Stud
             llm_instruction: `De leerling heeft een hoog werktempo. Genereer een uitdagende opdracht die meer diepgang vereist.`,
             adviceJufAimee: `${student.fullName} heeft een hoog werktempo — overweeg om de focus te verschuiven naar diepgang in plaats van meer opdrachten.`,
         });
+    }
+
+    const recentCompletedWithTime = assignments
+        .filter(a => a.status === "COMPLETED" && a.startedAt !== null && a.submittedAt !== null && a.estimatedTime !== null)
+        .sort((a, b) => (b.submittedAt?.getTime() ?? 0) - (a.submittedAt?.getTime() ?? 0))
+        .slice(0, 3);
+
+    for (const assignment of recentCompletedWithTime) {
+        if (!assignment.startedAt || !assignment.submittedAt) continue;
+        const completionMinutes = (assignment.submittedAt.getTime() - assignment.startedAt.getTime()) / 60000;
+        const expectedMinutes = assignment.estimatedTime
+            ? estimatedTimeToMinutes(assignment.estimatedTime)
+            : null;
+        if (!expectedMinutes || completionMinutes <= 0) continue;
+
+        const ratio = completionMinutes / expectedMinutes;
+
+        if (ratio < 0.4) {
+            signals.push({
+                type: "voltooiingstijd",
+                variant: "advice",
+                teacher_message: `${student.fullName} voltooide een opdracht in ${Math.round(completionMinutes)} min (verwacht: ~${expectedMinutes} min) — veel sneller dan verwacht.`,
+                teacher_feedback_advice,
+                llm_instruction: `De leerling voltooide een opdracht in slechts ${Math.round(completionMinutes)} minuten terwijl ${expectedMinutes} minuten verwacht werd. Dit kan duiden op onderbenutting. Adviseer de docent een uitdagendere opdracht aan te bieden.`,
+                adviceJufAimee: `${student.fullName} voltooide de opdracht in slechts ${Math.round(completionMinutes)} minuten — veel sneller dan de verwachte ${expectedMinutes} minuten. Misschien is een uitdagendere opdracht op zijn/haar plaats?`,
+            });
+            break;
+        }
+
+        if (ratio > 2.0) {
+            signals.push({
+                type: "voltooiingstijd",
+                variant: "warning",
+                teacher_message: `${student.fullName} deed er ${Math.round(completionMinutes)} min over (verwacht: ~${expectedMinutes} min) — mogelijk vastgelopen.`,
+                teacher_feedback_advice,
+                llm_instruction: `De leerling deed er ${Math.round(completionMinutes)} minuten over terwijl ${expectedMinutes} minuten verwacht werd. De leerling heeft mogelijk moeite gehad met de opdracht. Adviseer de docent te achterhalen of de leerling hulp nodig had en overweeg een laagdrempeliger vervolgopdracht.`,
+                adviceJufAimee: `${student.fullName} deed er ${Math.round(completionMinutes)} minuten over — ruim langer dan verwacht. Misschien liep hij/zij ergens op vast?`,
+            });
+            break;
+        }
+
+        if (ratio >= 0.6 && ratio <= 1.4) {
+            signals.push({
+                type: "voltooiingstijd",
+                variant: "positive",
+                teacher_message: `${student.fullName} voltooide een opdracht in ${Math.round(completionMinutes)} min (verwacht: ~${expectedMinutes} min) — precies op tempo.`,
+                teacher_feedback_advice,
+                llm_instruction: `De leerling werkt op het juiste tempo: ${Math.round(completionMinutes)} minuten voor een opdracht van ~${expectedMinutes} minuten. Geef een positief signaal aan de docent.`,
+                adviceJufAimee: `${student.fullName} werkte precies op het verwachte tempo — dat is een goed teken dat het niveau goed aansluit!`,
+            });
+            break;
+        }
     }
 
     const priority: Record<SignalVariant, number> = { warning: 0, advice: 1, positive: 2 };

@@ -117,6 +117,7 @@ export async function POST(req: NextRequest) {
       data: {
         studentWork: work,
         savedAt: new Date(),
+        startedAt: assignment.status === "PENDING" && work.trim() ? new Date() : undefined,
         status: work.trim() ? "IN_PROGRESS" : assignment.status,
       },
       select: {

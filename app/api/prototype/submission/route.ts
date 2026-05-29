@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (assignment.status === "PENDING") {
       await prisma.assignment.update({
         where: { id: assignmentId },
-        data: { status: "IN_PROGRESS", savedAt: new Date() },
+        data: { status: "IN_PROGRESS", savedAt: new Date(), startedAt: new Date() },
       });
     }
 

@@ -76,6 +76,8 @@ async function getDashboardStudents() {
           bloomLevel: true,
           status: true,
           createdAt: true,
+          estimatedTime: true,
+          startedAt: true,
           submittedAt: true,
           bloomNiveau: true,
         },

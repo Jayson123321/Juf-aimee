@@ -29,6 +29,9 @@ Het doel is niet om de leraar te vervangen, maar om aandachtspunten zichtbaar te
 | `taakbetrokkenheid` | Openstaande opdrachten, maar vandaag niets ingeleverd | `warning` | Leerling lijkt niet actief betrokken |
 | `intellectueel` | 3 of meer opdrachten afgerond op Bloom-niveau 5 of 6 | `positive` | Leerling presteert consistent op hoog niveau |
 | `Psychomotorisch` | 3 of meer opdrachten afgerond op één dag | `positive` | Leerling werkt in hoog tempo |
+| `voltooiingstijd` | Opdracht afgerond in minder dan 40% van de verwachte tijd | `advice` | Leerling werkt opvallend snel — overweeg uitdagendere opdracht |
+| `voltooiingstijd` | Opdracht afgerond in meer dan 200% van de verwachte tijd | `warning` | Leerling liep mogelijk vast — check of hulp nodig was |
+| `voltooiingstijd` | Opdracht afgerond tussen 60% en 140% van de verwachte tijd | `positive` | Leerling werkt op het juiste tempo voor het niveau |
 
 **Prioriteitsvolgorde bij weergave:**
 
@@ -68,6 +71,12 @@ INTELLECTUEEL
 PSYCHOMOTORISCH
   Als 3 of meer opdrachten vandaag zijn ingeleverd
   → Leerling werkt snel; overweeg verdieping in plaats van meer taken
+
+VOLTOOIINGSTIJD
+  Verwachte tijd komt uit de "Geschatte tijd"-dropdown die de leraar instelt bij het genereren
+  Als voltooiingstijd < 40% van verwacht  → advice:   leerling werkt veel te snel
+  Als voltooiingstijd > 200% van verwacht → warning:  leerling liep mogelijk vast
+  Als voltooiingstijd tussen 60%–140%     → positive: leerling werkt op het juiste tempo
 ```
 
 **Uitvoer per signaal:**

@@ -666,6 +666,7 @@ export async function POST(req: NextRequest) {
               : null,
           bloomLevel: resolvedBloom,
           bloomNiveau: bloomLevelToNumber(resolvedBloom),
+          estimatedTime: estimatedTime || null,
           status: "PENDING",
           assignmentType: isMc ? "MULTIPLE_CHOICE" : "TEXT",
           interactiveContent: isMc ? mcContent : undefined,

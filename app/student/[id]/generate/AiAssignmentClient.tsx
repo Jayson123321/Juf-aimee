@@ -675,6 +675,7 @@ export function AiAssignmentClient({
         studentId: student.id,
         focusArea: resolvedFocusArea,
         bloomLevel: selectedBloom,
+        estimatedTime,
         currentAssignment: {
           ...assignment,
           illustrationUrl: assignmentImage?.imageUrl,
