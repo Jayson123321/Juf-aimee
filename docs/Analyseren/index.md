@@ -14,6 +14,7 @@ In deze sectie vind je het literatuuronderzoek en de analyse van bestaande oplos
 | [RAG en Vector Database](RAG_en_Vector_Database.md) | Technisch onderzoek naar Retrieval Augmented Generation en vector databases |
 | [RAS Unified Pipeline](RAS_Unified_Pipeline.md) | Uitwerking van de RAS-pipeline (Retrieval And Structured Augmented Generation) |
 | [OPP Similarity Test](OPP-similarity-test.md) | Test voor het vergelijken van OPP-documenten via embeddings |
+| [Signalensysteem](Signalensysteem.md) | Hoe het systeem automatisch gedragspatronen bij leerlingen detecteert en vertaalt naar adviezen voor de leraar |
 
 ---
 
