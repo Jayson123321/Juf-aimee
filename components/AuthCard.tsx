@@ -41,8 +41,16 @@ export default function AuthCard({ initialMode, error }: Props) {
   const showError = error && mode === initialMode;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#1b2338] p-4 sm:p-6">
-      <div className="relative w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl bg-white md:min-h-[640px]">
+    <main className="relative min-h-screen flex items-center justify-center bg-[#030213] p-4 sm:p-6 overflow-hidden">
+      <div
+        className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(circle, #fff0e7 1px, transparent 1px)",
+          backgroundSize: "30px 30px",
+        }}
+        aria-hidden
+      />
+      <div className="relative w-full max-w-5xl rounded-3xl overflow-hidden border-4 border-orange-400 shadow-[10px_10px_0px_0px_rgba(251,146,60,1)] bg-white md:min-h-[640px]">
         {/* ---------------- LOGIN FORM (desktop: right half) ---------------- */}
         <motion.div
           inert={!isLogin}
@@ -53,7 +61,7 @@ export default function AuthCard({ initialMode, error }: Props) {
         >
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 relative rounded-xl overflow-hidden flex-shrink-0">
-              <Image src={AimeeImage} alt="Juf Aimee" fill className="object-contain" />
+              <Image src={AimeeImage} alt="Juf Aimee" fill sizes="48px" className="object-contain" />
             </div>
             <div>
               <h1 className="text-gray-900 text-lg font-bold leading-tight">Juf Aimee</h1>
@@ -63,7 +71,7 @@ export default function AuthCard({ initialMode, error }: Props) {
 
           {/* Mobile illustration */}
           <div className="md:hidden relative w-40 h-40 mx-auto">
-            <Image src={WelcomeImage} alt="Juf Aimee verwelkomt je" fill className="object-contain" priority />
+            <Image src={WelcomeImage} alt="Juf Aimee verwelkomt je" fill sizes="160px" className="object-contain" priority />
           </div>
 
           <div>
@@ -166,7 +174,7 @@ export default function AuthCard({ initialMode, error }: Props) {
         >
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 relative rounded-xl overflow-hidden flex-shrink-0">
-              <Image src={AimeeImage} alt="Juf Aimee" fill className="object-contain" />
+              <Image src={AimeeImage} alt="Juf Aimee" fill sizes="48px" className="object-contain" />
             </div>
             <div>
               <h1 className="text-gray-900 text-lg font-bold leading-tight">Juf Aimee</h1>
@@ -176,7 +184,7 @@ export default function AuthCard({ initialMode, error }: Props) {
 
           {/* Mobile illustration */}
           <div className="md:hidden relative w-40 h-40 mx-auto">
-            <Image src={WelcomeImage} alt="Juf Aimee verwelkomt je" fill className="object-contain" priority />
+            <Image src={WelcomeImage} alt="Juf Aimee verwelkomt je" fill sizes="160px" className="object-contain" priority />
           </div>
 
           <div>
@@ -302,7 +310,7 @@ export default function AuthCard({ initialMode, error }: Props) {
               className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg"
             >
               <span className="relative h-8 w-8 overflow-hidden rounded-full">
-                <Image src={AimeeImage} alt="" fill className="object-contain" />
+                <Image src={AimeeImage} alt="" fill sizes="32px" className="object-contain" />
               </span>
             </motion.span>
             <span className="text-orange-700 text-sm font-extrabold leading-tight">
@@ -311,7 +319,7 @@ export default function AuthCard({ initialMode, error }: Props) {
           </motion.div>
 
           <div className="relative w-100 h-100 rounded-3xl overflow-hidden drop-shadow-2xl">
-            <Image src={WelcomeImage} alt="Juf Aimee verwelkomt je" fill className="object-contain" priority />
+            <Image src={WelcomeImage} alt="Juf Aimee verwelkomt je" fill sizes="(max-width: 768px) 0px, 400px" className="object-contain" priority />
           </div>
 
           <AnimatePresence mode="wait" initial={false}>
