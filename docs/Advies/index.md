@@ -8,6 +8,7 @@ In deze sectie vind je de adviesrapporten die zijn opgesteld voor de opdrachtgev
 
 | Document | Beschrijving |
 |----------|--------------|
+| [Technisch overdrachts- en adviesdocument](technisch-overdrachtsdocument.md) | Overdrachtsadvies voor het team dat het project overneemt: architectuur, AI-pipelines, tech-debt, beveiliging en een geprioriteerde roadmap |
 | [Advies Juf Aimee](advies-juf-aimee.md) | Hoofdadvies met onderbouwde aanbevelingen voor het Juf Aimee platform |
 | [Advies Dashboard](advies_dashboard.md) | Specifieke aanbevelingen voor het leraarsdashboard |
 
