@@ -1,10 +1,9 @@
-# Technisch overdrachts- en adviesdocument
+# Technische overdracht — Juf Aimee
 
-> **Doelgroep:** het team dat dit project na ons overneemt.
-> **Doel:** in één document weten *wat er is gebouwd*, *hoe het technisch in elkaar zit*, *waar wij zijn geëindigd* en *wat de beste volgende stappen zijn* — inclusief de valkuilen die wij zijn tegengekomen.
->
+> **Voor:** het ontwikkelteam (ICT) dat dit project overneemt.
+> **Doel:** in één document weten *wat er is gebouwd*, *hoe het technisch in elkaar zit*, *waar wij zijn geëindigd* en *welke valkuilen we zijn tegengekomen*.
+> **Lees hier eerst bij:** het [strategische advies over de AI-oplossing](advies-ai-oplossing.md) (het *waarom* en de keuzes) en de [suggestie voor de werkwijze & vervolgwerk](backlog-volgende-team.md) (hoe je het kunt aanpakken).
 > **Opgesteld door:** Team Juf Aimee (Shehbaaz, Jayson, Mazen, Ruben) — Studio RAAI, HvA.
-> **Opdrachtgever:** Lectoraat Digital Life, Hogeschool van Amsterdam.
 
 ---
 
@@ -225,6 +224,7 @@ Geprioriteerd. Begin bovenaan.
 ### Fase 0 — Opstarten & schoonmaken (week 1–2)
 
 1. **Krijg het lokaal draaiend** met de checklist in §10. Lukt de cloud niet meteen: dat is normaal, plan campus-tijd in (wij liepen hier ook tegenaan, zie het [obstakel-logboek](../sprints/sprint3/obstakel-logboek.md)).
+2. **Trek het gelekte token in** en haal `model.env` uit de repo (zie §8). Dit is de allereerste commit van het nieuwe team.
 3. **Kies één route-boom** (`/student` + `/dashboard` aanbevolen) en verwijder de prototype-duplicaten.
 4. **Werk `web/CLAUDE.md` en de README bij** naar de huidige werkelijkheid (of laat ze verwijzen naar dít document).
 
