@@ -1,5 +1,8 @@
 nav:
   - index.md
+  - advies-ai-oplossing.md
+  - technisch-overdrachtsdocument.md
+  - backlog-volgende-team.md
   - advies-juf-aimee.md
   - advies_dashboard.md
   - advies-beslislogica-judge.md
