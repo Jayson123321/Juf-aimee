@@ -44,6 +44,7 @@ model Student {
   bloomNiveau      Int?
   teacherNotes     String?
   llmSignalAdvice  String?
+  signalsCachedAt  DateTime?
 
   primaryTeacherId String?
   primaryTeacher   User?   @relation("StudentPrimaryTeacher", fields: [primaryTeacherId], references: [id], onDelete: SetNull)
