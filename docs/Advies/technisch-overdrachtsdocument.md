@@ -225,7 +225,6 @@ Geprioriteerd. Begin bovenaan.
 ### Fase 0 — Opstarten & schoonmaken (week 1–2)
 
 1. **Krijg het lokaal draaiend** met de checklist in §10. Lukt de cloud niet meteen: dat is normaal, plan campus-tijd in (wij liepen hier ook tegenaan, zie het [obstakel-logboek](../sprints/sprint3/obstakel-logboek.md)).
-2. **Trek de HF-token in** en haal `model.env` uit de repo. Eerste commit van het nieuwe team.
 3. **Kies één route-boom** (`/student` + `/dashboard` aanbevolen) en verwijder de prototype-duplicaten.
 4. **Werk `web/CLAUDE.md` en de README bij** naar de huidige werkelijkheid (of laat ze verwijzen naar dít document).
 
@@ -260,7 +259,7 @@ npm install
 # 2. Database (Docker) — PostgreSQL + pgvector op poort 5433
 docker compose up -d postgres
 
-# 3. .env aanmaken (zie sjabloon hieronder)
+# 3. .env aanmaken (zie configuratie hieronder)
 
 # 4. Prisma client genereren + migraties draaien
 npx prisma generate
@@ -273,16 +272,41 @@ npm run ingest
 npm run dev   # http://localhost:3000
 ```
 
-**`.env`-sjabloon:**
+**Configuratie via `.env`:**
+
+De app leest alle omgevingsgebonden instellingen uit een `.env`-bestand in de projectroot. Dat bestand staat (terecht) in `.gitignore` en hoort **nooit** gecommit te worden — het bevat per-machine en gevoelige waarden. Maak het lokaal aan op basis van de variabelen die de code verwacht.
+
+!!! tip "Aanbevolen werkwijze: een `.env.example` in de repo"
+    Voeg een `.env.example` toe met **placeholder-waarden** (geen echte secrets) als gedeeld sjabloon. Iedereen kopieert die naar een eigen `.env` en vult zijn eigen waarden in:
+
+    ```bash
+    cp .env.example .env   # daarna .env invullen met je eigen waarden
+    ```
+
+De variabelen die het project gebruikt, met uitleg in plaats van concrete waarden:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/juf-aimee"
-OLLAMA_HOST=http://127.0.0.1:11435           # via SSH-tunnel naar de GPU-machine
-EMBED_MODEL="jeffh/intfloat-multilingual-e5-large:f16"
-GEN_MODEL=qwen3:14b
-ASSISTANT_MODEL=mistral-nemo:12b
-ASSIGNMENT_IMAGE_API_URL=http://127.0.0.1:8000/generate
+# Database — connection string naar je lokale PostgreSQL (Docker, pgvector).
+# Let op de niet-standaard poort uit docker-compose.yml.
+DATABASE_URL="postgresql://<user>:<password>@localhost:<poort>/<database>"
+
+# Ollama — host waar de LLM-runtime bereikbaar is.
+# Lokaal vaak via een SSH-tunnel naar de GPU-machine (zie hieronder).
+OLLAMA_HOST="http://127.0.0.1:<tunnel-poort>"
+
+# Modelnamen per rol — moeten matchen met de modellen die je hebt ge-`pull`-d in Ollama.
+EMBED_MODEL="<embedding-model>"
+GEN_MODEL="<generatie-model>"
+ASSISTANT_MODEL="<chat-model>"
+
+# Endpoint van de FastAPI image-service (lokaal of via tunnel).
+ASSIGNMENT_IMAGE_API_URL="http://127.0.0.1:<poort>/generate"
 ```
+
+> De exacte modelnamen, poorten en de standaardwaarden (fallbacks) staan in de code: [`lib/ollama.ts`](../../lib/ollama.ts) en [`lib/llm-models.ts`](../../lib/llm-models.ts). De poort van de database staat in [`docker-compose.yml`](../../docker-compose.yml). Houd één bron van waarheid aan (zie §7 en §9) zodat `.env`, code-defaults en documentatie niet uit elkaar lopen.
+
+!!! danger "Secrets horen niet in `.env`-bestanden die meegeleverd worden"
+    Voor echte geheimen (zoals API-tokens) geldt: nooit in de repo, ook niet in `model.env`. Gebruik een lokale `.env` (gitignored) of een secrets-manager, en injecteer ze als omgevingsvariabele. Zie [§8](#8-beveiliging-en-privacy) — er staat nu nog een token in de git-historie die ingetrokken moet worden.
 
 **Cloud/GPU (Ollama + image-service):** zie de stap-voor-stap opstartvolgorde in de [Technische handleiding AI-runtime](../Ontwerp/technische-handleiding-ai-runtime.md), inclusief het exacte SSH-tunnelcommando en welke modellen je moet `ollama pull`-en.
 
