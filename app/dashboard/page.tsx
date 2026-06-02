@@ -28,7 +28,7 @@ import {
   getBloomLevelLabel,
   getStudentAge,
 } from "@/lib/student-profile";
-import { computeSignals, generateSignalAdvice } from "@/lib/signals";
+import { computeSignals, generateSignalAdvice, type Signal } from "@/lib/signals";
 import { getEmbedding } from "@/lib/ollama";
 
 export const dynamic = "force-dynamic";
@@ -89,7 +89,21 @@ async function getDashboardStudents() {
     },
   });
 
-  // Sequentieel verwerken om Ollama niet te overbelasten met gelijktijdige requests
+  const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 uur
+  const now = Date.now();
+
+  function computeAssignmentsHash(assignments: Array<{ id: string; status: string; submittedAt: Date | null; bloomNiveau: number | null }>) {
+    const str = [...assignments]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(a => `${a.id}:${a.status}:${a.submittedAt?.toISOString() ?? ""}:${a.bloomNiveau ?? ""}`)
+      .join("|");
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    }
+    return h.toString(36);
+  }
+
   const results = [];
   for (const student of students) {
     const presentation = deriveStudentPresentation({
@@ -104,7 +118,37 @@ async function getDashboardStudents() {
     ).length;
     const signals = computeSignals(student.assignments, student, student.teacherNotes ?? undefined);
 
-    const signalsWithAdvice = await generateSignalAdvice(student, signals);
+    const currentHash = computeAssignmentsHash(student.assignments);
+    const cacheAge = student.signalsCachedAt ? now - student.signalsCachedAt.getTime() : Infinity;
+
+    let signalsWithAdvice: Signal[] = [];
+    let needsSave = false;
+    if (cacheAge < CACHE_TTL_MS && student.llmSignalAdvice) {
+      try {
+        const cached = JSON.parse(student.llmSignalAdvice);
+        if (cached.hash === currentHash) {
+          signalsWithAdvice = cached.signals;
+        } else {
+          signalsWithAdvice = await generateSignalAdvice(student, signals);
+          needsSave = true;
+        }
+      } catch {
+        signalsWithAdvice = await generateSignalAdvice(student, signals);
+        needsSave = true;
+      }
+    } else {
+      signalsWithAdvice = await generateSignalAdvice(student, signals);
+      needsSave = true;
+    }
+    if (needsSave) {
+      await prisma.student.update({
+        where: { id: student.id },
+        data: {
+          llmSignalAdvice: JSON.stringify({ hash: currentHash, signals: signalsWithAdvice }),
+          signalsCachedAt: new Date(),
+        },
+      });
+    }
 
     results.push({
       id: student.id,
@@ -129,7 +173,7 @@ async function saveTeacherNotes(studentId: string, notes: string) {
   "use server";
   await prisma.student.update({
     where: { id: studentId },
-    data: { teacherNotes: notes },
+    data: { teacherNotes: notes, llmSignalAdvice: null, signalsCachedAt: null },
   });
 
   if (!notes.trim()) return;
@@ -457,7 +501,7 @@ function StudentCard({
         {student.signals.length > 0 && (
           <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-xs">
             <div className="flex flex-col gap-1.5">
-              {student.signals.map((signal) => {
+              {student.signals.map((signal: Signal) => {
                 const isWarning = signal.variant === "warning";
                 const isPositive = signal.variant === "positive";
                 const dotClass = isWarning
