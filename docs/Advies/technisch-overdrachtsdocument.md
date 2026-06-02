@@ -2,7 +2,7 @@
 
 > **Voor:** het ontwikkelteam (ICT) dat dit project overneemt.
 > **Doel:** in één document weten *wat er is gebouwd*, *hoe het technisch in elkaar zit*, *waar wij zijn geëindigd* en *welke valkuilen we zijn tegengekomen*.
-> **Lees hier eerst bij:** het [strategische advies over de AI-oplossing](advies-ai-oplossing.md) (het *waarom* en de keuzes) en de [suggestie voor de werkwijze & vervolgwerk](backlog-volgende-team.md) (hoe je het kunt aanpakken).
+> **Lees hier eerst bij:** het [strategische advies over de AI-oplossing](advies-ai-oplossing.md) (het *waarom* en de keuzes achter dit project).
 > **Opgesteld door:** Team Juf Aimee (Shehbaaz, Jayson, Mazen, Ruben) — Studio RAAI, HvA.
 
 ---
