@@ -40,11 +40,39 @@ function chunkText(text: string, chunkSize = 400): string[] {
   return chunks.map(sanitizeChunkText).filter((c) => c.length > 50)
 }
 
+/**
+ * Sanitiseert een OPP-tekstchunk voordat die als RAG-context wordt opgeslagen.
+ *
+ * Verdedigingsstrategie — Indirect Prompt Injection / Context Poisoning
+ * (OWASP LLM01, arxiv.org/pdf/2507.13169 §3.1.2):
+ *
+ * mammoth.extractRawText() haalt ALLE tekst op uit een Word-document,
+ * inclusief tekst met witte kleur of w:vanish-vlag die onzichtbaar is voor
+ * de lezer. Zonder filtering kunnen kwaadaardige instructies verborgen in een
+ * OPP-document als OppChunk worden opgeslagen en via RAG de planner bereiken.
+ *
+ * Twee extra lagen bovenop de bestaande sanitisatie:
+ * 1. Verwijder expliciete injection-markers (SYSTEM, INST, PROMPT-blokken)
+ * 2. Verwijder bekende override-patronen (Nederlands + Engels)
+ */
 function sanitizeChunkText(text: string) {
   return text
     .normalize("NFKC")
     .replace(/\u0000/g, " ")
     .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ")
+    // Context poisoning defense — verwijder injection-markers
+    .replace(/\[\/?(?:SYSTEM|INST|PROMPT|SYS|CONTEXT)[^\]]*\]/gi, "")
+    .replace(/(?:^|\s)SYSTEM\s*:/gim, " ")
+    // Verwijder volledige zinnen met bekende injection-patronen
+    .replace(/negeer[^.!?]*?(instructies|profiel|opdracht|context)[^.!?]*[.!?]?/gi, "")
+    .replace(/genereer[^.!?]*?(makkelijkste|eenvoudigste|simpelste)[^.!?]*[.!?]?/gi, "")
+    .replace(/noem\s+geen[^.!?]*[.!?]?/gi, "")
+    .replace(/ignore\s+(all\s+)?(previous\s+)?instructions[^.!?]*[.!?]?/gi, "")
+    .replace(/je\s+bent\s+nu\s+een\s+andere[^.!?]*[.!?]?/gi, "")
+    .replace(/you\s+are\s+now\s+a\s+different[^.!?]*[.!?]?/gi, "")
+    // Opruimen van losse fragmenten na verwijdering
+    .replace(/\s+\.\s+/g, " ")
+    .replace(/\bvan\s+de\s+leerling\b(?!\s+\w)/gi, "")
     .replace(/\s+/g, " ")
     .trim()
 }
@@ -157,6 +185,7 @@ async function getOrCreateStudent(s: IngestStudent) {
       data: {
         groep: s.groep,
         bloomNiveau: s.bloomNiveau,
+
       },
     })
     console.log(`Student reused: ${updatedStudent.fullName} (id: ${updatedStudent.id})`)
@@ -176,12 +205,12 @@ async function getOrCreateStudent(s: IngestStudent) {
 
 async function main() {
   const students: IngestStudent[] = [
-    { fullName: "Julia van Loon",  groep: "6", bloomNiveau: 1, file: "OPP_1.docx" },
-    { fullName: "Milan de Groot",  groep: "6", bloomNiveau: 1, file: "OPP_2.docx" },
-    { fullName: "Sophie Meijer",   groep: "5", bloomNiveau: 1, file: "OPP_3.docx" },
-    { fullName: "Daan Verbeek",    groep: "6", bloomNiveau: 1, file: "OPP_4.docx" },
-    { fullName: "Emma Koster",     groep: "4", bloomNiveau: 1, file: "OPP_5.docx" },
-    { fullName: "Noah Smit",       groep: "6", bloomNiveau: 1, file: "OPP_6.docx" },
+    { fullName: "Julia van Loon",  groep: "6", bloomNiveau: 6, file: "OPP_1.docx" },
+    { fullName: "Milan de Groot",  groep: "6", bloomNiveau: 5, file: "OPP_2.docx" },
+    { fullName: "Sophie Meijer",   groep: "5", bloomNiveau: 5, file: "OPP_3_poison.docx" }, // TIJDELIJK: vergiftigd voor demo
+    { fullName: "Daan Verbeek",    groep: "6", bloomNiveau: 3, file: "OPP_4.docx" },
+    { fullName: "Emma Koster",     groep: "4", bloomNiveau: 4, file: "OPP_5.docx" },
+    { fullName: "Noah Smit",       groep: "6", bloomNiveau: 5, file: "OPP_6.docx" },
   ]
 
   for (const s of students) {
