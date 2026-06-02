@@ -37,8 +37,8 @@ print("=" * 60)
 
 resultaten = []
 
-for naam, pad in [("Origineel", "OPP_bestanden/OPP_1_backup.docx"),
-                  ("Vergiftigd", "OPP_bestanden/OPP_1.docx")]:
+for naam, pad in [("Origineel", "OPP_bestanden/OPP_3.docx"),
+                  ("Vergiftigd", "OPP_bestanden/OPP_3_poison.docx")]:
     print(f"\n--- {naam} ---")
     zichtbaar = extraheer_zichtbare_tekst(pad)
     alles = extraheer_alle_tekst(pad)
