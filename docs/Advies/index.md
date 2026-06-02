@@ -8,13 +8,12 @@ In deze sectie vind je de adviesrapporten die zijn opgesteld voor de opdrachtgev
 
 ### Overdracht & doorontwikkeling (realisatiefase, Ruben)
 
-Dit drieluik adviseert over de structurele AI-oplossing en helpt het volgende team starten. Lees ze in deze volgorde:
+Deze twee documenten adviseren over de structurele AI-oplossing en helpen het volgende team starten. Lees ze in deze volgorde:
 
 | Document | Voor wie | Beschrijving |
 |----------|----------|--------------|
 | [1. Advies: AI-oplossing borgen en doorontwikkelen](advies-ai-oplossing.md) | Opdrachtgever | Het strategische advies (*waarom*): kernadvies, drie onderbouwde AI-keuzes met afgewogen alternatieven, maatschappelijke impact en het gevraagde besluit |
 | [2. Technische overdracht](technisch-overdrachtsdocument.md) | ICT-team | De technische onderbouwing (*hoe*): architectuur, AI-pipelines, datamodel, tech-debt, beveiliging en quick-start |
-| [3. Werkwijze & vervolgwerk](backlog-volgende-team.md) | ICT-team | Een suggestie (geen voorschrift) voor *hoe* het werk aan te pakken: advies over de werkwijze + voorbeeld user- en learning-stories |
 
 ### Overige adviezen
 

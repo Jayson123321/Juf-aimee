@@ -13,7 +13,7 @@ Juf Aimee is een AI-onderwijsassistent die leraren helpt om gepersonaliseerde ve
 
 Nu het fundament staat, is de centrale vraag voor de opdrachtgever: **welke AI-oplossing past structureel bij Juf Aimee, en hoe houden we die verantwoord en overdraagbaar?** Dit advies beantwoordt die vraag vanuit wat we tijdens het bouwen concreet hebben geleerd, en benoemt expliciet de maatschappelijke gevolgen van de keuzes.
 
-De uitvoering ervan staat in twee aparte documenten voor het volgende ontwikkelteam: de [Technische overdracht](technisch-overdrachtsdocument.md) (hoe het in elkaar zit) en een suggestie voor de [werkwijze & vervolgwerk](backlog-volgende-team.md) (hoe het aan te pakken).
+De technische uitwerking ervan staat in een apart document voor het volgende ontwikkelteam: de [Technische overdracht](technisch-overdrachtsdocument.md) (hoe het in elkaar zit en hoe je het kunt aanpakken).
 
 ---
 
@@ -83,7 +83,7 @@ De adviezen hierboven zijn bewust niet alleen op techniek gekozen, maar op hun m
 2. **Akkoord op een borgingssprint** (beveiliging + privacy + opschoning) als eerste werk van het volgende team, vóór nieuwe features.
 3. **Bevestiging van het uitgangspunt** dat de leraar altijd de eindbeslisser blijft.
 
-Bij akkoord kan het volgende team direct starten met de [Technische overdracht](technisch-overdrachtsdocument.md) en de [suggestie voor de werkwijze & vervolgwerk](backlog-volgende-team.md).
+Bij akkoord kan het volgende team direct starten met de [Technische overdracht](technisch-overdrachtsdocument.md).
 
 ---
 
