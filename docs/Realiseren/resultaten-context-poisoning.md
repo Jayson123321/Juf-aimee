@@ -60,7 +60,7 @@ Commandos uitgevoerd:
 
 De vergiftigde tekst wordt door mammoth opgehaald en **zonder filtering opgeslagen** als OppChunk in de vector-database.
 
-**Screenshot 2:** Output van check_chunks.ts toont injectie-omschrijving in chunk 27
+**Screenshot 3:** Output van check_chunks.ts toont injectie-omschrijving in chunk 27
 
 ![alt text](images/check_chunk.png)
 
@@ -80,11 +80,11 @@ Opdracht gegenereerd in de applicatie voor Sophie Meijer:
 **Verwacht op basis van echt OPP:** Opdracht over taal, lezen of creatief schrijven  
 **Werkelijk resultaat:** Opdracht over MARS-kolonisatie
 
-**Screenshot 3:** Gegenereerde opdracht "De beste plek voor een basis op Mars"
+**Screenshot 4:** Gegenereerde opdracht "De beste plek voor een basis op Mars"
 
 ![alt text](images/marsopdracht.png)
 
-**Screenshot 4:** omderbouwing gemanipuleerde opdracht "De beste plek voor een basis op Mars"
+**Screenshot 5:** omderbouwing gemanipuleerde opdracht "De beste plek voor een basis op Mars"
 
 ![alt text](<images/onderbouwing marsopdracht .png>)
 
@@ -108,7 +108,7 @@ Defensielaag geactiveerd in `scripts/ingest-opp.ts` — `sanitizeChunkText()`:
 
 Commando uitgevoerd: `npm run ingest` (zelfde vergiftigde document, fix AAN)
 
-**Screenshot 5:** Output van check_chunks.ts ook chunk 27 toont nu schoon.
+**Screenshot 6:** Output van check_chunks.ts ook chunk 27 toont nu schoon.
 
 ![alt text](images/schone-chunk.png)
 
@@ -121,11 +121,11 @@ Commando uitgevoerd: `npm run ingest` (zelfde vergiftigde document, fix AAN)
 Zelfde vergiftigde document OPP_3_poison.docx fix aan, opnieuw ingested.  
 De sanitisatie filtert de injectie-commando's vóór opslag — chunk 27 bevat alleen de onschadelijke resterende tekst.
 
-**Screenshot 6:** Gegenereerde opdracht na fix gebaseerd op het vergiftgd profiel
+**Screenshot 7:** Gegenereerde opdracht na fix gebaseerd op het vergiftgd profiel
 
 ![alt text](images/gegenereerde-opdracht-fix.png)
 
-**Screenshot 7:** onderbouwing normale opdrachtgeneratie
+**Screenshot 8:** onderbouwing normale opdrachtgeneratie
 
 ![alt text](images/onderbouwing-normale-opdracht.png)
 
