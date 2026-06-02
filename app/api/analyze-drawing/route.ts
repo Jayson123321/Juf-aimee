@@ -24,33 +24,30 @@ export async function POST(req: NextRequest) {
   }
 
   const drawingConfig = MODELS.drawing
-  const opdrachtContext = existingFeedback
-    ? `De opdracht was: "${submission.assignment.description ?? "onbekend"}"
+  const opdrachtContext = submission.assignment.description
+    ? `De opdracht was: "${submission.assignment.description}"\n\nAnalyseer nu de tekening van de leerling.`
+    : "Analyseer de tekening van de leerling."
 
-Er is al een eerdere analyse gedaan. Vul deze aan met ontbrekende of onvolledige onderdelen. Vervang geen goede informatie, voeg alleen toe wat mist of verbeter wat onduidelijk is.
-
-EERDERE ANALYSE:
-${existingFeedback}
-
-Geef de volledige verbeterde versie terug in hetzelfde formaat.`
-    : submission.assignment.description
-      ? `De opdracht was: "${submission.assignment.description}"\n\nAnalyseer nu de tekening van de leerling.`
-      : "Analyseer de tekening van de leerling."
+  const messages = existingFeedback
+    ? [
+        { role: "system" as const, content: drawingConfig.prompt },
+        { role: "user" as const, content: opdrachtContext, images: [submission.filePath] },
+        { role: "assistant" as const, content: existingFeedback },
+        {
+          role: "user" as const,
+          content:
+            "Bekijk de tekening opnieuw zorgvuldig. Verbeter de bovenstaande feedback: vul ontbrekende of onvolledige punten aan, corrigeer onjuiste observaties en maak vage punten concreter. Geef de volledige verbeterde versie terug in hetzelfde formaat.",
+        },
+      ]
+    : [
+        { role: "system" as const, content: drawingConfig.prompt },
+        { role: "user" as const, content: opdrachtContext, images: [submission.filePath] },
+      ]
 
   try {
     const response = await ollama.chat({
       model: drawingConfig.model,
-      messages: [
-        {
-          role: "system",
-          content: drawingConfig.prompt,
-        },
-        {
-          role: "user",
-          content: opdrachtContext,
-          images: [submission.filePath],
-        },
-      ],
+      messages,
       options: { temperature: 0.3 },
       keep_alive: 0,
     })

@@ -91,9 +91,9 @@ export function TeacherFeedbackForm({
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3">
           <Sparkles className="size-4 shrink-0 text-violet-500" />
           <p className="flex-1 text-xs leading-6 text-violet-700">
-            {existingFeedback
-              ? "Er is al een analyse gedaan. Je kunt de tekening opnieuw laten analyseren."
-              : "Er is een tekening ingestuurd. Laat AI de tekening analyseren als startpunt voor je feedback."}
+            {feedback.trim()
+              ? "De AI gebruikt de huidige analyse als context en vult ontbrekende punten aan of verfijnt discrepanties."
+              : "Er is een tekening ingestuurd. De AI analyseert de tekening en genereert een eerste feedbackvoorstel."}
           </p>
           <button
             className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -102,7 +102,7 @@ export function TeacherFeedbackForm({
             type="button"
           >
             {analyzing ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
-            {analyzing ? "Analyseren…" : existingFeedback ? "Analyseer tekening" : "Analyseer tekening"}
+            {analyzing ? "Analyseren…" : feedback.trim() ? "Heranalyseer" : "Analyseer tekening"}
           </button>
         </div>
       )}
