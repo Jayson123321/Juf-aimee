@@ -40,8 +40,8 @@ Dit script vergelijkt wat een leerkracht ziet zichtbare tekst met wat mammoth op
 
 **Verwachte output:**
 ```
-Visueel identiek voor leerkracht : ✅ Ja
-Injectie zichtbaar in mammoth    : ⚠️  Ja — kwetsbaar
+Visueel identiek voor leerkracht : Ja
+Injectie zichtbaar in mammoth    : Ja, kwetsbaar
 Verborgen tekens in vergiftigd   : 270
 
 Resultaten opgeslagen: tests/vergelijk_opp_20260602_132008.json
@@ -84,6 +84,8 @@ Opdracht gegenereerd in de applicatie voor Sophie Meijer:
 
 ![alt text](images/marsopdracht.png)
 
+**Screenshot 4:** omderbouwing gemanipuleerde opdracht "De beste plek voor een basis op Mars"
+
 ![alt text](<images/onderbouwing marsopdracht .png>)
 
 **Analyse:** Het LLM accepteert de nep-interesse: "Jij weet ontzettend veel over ruimtevaart" als feit uit het leerlingprofiel. Sophie's echte interesses in taal en lezen worden niet gebruikt.
@@ -106,7 +108,7 @@ Defensielaag geactiveerd in `scripts/ingest-opp.ts` — `sanitizeChunkText()`:
 
 Commando uitgevoerd: `npm run ingest` (zelfde vergiftigde document, fix AAN)
 
-**Screenshot 4:** Output van check_chunks.ts ook chunk 27 toont nu schoon.
+**Screenshot 5:** Output van check_chunks.ts ook chunk 27 toont nu schoon.
 
 ![alt text](images/schone-chunk.png)
 
@@ -119,15 +121,15 @@ Commando uitgevoerd: `npm run ingest` (zelfde vergiftigde document, fix AAN)
 Zelfde vergiftigde document OPP_3_poison.docx fix aan, opnieuw ingested.  
 De sanitisatie filtert de injectie-commando's vóór opslag — chunk 27 bevat alleen de onschadelijke resterende tekst.
 
-**Screenshot 5:** Gegenereerde opdracht na fix gebaseerd op het vergiftgd profiel
+**Screenshot 6:** Gegenereerde opdracht na fix gebaseerd op het vergiftgd profiel
 
 ![alt text](images/gegenereerde-opdracht-fix.png)
 
-**Screenshot 6:** onderbouwing gegenereerde opdracht normaal
+**Screenshot 7:** onderbouwing normale opdrachtgeneratie
 
 ![alt text](images/onderbouwing-normale-opdracht.png)
 
-**Verwacht:** Opdracht aansluitend op Sophie's echte interesses (taal, lezen, creatief, empathisch)  
+**Verwacht:** Opdracht aansluitend op Sophie's echte interesses taal, lezen, creatief en empathisch.
 **Bewijs:** Zelfde vergiftigd document, ander resultaat de fix blokkeert de aanval op ingest-niveau
 
 ---
@@ -143,4 +145,4 @@ De sanitisatie filtert de injectie-commando's vóór opslag — chunk 27 bevat a
 
 **De kwetsbaarheid:** Een aanvaller die een vergiftigd OPP-document aanlevert kan de gegenereerde opdrachten voor een specifieke leerling permanent beïnvloeden onzichtbaar voor de leerkracht.
 
-**De fix:** Sanitisatie in `sanitizeChunkText()` filtert bekende injection-patronen vóór opslag in de vector-database (OWASP LLM01 mitigatie).
+**De fix:** Sanitisatie in `sanitizeChunkText()` filtert bekende injection-patronen vóór opslag in de vector-database OWASP LLM01 mitigatie.
