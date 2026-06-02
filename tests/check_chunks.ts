@@ -7,7 +7,7 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const student = await prisma.student.findFirst({
-    where: { fullName: "Julia van Loon" },
+    where: { fullName: "Sophie Meijer" },
   });
 
   if (!student) {
