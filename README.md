@@ -1,65 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Juf Aimee 
+ 
+> AI-assistent voor leraren in het hoogbegaafd onderwijs — gebouwd voor [Digital Life](https://digitallifecentre.nl/)
+ 
+## Over het project
+ 
+Juf Aimee is een AI-assistent die leraren ondersteunt bij het begeleiden van hoogbegaafde leerlingen. Het uitgangspunt is **responsible AI**: de AI vult de leraar aan, en de leraar vult de AI aan. Niet de AI als vervanger, maar als verlengstuk van de leraar.
+ 
+Het systeem genereert gepersonaliseerde opdrachten op basis van het profiel van elke leerling — afgestemd op hun IQ, leerbehoefte, interesses en aandachtspunten en nog veel meer.
+ 
+---
+ 
+## Architectuur
+ 
+```
+Juf-aimee/
+├── app/              # Next.js webapplicatie (leraar-dashboard)
+├── components/       # Herbruikbare UI-componenten
+├── lib/              # Gedeelde logica en utilities
+├── mcp/              # Edurep MCP server (lesmateriaal zoeken)
+│   ├── src/
+│   └── dist/
+├── prisma/           # Database schema en migraties
+└── scripts/          # OPP-verwerking scripts
+```
+ 
+---
+ 
+## Kernfunctionaliteiten
+ 
+### RAG-systeem op OPP-documenten
+Leraren werken met **Ontwikkelingsperspectieven (OPP)** per leerling — Word-documenten met informatie zoals:
+- IQ en cognitief niveau
+- Leerbehoeften en leerstijl
+- Interesses en motivatie
+- Zwakheden en aandachtspunten
 
-## Getting Started
+Deze documenten worden automatisch omgezet naar vectoren en opgeslagen in een PostgreSQL database met de pgvector extensie. Prisma wordt gebruikt als ORM. Bij het genereren van een opdracht zoekt het systeem het meest relevante chunks OPP-profiel op via cosine similarity en geeft de AI context over de leerling.
 
-First, run the development server:
+### Gepersonaliseerde opdrachten
+Op basis van het OPP-profiel genereert de AI opdrachten die passen bij het niveau en de interesses van de leerling. Geen generieke taken, maar maatwerk.
+ 
+###### Edurep MCP Server
+Een zelfgebouwde [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server die verbinding maakt met de [Edurep](https://edurep.kennisnet.nl) database — de grootste Nederlandse database voor educatief lesmateriaal.
 
+De MCP server kan worden gekoppeld aan Claude Desktop of Claude Code, waardoor de llm automatisch passend lesmateriaal kan opzoeken op basis van vak, niveau en leerdoelen.
+
+> Vereist Claude Desktop of Claude Code om de MCP server te gebruiken.
+ 
+---
+ 
+## Tech stack
+ 
+| Onderdeel | Technologie |
+|---|---|
+| Frontend | Next.js 16, TypeScript, Tailwind CSS |
+| AI | Ollama (lokaal), Anthropic Claude |
+| Vector database | Prisma + embeddings |
+| Lesmateriaal | Edurep API via MCP server |
+| Database | PostgreSQL via Prisma |
+| Containerisatie | Docker |
+ 
+---
+ 
+## MCP Server (Edurep)
+ 
+De `mcp/` map bevat een zelfgebouwde MCP server die Claude Desktop en Claude Code in staat stelt om educatief materiaal op te zoeken via de Edurep API.
+ 
 ```bash
+# Installeren
+cd mcp
+npm install
+ 
+# Compileren
+npm run build
+ 
+# Registreren in Claude Code
+claude mcp add-json edurep '{"type":"stdio","command":"node","args":["./mcp/dist/index.js"]}'
+```
+ 
+Beschikbare tools:
+- `search_materials` — zoek educatief materiaal op trefwoord
+---
+ 
+## Responsible AI
+ 
+Dit project is gebouwd met de volgende principes:
+ 
+- **De leraar beslist** — AI genereert suggesties, de leraar keurt goed
+- **Transparantie** — het systeem legt uit waarom een opdracht bij een leerling past
+- **Privacy** — OPP-data blijft lokaal, geen persoonsgegevens naar externe modellen
+- **Aanvullend, niet vervangend** — AI als gereedschap, niet als autoriteit
+---
+ 
+## Lokaal draaien
+ 
+```bash
+# Kloon de repo
+git clone https://github.com/jayson123321/juf-aimee.git
+cd juf-aimee
+ 
+# Installeer dependencies
+npm install
+ 
+# Configureer omgevingsvariabelen
+cp .env.example .env
+ 
+# Start de applicatie
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+ 
+> Vereist: Node.js 18+, Docker (voor de database), Ollama (voor lokale AI)
+ 
+---
+## Contributors
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Dit project is gebouwd door een team van Digital Life studenten.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Mijn bijdragen:**
+- RAG-systeem — OPP-documenten verwerken naar vectoren, embeddings pipeline, pgvector integratie
+- Edurep MCP Server — zelfgebouwde MCP server voor lesmateriaal zoeken via Claude
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Voor een volledig overzicht van alle bijdragen, zie de [commit history](https://github.com/jayson123321/juf-aimee/commits/main). 
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# MkDocs with Docker Compose
-
-Build and preview the documentation without installing Python locally.
-
-## Prerequisites
-- Docker and Docker Compose v2.
-
-## Build the image
-```bash
-docker compose build mkdocs
-```
-
-## Live preview
-```bash
-docker compose up mkdocs
-```
-- Opens on http://localhost:8000
-- Hot-reloads on changes under this repository.
-
-## Build static site
-```bash
-docker compose run --rm mkdocs \
-  sh -c "pip install -e /workspace/mdocotion && mkdocs build --site-dir public"
-```
-- Outputs to `public/` (GitLab Pages compatible).
-
-## Notes
-- Dependencies are in `requirements.txt` (used by CI and the Docker image).
-- The container installs the local `mdocotion` package in editable mode before running MkDocs to load the custom macros.
+## Gemaakt voor
+ 
+[Digital Life](https://digitallife.nl) — opleiding aan de Hogeschool van Amsterdam
