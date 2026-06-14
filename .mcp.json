@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "edurep": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["C:/Users/Jayso/OneDrive/Documenten/portfolio/github_projects/Juf-aimee/mcp/dist/index.js"]
+    }
+  }
+}
