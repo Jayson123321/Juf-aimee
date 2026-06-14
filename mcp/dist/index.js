@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-const EDUREP_API_BASE = "https://api.edurep.nl/v1/jsonsearch";
+const EDUREP_API_BASE = "https://proxy.edurep.nl/v3/search";
 const USER_AGENT = "edurep-app/1.0";
 // Create server instance
 const server = new McpServer({
@@ -14,7 +14,7 @@ server.registerTool("search_materials", {
         query: z.string().describe("Het zoekwoord, bijv. 'plusklas' of 'rekenen groep 3'"),
     },
 }, async ({ query }) => {
-    const url = `${EDUREP_API_BASE}?query=${encodeURIComponent(query)}&maximumRecords=5`;
+    const url = `${EDUREP_API_BASE}?mode=json&query=%22${encodeURIComponent(query)}%22&page-size=5`;
     const response = await fetch(url, {
         headers: { "User-Agent": USER_AGENT },
     });
